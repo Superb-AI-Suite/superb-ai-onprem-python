@@ -20,7 +20,6 @@ from spb_onprem.base_types import (
     UndefinedType,
 )
 from .queries import Queries
-from .utils import Utils
 from .entities import (
     Data,
     Scene,
@@ -443,63 +442,30 @@ class DataService(BaseService):
         data = Data.model_validate(response)
         return data
 
-    def upload_image_data_from_path(
+    def create_image_data(
         self,
         dataset_id: str,
         key: str,
+        image_content: BytesIO,
+        thumbnail_content: Optional[BytesIO] = None,
         slice_ids: Optional[List[str]] = None,
-        image_path: Optional[BytesIO] = None,
         annotation: Optional[dict] = None,
         meta: Optional[dict[str, DataMetaValue]] = None,
     ):
-        """Upload an image data from a path.
-
-        Args:
-            dataset_id (str): The dataset id.
-            key (str): The key of the data.
-            slice_ids (Optional[List[str]], optional): The slice ids of the data. Defaults to None.
-            image_path (Optional[BytesIO], optional): The image path of the data. Defaults to None.
-            annotation (Optional[dict], optional): The annotation of the data. Defaults to None.
-            meta (Optional[dict], optional): The meta of the data. Defaults to None.
-
-        Returns:
-            Data: The uploaded data.
-        """
-        with open(image_path, 'rb') as f:
-            image_content = f.read()
-        image = BytesIO(image_content)
-
-        return self.upload_image_data(
-            dataset_id=dataset_id,
-            key=key,
-            slice_ids=slice_ids,
-            image=image,
-            annotation=annotation,
-            meta=meta,
-        )
-
-    def upload_image_data(
-        self,
-        dataset_id: str,
-        key: str,
-        slice_ids: Optional[List[str]] = None,
-        image: Optional[BytesIO] = None,
-        annotation: Optional[dict] = None,
-        meta: Optional[dict[str, DataMetaValue]] = None,
-    ):
-        """
-        Upload image data to a dataset.
+        """Create image data in the dataset.
+        Image processing should be done by the client before calling this method.
 
         Args:
             dataset_id (str): The ID of the dataset to upload the image data to.
             key (str): The key for the image data.
+            image_content (BytesIO): The pre-processed image data to upload.
+            thumbnail_content (Optional[BytesIO]): Pre-processed thumbnail data. If not provided, no thumbnail will be created.
             slice_ids (Optional[List[str]]): List of slice IDs associated with the image data.
-            image (Optional[BytesIO]): The image data to upload.
             annotation (Optional[dict]): Annotations associated with the image data.
-            meta (Optional[dict]): Metadata of the data. { "key1": val1, "key2": val2, ... }
+            meta (Optional[dict[str, DataMetaValue]]): Metadata of the data. { "key1": val1, "key2": val2, ... }
 
         Returns:
-            None
+            Data: The created data object.
         """
         content_service = ContentService()
         data = Data(
@@ -508,31 +474,31 @@ class DataService(BaseService):
             type=DataType.SUPERB_IMAGE,
         )
         data.slice_ids = slice_ids
-        
-        if image is not None:
-            # Build Image Content
-            image_content = content_service.upload_content_with_data(
-                image,
-                content_type="image/jpeg",
-                key=f"{key}_image",
-            )
-            thumbnail = Utils.create_thumbnail(
-                image=image,
-            )
-            thumbnail_content = content_service.upload_content_with_data(
-                thumbnail,
+
+        # Upload main image content
+        image_content_obj = content_service.upload_content_with_data(
+            image_content,
+            content_type="image/jpeg",
+            key=f"{key}_image",
+        )
+        scene = Scene(
+            type=SceneType.IMAGE,
+            content=image_content_obj,
+            meta=None,
+        )
+        data.scene = [scene]
+
+        # Upload thumbnail if provided
+        if thumbnail_content is not None:
+            thumbnail_content_obj = content_service.upload_content_with_data(
+                thumbnail_content,
                 content_type="image/jpeg",
                 key=f"{key}_thumbnail",
             )
-            scene = Scene(
-                type=SceneType.IMAGE,
-                content=image_content,
-                meta=None,
-            )
-            data.scene = [scene]
-            data.thumbnail = thumbnail_content
+            data.thumbnail = thumbnail_content_obj
+
+        # Handle annotation if provided
         if annotation is not None:
-            # Build Image Annotation
             annotation_content = content_service.upload_json_content(
                 annotation,
                 key=f"{key}_annotation",
@@ -541,11 +507,13 @@ class DataService(BaseService):
                 content=annotation_content,
                 meta=None
             )
-            annotation=Annotation(
+            annotation_obj = Annotation(
                 versions=[annotation_version],
                 meta=None
             )
-            data.annotation = annotation
+            data.annotation = annotation_obj
+
+        # Handle metadata if provided
         if meta is not None:
             data.meta = DataMeta.from_dict(meta)
 
@@ -553,5 +521,4 @@ class DataService(BaseService):
             Queries.CREATE,
             Queries.CREATE["variables"](data)
         )
-        data = Data.model_validate(response)
-        return data
+        return Data.model_validate(response)

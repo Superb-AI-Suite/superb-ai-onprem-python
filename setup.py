@@ -20,6 +20,9 @@ setup(
     ],
     python_requires=">=3.7",
     install_requires=[
-        # Add your dependencies here
+        "requests>=2.25.0",  # HTTP 클라이언트
+        "urllib3>=1.26.0",  # requests의 의존성이지만 Retry 로직을 위해 명시
+        "pydantic>=2.0.0",  # 데이터 검증 및 직렬화
+        "configparser>=5.0.0",  # 설정 파일 파싱
     ],
 ) 
