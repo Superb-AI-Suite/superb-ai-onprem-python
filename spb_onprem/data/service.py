@@ -102,7 +102,7 @@ class DataService(BaseService):
     def get_data_list(
         self,
         dataset_id: str,
-        filter: Optional[DataListFilter] = None,
+        data_filter: Optional[DataListFilter] = None,
         cursor: Optional[str] = None,
         length: Optional[int] = 10,
     ):
@@ -127,7 +127,7 @@ class DataService(BaseService):
             Queries.GET_LIST,
             Queries.GET_LIST["variables"](
                 dataset_id=dataset_id,
-                data_list_filter=filter,
+                data_list_filter=data_filter,
                 cursor=cursor,
                 length=length
             )

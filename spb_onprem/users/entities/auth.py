@@ -11,7 +11,7 @@ class AuthUser(CustomBaseModel):
     access_key: str = Field(alias="accessKey")
     access_key_secret: str = Field(alias="accessKeySecret")
     is_system_sdk: bool = Field(alias="isSystemSdk")
-    system_sdk_user_email: str = Field(alias="systemSdkUserEmail")
+    system_sdk_user_email: Optional[str] = Field(None, alias="systemSdkUserEmail")
 
     _access_token: Optional[str] = None
     _instance: ClassVar[Optional["AuthUser"]] = None
@@ -58,7 +58,8 @@ class AuthUser(CustomBaseModel):
                         host=config["default"]["host"],
                         access_key=config["default"]["access_key"],
                         access_key_secret=config["default"]["access_key_secret"],
-                        is_system_sdk=False
+                        is_system_sdk=False,
+                        system_sdk_user_email=None  # Not required in normal mode
                     )
                 except configparser.Error as e:
                     raise SDKConfigError(f"Error parsing config file: {str(e)}") from e

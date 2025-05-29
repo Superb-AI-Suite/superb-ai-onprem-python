@@ -1,14 +1,51 @@
 from typing import Optional, Union
 from spb_onprem.base_service import BaseService
+from spb_onprem.exceptions import BadParameterError
 from spb_onprem.base_types import Undefined, UndefinedType
 from .queries import Queries
 from .entities import Dataset
+from .params.datasets import DatasetsFilter
 
 
 class DatasetService(BaseService):
     """
     Service class for handling dataset-related operations.
     """
+    
+    def get_datasets(
+        self,
+        datasets_filter: Optional[DatasetsFilter] = None,
+        cursor: Optional[str] = None,
+        length: Optional[int] = 10
+    ):
+        """
+        Get a list of datasets based on the provided filter and pagination parameters.
+        
+        Args:
+            datasets_filter (Union[DatasetsFilter, UndefinedType]): Filter criteria for datasets
+            cursor (Optional[str]): Cursor for pagination
+            length (Optional[int]): Number of items per page (default: 10)
+        
+        Returns:
+            List[Dataset]: A list of Dataset objects
+        """
+        if length > 50:
+            raise BadParameterError("The maximum length is 50.")
+        
+        response = self.request_gql(
+            Queries.DATASETS,
+            Queries.DATASETS["variables"](
+                datasets_filter=datasets_filter,
+                cursor=cursor,
+                length=length
+            )
+        )
+        datasets = [Dataset.model_validate(dataset) for dataset in response["datasets"]]
+        return (
+            datasets,
+            response.get("next", None),
+            response.get("totalCount", False)
+        )
 
     def get_dataset(
         self,
