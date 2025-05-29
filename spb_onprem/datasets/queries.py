@@ -1,4 +1,4 @@
-from sdk.datasets.params import (
+from spb_onprem.datasets.params import (
     dataset_params,
     datasets_params,
     create_dataset_params,

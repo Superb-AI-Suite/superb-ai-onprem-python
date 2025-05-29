@@ -2,7 +2,7 @@ from typing import (
     Union,
 )
 
-from sdk.base_types import (
+from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
 )

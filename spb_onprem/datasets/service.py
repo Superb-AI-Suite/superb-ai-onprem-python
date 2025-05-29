@@ -1,6 +1,6 @@
 from typing import Optional, Union
-from sdk.base_service import BaseService
-from sdk.base_types import Undefined, UndefinedType
+from spb_onprem.base_service import BaseService
+from spb_onprem.base_types import Undefined, UndefinedType
 from .queries import Queries
 from .entities import Dataset
 

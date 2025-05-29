@@ -1,7 +1,7 @@
 from typing import Optional, List, Union
 
-from sdk.base_model import CustomBaseModel, Field
-from sdk.base_types import Undefined, UndefinedType
+from spb_onprem.base_model import CustomBaseModel, Field
+from spb_onprem.base_types import Undefined, UndefinedType
 
 
 class DatasetsFilterOptions(CustomBaseModel):

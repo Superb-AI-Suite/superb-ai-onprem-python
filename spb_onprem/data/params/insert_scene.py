@@ -1,4 +1,4 @@
-from sdk.data.entities import Scene
+from spb_onprem.data.entities import Scene
 
 
 def insert_scene_params(

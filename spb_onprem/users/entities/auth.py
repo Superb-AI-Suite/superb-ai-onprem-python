@@ -3,8 +3,8 @@ import os
 import configparser
 from typing import Optional, ClassVar
 
-from sdk.base_model import CustomBaseModel, Field
-from sdk.exceptions import SDKConfigError
+from spb_onprem.base_model import CustomBaseModel, Field
+from spb_onprem.exceptions import SDKConfigError
 
 class AuthUser(CustomBaseModel):
     host: str = Field(alias="host")

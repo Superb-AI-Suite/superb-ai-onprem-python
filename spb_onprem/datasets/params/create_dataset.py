@@ -1,6 +1,6 @@
 from typing import Union
-from sdk.base_types import Undefined, UndefinedType
-from sdk.exceptions import BadParameterError
+from spb_onprem.base_types import Undefined, UndefinedType
+from spb_onprem.exceptions import BadParameterError
 
 
 def create_dataset_params(

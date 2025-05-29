@@ -1,4 +1,4 @@
-from sdk.slices.params import (
+from spb_onprem.slices.params import (
     slices_params,
     slice_params,
     create_slice_params,

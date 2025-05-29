@@ -1,4 +1,4 @@
-from sdk.data.entities import Data
+from spb_onprem.data.entities import Data
 
 
 def create_params(

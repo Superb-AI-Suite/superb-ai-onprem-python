@@ -1,7 +1,7 @@
 from typing import Union
 
-from sdk.base_types import UndefinedType, Undefined
-from sdk.exceptions import BadParameterError
+from spb_onprem.base_types import UndefinedType, Undefined
+from spb_onprem.exceptions import BadParameterError
 
 
 def update_slice_params(

@@ -2,9 +2,9 @@ from typing import (
     Optional,
     List
 )
-from sdk.base_model import CustomBaseModel, Field
-from sdk.data.enums import DataType
-from sdk.exceptions import BadParameterError
+from spb_onprem.base_model import CustomBaseModel, Field
+from spb_onprem.data.enums import DataType
+from spb_onprem.exceptions import BadParameterError
 
 class AnnotationFilter(CustomBaseModel):
     type: Optional[str] = None

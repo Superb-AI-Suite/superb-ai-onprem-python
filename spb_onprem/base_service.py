@@ -5,8 +5,8 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util import Retry
 
-from sdk.users.entities import AuthUser
-from sdk.exceptions import (
+from spb_onprem.users.entities import AuthUser
+from spb_onprem.exceptions import (
     NotFoundError,
     UnknownError,
     BadResponseError,

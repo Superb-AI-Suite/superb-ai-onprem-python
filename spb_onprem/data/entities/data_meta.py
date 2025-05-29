@@ -1,7 +1,7 @@
 from typing import Optional, Union
 from datetime import datetime
-from sdk.data.enums import DataMetaTypes, DataMetaValue
-from sdk.base_model import CustomBaseModel
+from spb_onprem.data.enums import DataMetaTypes, DataMetaValue
+from spb_onprem.base_model import CustomBaseModel
 
 
 class DataMeta(CustomBaseModel):

@@ -3,11 +3,11 @@ from typing import (
     Optional,
     List
 )
-from sdk.base_types import (
+from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
 )
-from sdk.data.entities import (
+from spb_onprem.data.entities import (
     DataMeta,
 )
 

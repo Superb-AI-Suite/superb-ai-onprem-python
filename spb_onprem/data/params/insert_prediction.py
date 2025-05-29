@@ -1,4 +1,4 @@
-from sdk.data.entities import Prediction
+from spb_onprem.data.entities import Prediction
 
 
 def insert_prediction_params (

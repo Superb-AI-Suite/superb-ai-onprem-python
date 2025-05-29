@@ -3,9 +3,9 @@ from typing import (
     Optional,
     List
 )
-from sdk.base_model import CustomBaseModel, Field
-from sdk.base_types import Undefined, UndefinedType
-from sdk.exceptions import BadParameterError
+from spb_onprem.base_model import CustomBaseModel, Field
+from spb_onprem.base_types import Undefined, UndefinedType
+from spb_onprem.exceptions import BadParameterError
 
 class SlicesFilterOptions(CustomBaseModel):
     """Options for filtering slices.

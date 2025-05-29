@@ -11,11 +11,11 @@ from typing import (
     Optional, List, Union,
 )
 
-from sdk.contents.service import (
+from spb_onprem.contents.service import (
     ContentService
 )
-from sdk.base_service import BaseService
-from sdk.base_types import (
+from spb_onprem.base_service import BaseService
+from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
 )
@@ -37,7 +37,7 @@ from .enums import (
 from .params import (
     DataListFilter,
 )
-from sdk.exceptions import BadParameterError
+from spb_onprem.exceptions import BadParameterError
 
 class DataService(BaseService):
     """

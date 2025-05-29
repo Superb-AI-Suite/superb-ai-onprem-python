@@ -1,7 +1,7 @@
 from typing import Optional, List
 
-from sdk.base_model import CustomBaseModel
-from sdk.contents.entities import BaseContent
+from spb_onprem.base_model import CustomBaseModel
+from spb_onprem.contents.entities import BaseContent
 
 
 class AnnotationVersion(CustomBaseModel):

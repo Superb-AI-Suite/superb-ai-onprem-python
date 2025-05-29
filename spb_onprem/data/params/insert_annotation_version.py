@@ -1,4 +1,4 @@
-from sdk.data.entities import AnnotationVersion
+from spb_onprem.data.entities import AnnotationVersion
 
 
 def insert_annotation_version_params(

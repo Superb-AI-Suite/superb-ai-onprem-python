@@ -1,7 +1,7 @@
 from typing import List, Union, Optional
 
-from sdk.data.entities import DataMeta
-from sdk.base_types import UndefinedType, Undefined
+from spb_onprem.data.entities import DataMeta
+from spb_onprem.base_types import UndefinedType, Undefined
 
 
 def upsert_data_meta_params(

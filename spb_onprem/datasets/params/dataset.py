@@ -1,5 +1,5 @@
 from typing import Optional
-from sdk.exceptions import BadParameterError
+from spb_onprem.exceptions import BadParameterError
 
 
 def dataset_params(

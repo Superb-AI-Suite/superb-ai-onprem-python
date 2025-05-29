@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sdk.base_model import CustomBaseModel, Field
+from spb_onprem.base_model import CustomBaseModel, Field
 
 class BaseContent(CustomBaseModel):
     """The content.

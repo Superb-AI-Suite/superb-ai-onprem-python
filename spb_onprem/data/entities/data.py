@@ -1,11 +1,11 @@
 from typing import List, Optional
-from sdk.base_model import CustomBaseModel, Field
-from sdk.data.enums import DataType
+from spb_onprem.base_model import CustomBaseModel, Field
+from spb_onprem.data.enums import DataType
 from .scene import Scene
 from .annotation import Annotation
 from .prediction import Prediction
 from .data_meta import DataMeta
-from sdk.contents.entities import BaseContent
+from spb_onprem.contents.entities import BaseContent
 
 class Data(CustomBaseModel):
     """
