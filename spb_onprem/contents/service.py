@@ -1,0 +1,132 @@
+import mimetypes
+import requests
+import json
+
+from io import BytesIO
+from typing import Optional, Union
+
+from sdk.base_service import BaseService
+from sdk.base_types import (
+    Undefined,
+    UndefinedType,
+)
+from .entities import Content, BaseContent
+from .queries import Queries
+
+
+
+class ContentService(BaseService):
+    """The content service for the SDK.
+    Content service is the service that handles the content operations.
+    """
+
+    def upload_content(
+        self,
+        file_path: str,
+        key: Union[
+            str,
+            UndefinedType    
+        ] = Undefined,
+    ):
+        '''
+        Uploads the content to the server.
+        Args:
+            file_path (str):
+                The path of the file to be uploaded.
+                You must provide the full path of the file (with extensions).
+        '''
+        with open(file_path, 'rb') as f:
+            file = f.read()
+        response = self.request_gql(
+            query=Queries.CREATE,
+            variables=Queries.CREATE["variables"](key)
+        )
+        upload_url = response['uploadURL']
+        
+        self.request(
+            method="PUT",
+            url=upload_url,
+            headers={
+                'Content-Type': mimetypes.guess_type(file_path)[0]
+            },
+            data=file,
+        )
+        content = response['content']
+        return BaseContent.model_validate(content)
+    
+    def upload_json_content(
+        self,
+        data: dict,
+        key: Union[
+            str,
+            UndefinedType    
+        ] = Undefined,
+    ):
+        '''
+        Uploads the JSON content to the server.
+
+        Args:
+            data (dict):
+                The JSON data to be uploaded.
+            key (Optional[str]):
+                An optional key to associate with the uploaded content.
+        '''
+        response = self.request_gql(
+            query=Queries.CREATE,
+            variables=Queries.CREATE["variables"](key) if key else None
+        )
+        upload_url = response['uploadURL']
+        self.request(
+            method="PUT",
+            url=upload_url,
+            headers={
+                'Content-Type': 'application/json'
+            },
+            json_data=data,
+        )
+        content = response['content']
+        return BaseContent.model_validate(content)
+
+    def upload_content_with_data(
+        self,
+        file_data: BytesIO,
+        content_type: str,
+        key: Union[
+            str,
+            UndefinedType    
+        ] = Undefined,
+    ):
+        '''
+        Uploads the content to the server.
+
+        Args:
+            file_data (BytesIO):
+                The file data to be uploaded.
+            content_type (str):
+                The MIME type of the file being uploaded (e.g., "image/jpeg").
+            key (Optional[str]):
+                An optional key to associate with the uploaded content.
+        '''
+        # Reset the BytesIO pointer to the beginning
+        file_data.seek(0)
+
+        # Request to get the upload URL
+        response = self.request_gql(
+            query=Queries.CREATE,
+            variables=Queries.CREATE["variables"](key)
+        )
+        upload_url = response['uploadURL']
+
+        # Upload the file data using the PUT request
+        self.request(
+            method="PUT",
+            url=upload_url,
+            headers={
+                'Content-Type': content_type
+            },
+            data=file_data.read(),
+        )
+
+        # Retrieve the uploaded content details
+        content = response['content']
+        return BaseContent.model_validate(content)
