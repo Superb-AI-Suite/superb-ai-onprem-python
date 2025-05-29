@@ -159,13 +159,47 @@ except UnknownError as e:
 
 ## Configuration
 
-The SDK requires proper configuration for authentication. Create a `.env` file in your project root:
+The SDK supports two authentication methods:
+
+### 1. Config File Authentication (Default)
+
+Create a config file at `~/.spb/onprem-config`:
 
 ```ini
-[superb-ai]
+[default]
 host=https://your-onprem-host
 access_key=your-access-key
+access_key_secret=your-access-key-secret
 ```
+
+This is the default authentication method when `SUPERB_SYSTEM_SDK=false` or not set.
+
+### 2. Environment Variables (for Airflow DAGs)
+
+When running in an Airflow DAG or other system environments, you can use environment variables for authentication. This method is activated by setting `SUPERB_SYSTEM_SDK=true`.
+
+```bash
+# Enable system SDK mode
+export SUPERB_SYSTEM_SDK=true
+
+# Set the host URL (either one is required)
+export SUPERB_SYSTEM_SDK_HOST=https://your-superb-ai-host
+# or
+export SUNRISE_SERVER_URL=https://your-superb-ai-host
+
+# Set the user email
+export SUPERB_SYSTEM_SDK_USER_EMAIL=user@example.com
+```
+
+For local development and testing of the system SDK mode, you can use a `.env` file. Copy `.env.example` to `.env` and modify the values:
+
+```bash
+cp .env.example .env
+```
+
+Note: 
+- When `SUPERB_SYSTEM_SDK=true`, the SDK will ignore the config file (`~/.spb/onprem-config`) and use environment variables exclusively.
+- When `SUPERB_SYSTEM_SDK=false` or not set, the SDK will look for authentication credentials in `~/.spb/onprem-config`.
 
 ## Requirements
 
