@@ -178,6 +178,7 @@ This is the default authentication method when `SUPERB_SYSTEM_SDK=false` or not 
 
 When running in an Airflow DAG or other system environments, you can use environment variables for authentication. This method is activated by setting `SUPERB_SYSTEM_SDK=true`.
 
+Required environment variables:
 ```bash
 # Enable system SDK mode
 export SUPERB_SYSTEM_SDK=true
@@ -191,11 +192,11 @@ export SUNRISE_SERVER_URL=https://your-superb-ai-host
 export SUPERB_SYSTEM_SDK_USER_EMAIL=user@example.com
 ```
 
-For local development and testing of the system SDK mode, you can use a `.env` file. Copy `.env.example` to `.env` and modify the values:
-
-```bash
-cp .env.example .env
-```
+You can set these environment variables:
+- Directly in your shell
+- In your Airflow DAG configuration
+- Through your deployment environment
+- Using a `.env` file with your preferred method of loading environment variables
 
 Note: 
 - When `SUPERB_SYSTEM_SDK=true`, the SDK will ignore the config file (`~/.spb/onprem-config`) and use environment variables exclusively.
