@@ -54,7 +54,7 @@ def slices_params(
         "cursor": cursor,
         "length": length,
     }
-    if slices_filter is not Undefined:
+    if slices_filter is not Undefined and slices_filter is not None:
         params["filter"] = slices_filter.model_dump(
             by_alias=True, exclude_unset=True
         )
