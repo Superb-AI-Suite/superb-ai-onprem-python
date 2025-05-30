@@ -5,10 +5,11 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="superb-ai-onprem",
-    version="0.1.0",
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     author="Superb AI",
-    author_email="",  # Add appropriate email
-    description="Superb AI On-premise SDK",
+    author_email="support@superb-ai.com",
+    description="Python SDK for Superb AI On-premise",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Superb-AI-Suite/superb-ai-onprem-python",
@@ -18,7 +19,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=[
         "requests>=2.22.0",  # Python 3.7 지원 시작 버전
         "urllib3>=1.21.1",  # Retry 기능 안정화 버전
