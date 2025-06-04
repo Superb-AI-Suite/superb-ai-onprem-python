@@ -22,48 +22,50 @@ class AuthUser(CustomBaseModel):
         config_file: str = "~/.spb/onprem-config"
     ) -> "AuthUser":
         if cls._instance is None:
-            if os.environ.get("SUPERB_SYSTEM_SDK") == "true":
-                if not os.environ.get("SUNRISE_SERVER_URL") and not os.environ.get("SUPERB_SYSTEM_SDK_HOST"):
-                    raise SDKConfigError("Superb Platform SDK is not configured. Please set the environment variable SUPERB_SYSTEM_SDK_URL.")
-                
-                if os.environ.get("SUNRISE_SERVER_URL"):
-                    system_sdk_host = os.environ.get("SUNRISE_SERVER_URL")
-                else:
-                    system_sdk_host = os.environ.get("SUPERB_SYSTEM_SDK_HOST")
-                
-                # Skip reading config file when SUPERB_SYSTEM_SDK is true
-                cls._instance = cls(
-                    host=system_sdk_host,
-                    access_key="",
-                    access_key_secret="",
-                    is_system_sdk=True,
-                    system_sdk_user_email=os.environ.get("SUPERB_SYSTEM_SDK_USER_EMAIL", "")
-                )
+            config_file_path = os.path.expanduser(config_file)
+            
+            if not os.path.exists(config_file_path):
+                cls._instance = cls._create_system_sdk_instance()
             else:
-                config_file_path = os.path.expanduser(config_file)
-                config = configparser.ConfigParser()
-                try:
-                    if not config.read(config_file_path):
-                        raise SDKConfigError(f"Failed to read config file: {config_file_path}")
-                    
-                    if "default" not in config:
-                        raise SDKConfigError(f"Missing 'default' section in config file: {config_file_path}")
-                    
-                    required_keys = ["host", "access_key", "access_key_secret"]
-                    for key in required_keys:
-                        if key not in config["default"]:
-                            raise SDKConfigError(f"Missing required key '{key}' in config file: {config_file_path}")
-                    
-                    cls._instance = cls(
-                        host=config["default"]["host"],
-                        access_key=config["default"]["access_key"],
-                        access_key_secret=config["default"]["access_key_secret"],
-                        is_system_sdk=False,
-                        system_sdk_user_email=None  # Not required in normal mode
-                    )
-                except configparser.Error as e:
-                    raise SDKConfigError(f"Error parsing config file: {str(e)}") from e
+                cls._instance = cls._create_config_instance(config_file_path)
         return cls._instance
+
+    @classmethod
+    def _create_system_sdk_instance(cls) -> "AuthUser":        
+        system_sdk_host = os.environ.get("SUNRISE_SERVER_URL") or os.environ.get("SUPERB_SYSTEM_SDK_HOST") or "http://app-api:8080"
+        
+        return cls(
+            host=system_sdk_host,
+            access_key="",
+            access_key_secret="",
+            is_system_sdk=True,
+            system_sdk_user_email=os.environ.get("SUPERB_SYSTEM_SDK_USER_EMAIL", "system@superb-ai.com")
+        )
+
+    @classmethod
+    def _create_config_instance(cls, config_file_path: str) -> "AuthUser":
+        config = configparser.ConfigParser()
+        try:
+            if not config.read(config_file_path):
+                raise SDKConfigError(f"Failed to read config file: {config_file_path}")
+            
+            if "default" not in config:
+                raise SDKConfigError(f"Missing 'default' section in config file: {config_file_path}")
+            
+            required_keys = ["host", "access_key", "access_key_secret"]
+            for key in required_keys:
+                if key not in config["default"]:
+                    raise SDKConfigError(f"Missing required key '{key}' in config file: {config_file_path}")
+            
+            return cls(
+                host=config["default"]["host"],
+                access_key=config["default"]["access_key"],
+                access_key_secret=config["default"]["access_key_secret"],
+                is_system_sdk=False,
+                system_sdk_user_email=None
+            )
+        except configparser.Error as e:
+            raise SDKConfigError(f"Error parsing config file: {str(e)}") from e
 
     @property
     def access_token(self):

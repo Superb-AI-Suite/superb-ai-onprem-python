@@ -47,3 +47,6 @@ coverage.xml
 
 # Logs
 *.log
+
+# Added from the code block
+spb_onprem/_version.py
