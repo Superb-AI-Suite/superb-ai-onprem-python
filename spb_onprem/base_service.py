@@ -32,7 +32,10 @@ class BaseService():
     
     def __init__(self):
         self._auth_user = AuthUser.get_instance()
-        self.endpoint = f"{self._auth_user.host}/graphql/"
+        if self._auth_user.is_system_sdk:
+            self.endpoint = f"{self._auth_user.host}/system/graphql/"
+        else:
+            self.endpoint = f"{self._auth_user.host}/graphql/"
     
     @classmethod
     def requests_retry_session(
