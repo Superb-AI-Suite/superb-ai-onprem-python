@@ -161,7 +161,7 @@ class DataService(BaseService):
             Tuple[List[Data], Optional[str], int]: The data list, the next cursor, and the total count.
         """
     
-        if length > 50:
+        if length > 500:
             raise ValueError("The maximum length is 500.")
         
         response = self.request_gql(
