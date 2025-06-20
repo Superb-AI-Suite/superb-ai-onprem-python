@@ -29,6 +29,10 @@ class ExportService(BaseService):
             DataListFilter,
             dict
         ] = Undefined,
+        location: Union[
+            UndefinedType,
+            str
+        ] = Undefined,
         data_count: Union[
             UndefinedType,
             int
@@ -63,6 +67,7 @@ class ExportService(BaseService):
                 dataset_id=dataset_id,
                 name=name,
                 data_filter=data_filter,
+                location=location,
                 data_count=data_count,
                 frame_count=frame_count,
                 annotation_count=annotation_count,
