@@ -8,6 +8,7 @@ from .datasets.service import DatasetService
 from .data.service import DataService
 from .slices.service import SliceService
 from .activities.service import ActivityService
+from .exports.service import ExportService
 
 # Core Entities and Enums
 from .entities import (
@@ -22,6 +23,7 @@ from .entities import (
     Slice,
     Activity,
     ActivityHistory,
+    Export,
 
     # Enums
     DataType,
@@ -44,6 +46,8 @@ from .searches import (
     SlicesFilterOptions,
     ActivitiesFilter,
     ActivitiesFilterOptions,
+    ExportFilter,
+    ExportFilterOptions,
 )
 
 __all__ = (
@@ -52,6 +56,7 @@ __all__ = (
     "DataService",
     "SliceService",
     "ActivityService",
+    "ExportService",
 
     # Core Entities
     "Data",
@@ -64,7 +69,7 @@ __all__ = (
     "Slice",
     "Activity",
     "ActivityHistory",
-    
+    "Export",
     # Enums
     "DataType",
     "SceneType",
@@ -84,4 +89,6 @@ __all__ = (
     "SlicesFilterOptions",
     "ActivitiesFilter",
     "ActivitiesFilterOptions",
+    "ExportFilter",
+    "ExportFilterOptions",
 )

@@ -16,6 +16,10 @@ from .activities.params.activities import (
     ActivitiesFilter,
     ActivitiesFilterOptions,
 )
+from .exports.params.exports import (
+    ExportFilter,
+    ExportFilterOptions,
+)
 
 __all__ = [
     "AnnotationFilter",
@@ -27,4 +31,6 @@ __all__ = [
     "SlicesFilterOptions",
     "ActivitiesFilter",
     "ActivitiesFilterOptions",
+    "ExportFilter",
+    "ExportFilterOptions",
 ]
