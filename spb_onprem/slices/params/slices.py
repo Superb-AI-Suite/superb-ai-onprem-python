@@ -34,7 +34,7 @@ def slices_params(
     slices_filter: Union[
         UndefinedType,
         SlicesFilter
-    ],
+    ] = Undefined,
     cursor: Optional[str] = None,
     length: Optional[int] = 10
 ):

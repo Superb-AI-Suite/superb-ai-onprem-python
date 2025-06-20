@@ -14,6 +14,13 @@ from .data.enums import (
     DataMetaTypes,
     DataMetaValue,
 )
+from .activities.entities import (
+    Activity,
+    ActivityHistory,
+    ActivityStatus,
+    ActivitySchema,
+    SchemaType,
+)
 
 __all__ = [
     # Core Entities
@@ -25,10 +32,15 @@ __all__ = [
     "DataMeta",
     "Dataset",
     "Slice",
+    "Activity",
+    "ActivityHistory",
     
     # Enums
     "DataType",
     "SceneType",
     "DataMetaTypes",
     "DataMetaValue",
+    "ActivityStatus",
+    "ActivitySchema",
+    "SchemaType",
 ] 

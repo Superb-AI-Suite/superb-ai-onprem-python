@@ -1,11 +1,10 @@
 import json
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class CustomBaseModel(BaseModel):
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
         
     def __json__(self):
         return self.model_dump()

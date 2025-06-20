@@ -12,6 +12,10 @@ from .slices.params.slices import (
     SlicesFilterOptions,
     SlicesFilter,
 )
+from .activities.params.activities import (
+    ActivitiesFilter,
+    ActivitiesFilterOptions,
+)
 
 __all__ = [
     "AnnotationFilter",
@@ -21,4 +25,6 @@ __all__ = [
     "DatasetsFilterOptions",
     "SlicesFilter",
     "SlicesFilterOptions",
+    "ActivitiesFilter",
+    "ActivitiesFilterOptions",
 ]

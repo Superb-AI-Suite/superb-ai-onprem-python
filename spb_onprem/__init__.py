@@ -7,6 +7,7 @@ except ImportError:
 from .datasets.service import DatasetService
 from .data.service import DataService
 from .slices.service import SliceService
+from .activities.service import ActivityService
 
 # Core Entities and Enums
 from .entities import (
@@ -19,12 +20,17 @@ from .entities import (
     DataMeta,
     Dataset,
     Slice,
-    
+    Activity,
+    ActivityHistory,
+
     # Enums
     DataType,
     SceneType,
     DataMetaTypes,
     DataMetaValue,
+    ActivityStatus,
+    ActivitySchema,
+    SchemaType,
 )
 
 # Filters
@@ -36,6 +42,8 @@ from .searches import (
     DatasetsFilterOptions,
     SlicesFilter,
     SlicesFilterOptions,
+    ActivitiesFilter,
+    ActivitiesFilterOptions,
 )
 
 __all__ = (
@@ -43,7 +51,8 @@ __all__ = (
     "DatasetService",
     "DataService",
     "SliceService",
-    
+    "ActivityService",
+
     # Core Entities
     "Data",
     "Scene",
@@ -53,12 +62,17 @@ __all__ = (
     "DataMeta",
     "Dataset",
     "Slice",
+    "Activity",
+    "ActivityHistory",
     
     # Enums
     "DataType",
     "SceneType",
     "DataMetaTypes",
     "DataMetaValue",
+    "ActivityStatus",
+    "ActivitySchema",
+    "SchemaType",
     
     # Filters
     "AnnotationFilter",
@@ -68,4 +82,6 @@ __all__ = (
     "DatasetsFilterOptions",
     "SlicesFilter",
     "SlicesFilterOptions",
+    "ActivitiesFilter",
+    "ActivitiesFilterOptions",
 )
