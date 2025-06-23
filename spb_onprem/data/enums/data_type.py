@@ -8,3 +8,4 @@ class DataType(str, Enum):
     """
     SUPERB_IMAGE = "SUPERB_IMAGE"
     MCAP = "MCAP"
+    SUPERB_3D = "SUPERB_3D"

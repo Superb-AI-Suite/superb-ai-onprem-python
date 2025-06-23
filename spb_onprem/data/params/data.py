@@ -17,8 +17,13 @@ def get_params(
         dict: The variables for the data query.
     """
     
-    return {
+    params = {
         "dataset_id": dataset_id,
-        "key": data_key,
-        "id": data_id,
     }
+    
+    if data_key is not Undefined:
+        params["key"] = data_key
+    if data_id is not Undefined:
+        params["id"] = data_id
+        
+    return params
