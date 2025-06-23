@@ -20,8 +20,8 @@ class ActivityHistory(CustomBaseModel):
     activity_id: Optional[str] = Field(None, alias="jobId")
     status: Optional[ActivityStatus] = Field(None, alias="status")
     
-    parameters: Optional[Any] = Field(None, alias="parameters")
-    progress: Optional[Any] = Field(None, alias="progress")
+    parameters: Optional[dict] = Field(None, alias="parameters")
+    progress: Optional[dict] = Field(None, alias="progress")
     
     meta: Optional[dict] = Field(None, alias="meta")
     

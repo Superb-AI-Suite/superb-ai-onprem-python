@@ -6,6 +6,10 @@ from spb_onprem.activities.entities import ActivitySchema
 
 def update_activity_params(
     activity_id: str,
+    dataset_id: Union[
+        str,
+        UndefinedType
+    ] = Undefined,
     activity_type: Union[
         str,
         UndefinedType
@@ -61,6 +65,8 @@ def update_activity_params(
         "id": activity_id
     }
 
+    if dataset_id is not Undefined:
+        params["datasetId"] = dataset_id
     if activity_type is not Undefined:
         params["type"] = activity_type
     if name is not Undefined:

@@ -8,6 +8,7 @@ from spb_onprem.activities.params import (
 
     start_activity_params,
     update_activity_history_params,
+    get_activity_history_params,
 )
 
 class Schemas:
@@ -101,6 +102,21 @@ class Queries:
             }}
         ''',
         "variables": get_activity_params,
+    }
+
+    GET_ACTIVITY_HISTORY = {
+        "name": "jobHistory",
+        "query": f'''
+            query jobHistory(
+                $dataset_id: ID,
+                $job_history_id: ID!
+            ) {{
+                jobHistory(datasetId: $dataset_id, id: $job_history_id) {{
+                    {Schemas.ACTIVITY_HISTORY}
+                }}
+            }}
+        ''',
+        "variables": get_activity_history_params,
     }
 
     CREATE_ACTIVITY = {

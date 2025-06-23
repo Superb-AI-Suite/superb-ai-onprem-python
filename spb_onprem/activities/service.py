@@ -127,6 +127,29 @@ class ActivityService(BaseService):
         )
         return Activity.model_validate(response)
 
+    def get_activity_history(
+        self,
+        dataset_id: str,
+        activity_history_id: str,
+    ) -> ActivityHistory:
+        """Get an activity history.
+        
+        Args:
+            dataset_id (str): The ID of the dataset to get the activity history for.
+            activity_history_id (str): The ID of the job to get the activity history for.
+        
+        Returns:
+            ActivityHistory: The activity history object.
+        """
+        response = self.request_gql(
+            Queries.GET_ACTIVITY_HISTORY,
+            Queries.GET_ACTIVITY_HISTORY["variables"](
+                dataset_id=dataset_id,
+                activity_history_id=activity_history_id,
+            )
+        )
+        return ActivityHistory.model_validate(response)
+
     def update_activity(
         self,
         activity_id: str,
@@ -236,12 +259,12 @@ class ActivityService(BaseService):
         """Start an activity.
         
         Args:
+            dataset_id (str): The ID of the dataset to start the activity for.
             activity_id (Optional[str]): The ID of the activity to start.
-            dataset_id (Optional[str]): The ID of the dataset to start the activity for.
             activity_type (Optional[str]): The type of the activity to start.
-            parameters (Optional[dict]): The parameters to start the activity with.
-            progress (Optional[dict]): The progress to start the activity with.
-            meta (Optional[dict]): The meta to start the activity with.
+            parameters (Optional[dict]): The parameters for the activity.
+            progress (Optional[dict]): The progress for the activity.
+            meta (Optional[dict]): The meta for the activity.
         
         Returns:
             ActivityHistory: The activity history object.
@@ -258,7 +281,7 @@ class ActivityService(BaseService):
             )
         )
         return ActivityHistory.model_validate(response)
-    
+
     def update_activity_history_status(
         self,
         activity_history_id: str,
@@ -272,8 +295,11 @@ class ActivityService(BaseService):
         
         Args:
             activity_history_id (str): The ID of the activity history to update.
-            status (ActivityStatus): The status to update the activity to.
-            meta (Optional[dict]): The meta to update the activity with.
+            status (ActivityStatus): The new status for the activity history.
+            meta (Optional[dict]): The meta for the activity history.
+        
+        Returns:
+            ActivityHistory: The updated activity history object.
         """
         response = self.request_gql(
             Queries.UPDATE_ACTIVITY_HISTORY,
@@ -301,8 +327,11 @@ class ActivityService(BaseService):
         
         Args:
             activity_history_id (str): The ID of the activity history to update.
-            progress (Optional[dict]): The progress to update the activity with.
-            meta (Optional[dict]): The meta to update the activity with.
+            progress (Optional[dict]): The new progress for the activity history.
+            meta (Optional[dict]): The meta for the activity history.
+        
+        Returns:
+            ActivityHistory: The updated activity history object.
         """
         response = self.request_gql(
             Queries.UPDATE_ACTIVITY_HISTORY,

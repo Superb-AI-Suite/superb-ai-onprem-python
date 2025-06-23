@@ -9,6 +9,7 @@ from .update_activity import update_activity_params
 from .delete_activity import delete_activity_params
 from .start_activity import start_activity_params
 from .update_activity_history import update_activity_history_params
+from .get_activity_history import get_activity_history_params
 
 __all__ = (
     "ActivitiesFilter",
@@ -20,4 +21,5 @@ __all__ = (
     "delete_activity_params",
     "start_activity_params",
     "update_activity_history_params",
+    "get_activity_history_params",
 )
