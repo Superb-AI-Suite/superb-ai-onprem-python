@@ -130,3 +130,21 @@ class ContentService(BaseService):
         # Retrieve the uploaded content details
         content = response['content']
         return BaseContent.model_validate(content)
+
+    def get_download_url(
+        self,
+        id: str,
+    ) -> str:
+        '''
+        Gets the content from the server.
+        Args:
+            id (str): The ID of the content to get.
+        Returns:
+            Content: The content object.
+        '''
+        
+        response = self.request_gql(
+            query=Queries.GET_DOWNLOAD_URL,
+            variables=Queries.GET_DOWNLOAD_URL["variables"](id)
+        )
+        return response

@@ -22,6 +22,7 @@ from .activities.entities import (
     SchemaType,
 )
 from .exports.entities import Export
+from .contents.entities import Content
 
 __all__ = [
     # Core Entities
@@ -36,6 +37,7 @@ __all__ = [
     "Activity",
     "ActivityHistory",
     "Export",
+    "Content",
 
     # Enums
     "DataType",

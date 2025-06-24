@@ -37,3 +37,21 @@ class Queries:
         ''',
         "variables": create_variables
     }
+    
+    @staticmethod
+    def get_download_url_params(
+        id: str,
+    ):
+        return {
+            "id": id
+        }
+    
+    GET_DOWNLOAD_URL = {
+        "name": "generateContentDownloadURL",
+        "query": '''
+            mutation GenerateContentDownloadURL($id: ID!) {
+                generateContentDownloadURL(id: $id) 
+            }
+        ''',
+        "variables": get_download_url_params
+    }
