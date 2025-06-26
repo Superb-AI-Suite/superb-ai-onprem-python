@@ -10,7 +10,7 @@ from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
 )
-from .entities import Content, BaseContent
+from .entities import BaseContent
 from .queries import Queries
 
 
@@ -19,6 +19,33 @@ class ContentService(BaseService):
     """The content service for the SDK.
     Content service is the service that handles the content operations.
     """
+
+    def create_content(
+        self,
+        key: Union[
+            str,
+            UndefinedType
+        ] = Undefined,
+        content_type: Union[
+            str,
+            UndefinedType
+        ] = Undefined,
+    ) -> str:
+        '''
+        Creates a new content.
+        Args:
+            key (Optional[str]):
+                An optional key to associate with the uploaded content.
+            content_type (Optional[str]):
+                An optional content type to associate with the uploaded content.
+        Returns:
+            str: The upload URL for the content.
+        '''
+        response = self.request_gql(
+            query=Queries.CREATE,
+            variables=Queries.CREATE["variables"](key, content_type)
+        )
+        return response['uploadURL']
 
     def upload_content(
         self,

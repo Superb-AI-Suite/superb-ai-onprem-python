@@ -442,6 +442,23 @@ class DataService(BaseService):
         data = Data.model_validate(response)
         return data
 
+    def create_data(
+        self,
+        data: Data,
+    )-> Data:
+        """Create a data.
+        Args:
+            data (Data): The data to create.
+
+        Returns:
+            Data: The created data object.
+        """
+        response = self.request_gql(
+            Queries.CREATE,
+            Queries.CREATE["variables"](data)
+        )
+        return Data.model_validate(response)
+
     def create_image_data(
         self,
         dataset_id: str,
