@@ -3,14 +3,14 @@ import requests
 import json
 
 from io import BytesIO
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
 )
-from .entities import BaseContent
+from .entities import BaseContent, Content
 from .queries import Queries
 
 
@@ -30,7 +30,7 @@ class ContentService(BaseService):
             str,
             UndefinedType
         ] = Undefined,
-    ) -> str:
+    ) -> Tuple[Content, str]:
         '''
         Creates a new content.
         Args:
@@ -45,7 +45,8 @@ class ContentService(BaseService):
             query=Queries.CREATE,
             variables=Queries.CREATE["variables"](key, content_type)
         )
-        return response['uploadURL']
+        content = Content.model_validate(response['content'])
+        return content, response['uploadURL']
 
     def upload_content(
         self,
