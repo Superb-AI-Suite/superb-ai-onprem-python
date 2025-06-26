@@ -39,7 +39,7 @@ class ContentService(BaseService):
             file = f.read()
         response = self.request_gql(
             query=Queries.CREATE,
-            variables=Queries.CREATE["variables"](key)
+            variables=Queries.CREATE["variables"](key, mimetypes.guess_type(file_path)[0])
         )
         upload_url = response['uploadURL']
         
@@ -73,7 +73,7 @@ class ContentService(BaseService):
         '''
         response = self.request_gql(
             query=Queries.CREATE,
-            variables=Queries.CREATE["variables"](key) if key else None
+            variables=Queries.CREATE["variables"](key, "application/json") if key else None
         )
         upload_url = response['uploadURL']
         self.request(
@@ -113,7 +113,7 @@ class ContentService(BaseService):
         # Request to get the upload URL
         response = self.request_gql(
             query=Queries.CREATE,
-            variables=Queries.CREATE["variables"](key)
+            variables=Queries.CREATE["variables"](key, content_type)
         )
         upload_url = response['uploadURL']
 
@@ -133,18 +133,18 @@ class ContentService(BaseService):
 
     def get_download_url(
         self,
-        id: str,
+        content_id: str,
     ) -> str:
         '''
         Gets the content from the server.
         Args:
-            id (str): The ID of the content to get.
+            content_id (str): The ID of the content to get.
         Returns:
             Content: The content object.
         '''
         
         response = self.request_gql(
             query=Queries.GET_DOWNLOAD_URL,
-            variables=Queries.GET_DOWNLOAD_URL["variables"](id)
+            variables=Queries.GET_DOWNLOAD_URL["variables"](content_id)
         )
         return response
