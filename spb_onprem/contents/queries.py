@@ -20,7 +20,7 @@ class Queries:
         if key is not Undefined:
             params["key"] = key
         if content_type is not Undefined:
-            params["contentType"] = content_type
+            params["content_type"] = content_type
         return params
 
     CREATE = {
