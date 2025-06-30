@@ -8,7 +8,16 @@ from spb_onprem.exceptions import BadParameterError
 
 class AnnotationFilter(CustomBaseModel):
     type: Optional[str] = None
-    key: Optional[str] = None
+    name: Optional[str] = None
+
+
+class AnnotationRangeFilter(CustomBaseModel):
+    annotation_type: Optional[str] = Field(None, alias="annotationType")
+    class_name: Optional[str] = Field(None, alias="className")
+    class_count_equals: Optional[int] = Field(None, alias="classCountEquals")
+    class_count_in: Optional[List[int]] = Field(None, alias="classCountIn")
+    class_count_max: Optional[int] = Field(None, alias="classCountMax")
+    class_count_min: Optional[int] = Field(None, alias="classCountMin")
 
 
 class DataFilterOptions(CustomBaseModel):
@@ -18,8 +27,10 @@ class DataFilterOptions(CustomBaseModel):
     key_contains: Optional[str] = Field(None, alias="keyContains")
     key_matches: Optional[str] = Field(None, alias="keyMatches")
     type_in: Optional[List[DataType]] = Field(None, alias="typeIn")
+    annotation_any: Optional[List[AnnotationFilter]] = Field(None, alias="annotationAny")
     annotation_in: Optional[List[AnnotationFilter]] = Field(None, alias="annotationIn")
     annotation_exists: Optional[bool] = Field(None, alias="annotationExists")
+    annotation_range: Optional[List[AnnotationRangeFilter]] = Field(None, alias="annotationRange")
     prediction_set_id_in: Optional[List[str]] = Field(None, alias="predictionSetIdIn")
     prediction_set_id_exists: Optional[bool] = Field(None, alias="predictionSetIdExists")
 
