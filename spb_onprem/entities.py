@@ -5,6 +5,7 @@ from .data.entities import (
     AnnotationVersion,
     Prediction,
     DataMeta,
+    DataSlice,
 )
 from .datasets.entities import Dataset
 from .slices.entities import Slice
@@ -13,6 +14,7 @@ from .data.enums import (
     SceneType,
     DataMetaTypes,
     DataMetaValue,
+    DataSliceStatus,
 )
 from .activities.entities import (
     Activity,
@@ -32,6 +34,7 @@ __all__ = [
     "AnnotationVersion",
     "Prediction",
     "DataMeta",
+    "DataSlice",
     "Dataset",
     "Slice",
     "Activity",
@@ -44,6 +47,7 @@ __all__ = [
     "SceneType",
     "DataMetaTypes",
     "DataMetaValue",
+    "DataSliceStatus",
     "ActivityStatus",
     "ActivitySchema",
     "SchemaType",

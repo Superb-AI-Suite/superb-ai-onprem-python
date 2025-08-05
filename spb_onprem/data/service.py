@@ -32,6 +32,7 @@ from .enums import (
     DataType,
     SceneType,
     DataMetaValue,
+    DataSliceStatus,
 )
 from .params import (
     DataListFilter,
@@ -98,103 +99,164 @@ class DataService(BaseService):
             Queries.GET["variables"](dataset_id=dataset_id, data_key=data_key)
         )
         return Data.model_validate(response)
-    
+
     def get_data_list(
         self,
         dataset_id: str,
         data_filter: Optional[DataListFilter] = None,
         cursor: Optional[str] = None,
-        length: Optional[int] = 10,
+        length: int = 10
     ):
-        """Get a list of data.
+        """Get data list of a dataset.
 
         Args:
             dataset_id (str): The dataset id.
-            filter (Optional[DataListFilter], optional): The filter for the data list. Defaults to None.
-            cursor (Optional[str], optional): The cursor for the data list. Defaults to None.
-            length (Optional[int], optional): The length of the data list. Defaults to 10.
-
-        Raises:
-            BadParameterError: The maximum length is 50.
+            data_filter (Optional[DataListFilter]): The filter to apply to the data.
+            cursor (Optional[str]): The cursor to use for pagination.
+            length (int): The length of the data to retrieve.
 
         Returns:
-            Tuple[List[Data], Optional[str], int]: The data list, the next cursor, and the total count.
+            tuple: A tuple containing the data, the next cursor, and the total count of data.
         """
         if length > 50:
-            raise BadParameterError("The maximum length is 50.")
-        
+            raise ValueError("Length must be less than or equal to 50.")
+
         response = self.request_gql(
             Queries.GET_LIST,
             Queries.GET_LIST["variables"](
                 dataset_id=dataset_id,
-                data_list_filter=data_filter,
+                data_filter=data_filter,
                 cursor=cursor,
                 length=length
             )
         )
-        data_list = [Data.model_validate(data) for data in response.get("data", [])]
+        data_list = response.get("data", [])
+        data = [Data.model_validate(data_dict) for data_dict in data_list]
         return (
-            data_list,
+            data,
             response.get("next", None),
-            response.get("totalCount", False)
+            response.get("totalCount", 0)
         )
 
     def get_data_id_list(
         self,
         dataset_id: str,
-        filter: Optional[DataListFilter] = None,
+        data_filter: Optional[DataListFilter] = None,
         cursor: Optional[str] = None,
-        length: Optional[int] = 50,
+        length: int = 10
     ):
-        """Get a list of data.
+        """Get data id list of a dataset.
 
         Args:
             dataset_id (str): The dataset id.
-            filter (Optional[DataListFilter], optional): The filter for the data list. Defaults to None.
-            cursor (Optional[str], optional): The cursor for the data list. Defaults to None.
-            length (Optional[int], optional): The length of the data list. Defaults to 50.
-
-        Raises:
-            BadParameterError: The maximum length is 500.
+            data_filter (Optional[DataListFilter]): The filter to apply to the data.
+            cursor (Optional[str]): The cursor to use for pagination.
+            length (int): The length of the data to retrieve.
 
         Returns:
-            Tuple[List[Data], Optional[str], int]: The data list, the next cursor, and the total count.
+            tuple: A tuple containing the data, the next cursor, and the total count of data.
         """
-    
-        if length > 500:
-            raise ValueError("The maximum length is 500.")
-        
+        if length > 50:
+            raise ValueError("Length must be less than or equal to 50.")
+
         response = self.request_gql(
             Queries.GET_ID_LIST,
             Queries.GET_ID_LIST["variables"](
                 dataset_id=dataset_id,
-                data_list_filter=filter,
+                data_filter=data_filter,
                 cursor=cursor,
-                length=length,
+                length=length
             )
         )
-        data_ids = response.get("data", [])
-        data_list = [Data.model_validate(data_id) for data_id in data_ids]
+        data_list = response.get("data", [])
+        data = [Data.model_validate(data_dict) for data_dict in data_list]
         return (
-            data_list,
+            data,
             response.get("next", None),
-            response.get("totalCount", False)
+            response.get("totalCount", 0)
         )
+
+    def create_image_data(
+        self,
+        dataset_id: str,
+        key: str,
+        image_content: Union[
+            BytesIO,
+            str,
+        ],
+        slices: Optional[List[str]] = None,
+        annotation: Optional[dict] = None,
+        predictions: Optional[List[dict]] = None,
+        meta: Optional[List[dict]] = None,
+        system_meta: Optional[List[dict]] = None,
+    ):
+        """Create an image data.
+
+        Args:
+            dataset_id (str): The dataset id.
+            key (str): The key of the data.
+            image_content (Union[BytesIO, str]): The image content. If str, it is considered as a file path.
+            slices (Optional[List[str]]): The slices to add the data to.
+            annotation (Optional[dict]): The annotation data.
+            predictions (Optional[List[dict]]): The predictions data.
+            meta (Optional[List[dict]]): The meta data.
+            system_meta (Optional[List[dict]]): The system meta data.
+
+        Returns:
+            Data: The created data.
+        """
+        content_service = ContentService()
+        if isinstance(image_content, str):
+            with open(image_content, "rb") as f:
+                content = content_service.upload_content(
+                    f.read(),
+                    key,
+                    f.name.split(".")[-1]
+                )
+        else:
+            content = content_service.upload_content(
+                image_content.read(),
+                key,
+                "jpg"
+            )
+
+        response = self.request_gql(
+            Queries.CREATE,
+            Queries.CREATE["variables"](
+                dataset_id=dataset_id,
+                key=key,
+                type=DataType.SUPERB_IMAGE,
+                slices=slices,
+                scene=[{
+                    "id": f"{key}_scene_0",
+                    "type": SceneType.IMAGE,
+                    "content": content.model_dump(by_alias=True),
+                    "meta": {}
+                }],
+                thumbnail=content.model_dump(by_alias=True),
+                annotation=annotation,
+                predictions=predictions,
+                meta=meta,
+                system_meta=system_meta,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
 
     def update_data(
         self,
         dataset_id: str,
         data_id: str,
         key: Union[
-            Optional[str],
-            UndefinedType
+            str,
+            UndefinedType,
         ] = Undefined,
         meta: Union[
-            Optional[List[DataMeta]],
+            List[dict],
             UndefinedType,
         ] = Undefined,
         system_meta: Union[
-            Optional[List[DataMeta]],
+            List[dict],
             UndefinedType,
         ] = Undefined,
     ):
@@ -203,20 +265,15 @@ class DataService(BaseService):
         Args:
             dataset_id (str): The dataset id.
             data_id (str): The data id.
-            key (Union[Optional[str], UndefinedType], optional): The key of the data. Defaults to Undefined.
-            meta (Union[Optional[List[DataMeta]], UndefinedType], optional): The meta of the data. Defaults to Undefined.
-            system_meta (Union[Optional[List[DataMeta]], UndefinedType], optional): The system meta of the data. Defaults to Undefined.
+            key (Union[str, UndefinedType], optional): The key of the data. Defaults to Undefined.
+            meta (Union[List[dict], UndefinedType], optional): The meta data. Defaults to Undefined.
+            system_meta (Union[List[dict], UndefinedType], optional): The system meta data. Defaults to Undefined.
 
         Returns:
             Data: The updated data.
         """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        if data_id is None:
-            raise BadParameterError("data_id is required.")
-
         response = self.request_gql(
-            query=Queries.UPDATE,
+            Queries.UPDATE,
             variables=Queries.UPDATE["variables"](
                 dataset_id=dataset_id,
                 data_id=data_id,
@@ -286,17 +343,15 @@ class DataService(BaseService):
             data_id (str): The data id.
 
         Returns:
-            Boolean: True if the data is deleted, False otherwise.
+            Data: The deleted data.
         """
         response = self.request_gql(
             Queries.DELETE,
-            Queries.DELETE["variables"](
-                dataset_id=dataset_id,
-                data_id=data_id
-            )
+            Queries.DELETE["variables"](dataset_id=dataset_id, data_id=data_id)
         )
-        return response
-    
+        data = Data.model_validate(response)
+        return data
+
     def insert_prediction(
         self,
         dataset_id: str,
@@ -318,12 +373,12 @@ class DataService(BaseService):
             Queries.INSERT_PREDICTION["variables"](
                 dataset_id=dataset_id,
                 data_id=data_id,
-                prediction=prediction
+                prediction=prediction,
             )
         )
         data = Data.model_validate(response)
         return data
-
+    
     def delete_prediction(
         self,
         dataset_id: str,
@@ -335,8 +390,8 @@ class DataService(BaseService):
         Args:
             dataset_id (str): The dataset id.
             data_id (str): The data id.
-            set_id (str): The prediction Set id to delete.
-        
+            set_id (str): The set id.
+
         Returns:
             Data: The updated data.
         """
@@ -442,100 +497,310 @@ class DataService(BaseService):
         data = Data.model_validate(response)
         return data
 
-    def create_data(
-        self,
-        data: Data,
-    )-> Data:
-        """Create a data.
-        Args:
-            data (Data): The data to create.
-
-        Returns:
-            Data: The created data object.
-        """
-        response = self.request_gql(
-            Queries.CREATE,
-            Queries.CREATE["variables"](data)
-        )
-        return Data.model_validate(response)
-
-    def create_image_data(
+    def update_slice_annotation(
         self,
         dataset_id: str,
-        key: str,
-        image_content: BytesIO,
-        thumbnail_content: Optional[BytesIO] = None,
-        slice_ids: Optional[List[str]] = None,
-        annotation: Optional[dict] = None,
-        meta: Optional[dict[str, DataMetaValue]] = None,
+        data_id: str,
+        slice_id: str,
+        meta: dict,
     ):
-        """Create image data in the dataset.
-        Image processing should be done by the client before calling this method.
+        """Update a slice annotation.
 
         Args:
-            dataset_id (str): The ID of the dataset to upload the image data to.
-            key (str): The key for the image data.
-            image_content (BytesIO): The pre-processed image data to upload.
-            thumbnail_content (Optional[BytesIO]): Pre-processed thumbnail data. If not provided, no thumbnail will be created.
-            slice_ids (Optional[List[str]]): List of slice IDs associated with the image data.
-            annotation (Optional[dict]): Annotations associated with the image data.
-            meta (Optional[dict[str, DataMetaValue]]): Metadata of the data. { "key1": val1, "key2": val2, ... }
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            meta (dict): The meta of the slice annotation.
 
         Returns:
-            Data: The created data object.
+            Data: The updated data.
         """
-        content_service = ContentService()
-        data = Data(
-            dataset_id=dataset_id,
-            key=key,
-            type=DataType.SUPERB_IMAGE,
-        )
-        data.slice_ids = slice_ids
-
-        # Upload main image content
-        image_content_obj = content_service.upload_content_with_data(
-            image_content,
-            content_type="image/jpeg",
-            key=f"{key}_image",
-        )
-        scene = Scene(
-            type=SceneType.IMAGE,
-            content=image_content_obj,
-            meta=None,
-        )
-        data.scene = [scene]
-
-        # Upload thumbnail if provided
-        if thumbnail_content is not None:
-            thumbnail_content_obj = content_service.upload_content_with_data(
-                thumbnail_content,
-                content_type="image/jpeg",
-                key=f"{key}_thumbnail",
-            )
-            data.thumbnail = thumbnail_content_obj
-
-        # Handle annotation if provided
-        if annotation is not None:
-            annotation_content = content_service.upload_json_content(
-                annotation,
-                key=f"{key}_annotation",
-            )
-            annotation_version = AnnotationVersion(
-                content=annotation_content,
-                meta=None
-            )
-            annotation_obj = Annotation(
-                versions=[annotation_version],
-                meta=None
-            )
-            data.annotation = annotation_obj
-
-        # Handle metadata if provided
-        if meta is not None:
-            data.meta = DataMeta.from_dict(meta)
-
         response = self.request_gql(
-            Queries.CREATE,
-            Queries.CREATE["variables"](data)
+            Queries.UPDATE_SLICE_ANNOTATION,
+            Queries.UPDATE_SLICE_ANNOTATION["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                meta=meta,
+            )
         )
-        return Data.model_validate(response)
+        data = Data.model_validate(response)
+        return data
+
+    def insert_slice_annotation_version(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        version: AnnotationVersion,
+    ):
+        """Insert a slice annotation version.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            version (AnnotationVersion): The annotation version.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        if version is None:
+            raise BadParameterError("version is required.")
+        
+        response = self.request_gql(
+            Queries.INSERT_SLICE_ANNOTATION_VERSION,
+            Queries.INSERT_SLICE_ANNOTATION_VERSION["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                version=version,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def update_slice_annotation_version(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        id: str,
+        channel: Union[str, UndefinedType, None] = Undefined,
+        version: Union[str, UndefinedType, None] = Undefined,
+        meta: Union[dict, UndefinedType, None] = Undefined,
+    ):
+        """Update a slice annotation version.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            id (str): The annotation version id.
+            channel (Union[str, UndefinedType, None], optional): The channel. Defaults to Undefined.
+            version (Union[str, UndefinedType, None], optional): The version. Defaults to Undefined.
+            meta (Union[dict, UndefinedType, None], optional): The meta. Defaults to Undefined.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        if id is None:
+            raise BadParameterError("id is required.")
+        
+        response = self.request_gql(
+            Queries.UPDATE_SLICE_ANNOTATION_VERSION,
+            Queries.UPDATE_SLICE_ANNOTATION_VERSION["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                id=id,
+                channel=channel,
+                version=version,
+                meta=meta,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def delete_slice_annotation_version(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        id: str,
+    ):
+        """Delete a slice annotation version.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            id (str): The annotation version id.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        if id is None:
+            raise BadParameterError("id is required.")
+        
+        response = self.request_gql(
+            Queries.DELETE_SLICE_ANNOTATION_VERSION,
+            Queries.DELETE_SLICE_ANNOTATION_VERSION["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                id=id,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def change_data_status(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        status: DataSliceStatus,
+    ):
+        """Change the status of a data slice.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            status (DataSliceStatus): The new status.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        if status is None:
+            raise BadParameterError("status is required.")
+        
+        response = self.request_gql(
+            Queries.CHANGE_DATA_STATUS,
+            Queries.CHANGE_DATA_STATUS["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                status=status,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def change_data_labeler(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        labeler: Optional[str],
+    ):
+        """Change the labeler of a data slice.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            labeler (Optional[str]): The labeler id. None to unassign.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        
+        response = self.request_gql(
+            Queries.CHANGE_DATA_LABELER,
+            Queries.CHANGE_DATA_LABELER["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                labeler=labeler,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def change_data_reviewer(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        reviewer: Optional[str],
+    ):
+        """Change the reviewer of a data slice.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            reviewer (Optional[str]): The reviewer id. None to unassign.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        
+        response = self.request_gql(
+            Queries.CHANGE_DATA_REVIEWER,
+            Queries.CHANGE_DATA_REVIEWER["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                reviewer=reviewer,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def update_data_slice(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        meta: dict,
+    ):
+        """Update the metadata of a data slice.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            meta (dict): The meta of the data slice.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        if meta is None:
+            raise BadParameterError("meta is required.")
+        
+        response = self.request_gql(
+            Queries.UPDATE_DATA_SLICE,
+            Queries.UPDATE_DATA_SLICE["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                slice_id=slice_id,
+                meta=meta,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
