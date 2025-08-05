@@ -3,6 +3,7 @@ from .data_meta import DataMeta
 from .data import Data
 from .prediction import Prediction
 from .scene import Scene
+from .data_slice import DataSlice
 
 
 __all__ = (
@@ -12,4 +13,5 @@ __all__ = (
     "AnnotationVersion",
     "Prediction",
     "DataMeta",
+    "DataSlice",
 )

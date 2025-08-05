@@ -12,6 +12,14 @@ from .params import (
     update_annotation_params,
     insert_annotation_version_params,
     delete_annotation_version_params,
+    update_slice_annotation_params,
+    insert_slice_annotation_version_params,
+    update_slice_annotation_version_params,
+    delete_slice_annotation_version_params,
+    change_data_status_params,
+    change_data_labeler_params,
+    change_data_reviewer_params,
+    update_data_slice_params,
 )
 
 
@@ -41,6 +49,8 @@ class Schemas:
         annotation {
             versions {
                 id
+                channel
+                version
                 content {
                     id
                 }
@@ -63,6 +73,27 @@ class Schemas:
             key
             type
             value
+        }
+        slices {
+            id
+            status
+            labeler
+            reviewer
+            tags
+            statusChangedAt
+            annotation {
+                versions {
+                    id
+                    channel
+                    version
+                    content {
+                        id
+                    }
+                    meta
+                }
+                meta
+            }
+            meta
         }
         createdAt
         updatedAt
@@ -117,15 +148,15 @@ class Queries():
         "name": "updateData",
         "query": f'''
             mutation updateData(
-                $datasetId: ID!,
-                $id: ID!,
+                $dataset_id: ID!,
+                $data_id: ID!,
                 $key: String,
                 $meta: [DataMetaInput!],
                 $systemMeta: [DataMetaInput!]
             ) {{
             updateData(
-                datasetId: $datasetId,
-                id: $id,
+                datasetId: $dataset_id,
+                id: $data_id,
                 key: $key,
                 meta: $meta,
                 systemMeta: $systemMeta
@@ -196,10 +227,12 @@ class Queries():
                     length: $length
                 ) {{
                     {Schemas.DATA_PAGE}
+                    next
+                    totalCount
                 }}
             }}
         ''',
-        "variables": get_data_list_params
+        "variables": get_data_list_params,
     }
 
     REMOVE_FROM_SLICE = {
@@ -207,13 +240,13 @@ class Queries():
         "query": f'''
             mutation (
                 $dataset_id: ID!,
-                $slice_id: ID!,
                 $data_id: ID!,
+                $slice_id: ID!,
             ) {{
                 removeDataFromSlice(
                     datasetId: $dataset_id,
-                    sliceId: $slice_id,
                     id: $data_id,
+                    sliceId: $slice_id,
                 ) {{
                     {Schemas.DATA}
                 }}
@@ -227,34 +260,35 @@ class Queries():
         "query": f'''
             mutation (
                 $dataset_id: ID!,
-                $slice_id: ID!,
                 $data_id: ID!,
+                $slice_id: ID!,
             ) {{
                 addDataToSlice(
                     datasetId: $dataset_id,
-                    sliceId: $slice_id,
                     id: $data_id,
+                    sliceId: $slice_id,
                 ) {{
                     {Schemas.DATA}
                 }}
             }}
-            )
         ''',
         "variables": insert_data_to_slice_params,
     }
 
     DELETE = {
         "name": "deleteData",
-        "query": '''
+        "query": f'''
             mutation (
-                $id: ID!,
-                $dataset_id: ID!
-            ) {
+                $dataset_id: ID!,
+                $data_id: ID!,
+            ) {{
                 deleteData(
-                    id: $id,
-                    datasetId: $dataset_id
-                )
-            }
+                    datasetId: $dataset_id,
+                    id: $data_id,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
         ''',
         "variables": delete_data_params,
     }
@@ -357,4 +391,186 @@ class Queries():
             }}
         ''',
         "variables": delete_annotation_version_params,
+    }
+
+    UPDATE_SLICE_ANNOTATION = {
+        "name": "updateSliceAnnotation",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $meta: JSONObject!,
+            ) {{
+                updateSliceAnnotation(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    meta: $meta,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_slice_annotation_params,
+    }
+
+    INSERT_SLICE_ANNOTATION_VERSION = {
+        "name": "insertSliceAnnotationVersion",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $version: AnnotationVersionInput!,
+            ) {{
+                insertSliceAnnotationVersion(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    version: $version,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": insert_slice_annotation_version_params,
+    }
+
+    UPDATE_SLICE_ANNOTATION_VERSION = {
+        "name": "updateSliceAnnotationVersion",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $id: ID!,
+                $channel: String,
+                $version: String,
+                $meta: JSONObject,
+            ) {{
+                updateSliceAnnotationVersion(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    id: $id,
+                    channel: $channel,
+                    version: $version,
+                    meta: $meta,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_slice_annotation_version_params,
+    }
+
+    DELETE_SLICE_ANNOTATION_VERSION = {
+        "name": "deleteSliceAnnotationVersion",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $id: ID!,
+            ) {{
+                deleteSliceAnnotationVersion(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    id: $id,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": delete_slice_annotation_version_params,
+    }
+
+    CHANGE_DATA_STATUS = {
+        "name": "changeDataStatus",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $status: DataSliceStatus!,
+            ) {{
+                changeDataStatus(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    status: $status,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": change_data_status_params,
+    }
+
+    CHANGE_DATA_LABELER = {
+        "name": "changeDataLabeler",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $labeler: String,
+            ) {{
+                changeDataLabeler(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    labeler: $labeler,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": change_data_labeler_params,
+    }
+
+    CHANGE_DATA_REVIEWER = {
+        "name": "changeDataReviewer",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $reviewer: String,
+            ) {{
+                changeDataReviewer(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    reviewer: $reviewer,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": change_data_reviewer_params,
+    }
+
+    UPDATE_DATA_SLICE = {
+        "name": "updateDataSlice",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $slice_id: ID!,
+                $meta: JSONObject!,
+            ) {{
+                updateDataSlice(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    sliceId: $slice_id,
+                    meta: $meta,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_data_slice_params,
     }

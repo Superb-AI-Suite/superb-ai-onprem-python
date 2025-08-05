@@ -5,6 +5,7 @@ from .scene import Scene
 from .annotation import Annotation
 from .prediction import Prediction
 from .data_meta import DataMeta
+from .data_slice import DataSlice
 from spb_onprem.contents.entities import BaseContent
 
 class Data(CustomBaseModel):
@@ -26,3 +27,4 @@ class Data(CustomBaseModel):
     created_by: Optional[str] = Field(None, alias="createdBy")
     updated_at: Optional[str] = Field(None, alias="updatedAt")
     updated_by: Optional[str] = Field(None, alias="updatedBy")
+    slices: Optional[List[DataSlice]] = None
