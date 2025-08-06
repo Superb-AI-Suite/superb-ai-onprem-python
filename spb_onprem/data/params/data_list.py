@@ -42,7 +42,7 @@ class DataListFilter(CustomBaseModel):
 
 def get_data_id_list_params(
     dataset_id: str,
-    data_list_filter: Optional[DataListFilter] = None,
+    data_filter: Optional[DataListFilter] = None,
     cursor: Optional[str] = None,
     length: Optional[int] = 50,
 ):
@@ -50,7 +50,7 @@ def get_data_id_list_params(
 
     Args:
         dataset_id (str): The dataset id.
-        data_list_filter (Optional[DataListFilter], optional): The filter for the data list. Defaults to None.
+        data_filter (Optional[DataListFilter], optional): The filter for the data list. Defaults to None.
         cursor (Optional[str], optional): The cursor for the data list. Defaults to None.
         length (Optional[int], optional): The length of the data list. Defaults to 50.
 
@@ -65,9 +65,9 @@ def get_data_id_list_params(
 
     return {
         "dataset_id": dataset_id,
-        "filter": data_list_filter.model_dump(
+        "filter": data_filter.model_dump(
             by_alias=True, exclude_unset=True
-        ) if data_list_filter else None,
+        ) if data_filter else None,
         "cursor": cursor,
         "length": length
     }
@@ -75,7 +75,7 @@ def get_data_id_list_params(
 
 def get_data_list_params(
     dataset_id: str,
-    data_list_filter: Optional[DataListFilter] = None,
+    data_filter: Optional[DataListFilter] = None,
     cursor: Optional[str] = None,
     length: Optional[int] = 10,
 ):
@@ -83,7 +83,7 @@ def get_data_list_params(
 
     Args:
         dataset_id (str): The dataset id.
-        data_list_filter (Optional[DataListFilter], optional): The filter for the data list. Defaults to None.
+        data_filter (Optional[DataListFilter], optional): The filter for the data list. Defaults to None.
         cursor (Optional[str], optional): The cursor for the data list. Defaults to None.
         length (Optional[int], optional): The length of the data list. Defaults to 10.
 
@@ -99,9 +99,9 @@ def get_data_list_params(
 
     return {
         "dataset_id": dataset_id,
-        "filter": data_list_filter.model_dump(
+        "filter": data_filter.model_dump(
             by_alias=True, exclude_unset=True
-        ) if data_list_filter else None,
+        ) if data_filter else None,
         "cursor": cursor,
         "length": length
     }
