@@ -494,7 +494,7 @@ class Queries():
                 $dataset_id: ID!,
                 $data_id: ID!,
                 $slice_id: ID!,
-                $status: DataStatus!,
+                $status: DataSliceStatus!,
             ) {{
                 changeDataStatus(
                     datasetId: $dataset_id,
