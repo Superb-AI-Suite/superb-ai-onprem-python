@@ -1,17 +1,15 @@
-from .create import (
+from .create_data import (
     create_params
 )
-from .update import (
+from .update_data import (
     update_params
 )
-from .get import (
+from .data import (
     get_params
 )
-from .get_data_id_list import (
-    get_data_id_list_params
-)
-from .get_data_list import (
-    get_data_list_params
+from .data_list import (
+    get_data_id_list_params,
+    get_data_list_params,
 )
 from .remove_data_from_slice import (
     remove_data_from_slice_params
