@@ -1,4 +1,4 @@
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Tuple
 
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import (
@@ -82,7 +82,7 @@ class ExportService(BaseService):
         export_filter: Optional[ExportFilter] = None,
         cursor: Optional[str] = None,
         length: int = 10
-    ) -> tuple[List[Export], Optional[str], int]:
+    ) -> Tuple[List[Export], Optional[str], int]:
         """Get exports.
         
         Args:
@@ -92,7 +92,7 @@ class ExportService(BaseService):
             length (int): The number of exports to get.
         
         Returns:
-            tuple[List[Export], Optional[str], int]: A tuple containing the exports, the next cursor, and the total count of exports.
+            Tuple[List[Export], Optional[str], int]: A tuple containing the exports, the next cursor, and the total count of exports.
         """
         response = self.request_gql(
             Queries.GET_EXPORTS,

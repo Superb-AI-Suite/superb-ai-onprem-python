@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Dict, List
 from datetime import datetime
 from spb_onprem.data.enums import DataMetaTypes, DataMetaValue
 from spb_onprem.base_model import CustomBaseModel
@@ -14,7 +14,7 @@ class DataMeta(CustomBaseModel):
     value: Optional[DataMetaValue] = None
 
     @classmethod
-    def from_dict(cls, meta: dict[str, DataMetaValue]) -> list["DataMeta"]:
+    def from_dict(cls, meta: Dict[str, DataMetaValue]) -> List["DataMeta"]:
         return [
             cls(
                 key=key,

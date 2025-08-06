@@ -14,7 +14,7 @@ from .data.enums import (
     SceneType,
     DataMetaTypes,
     DataMetaValue,
-    DataSliceStatus,
+    DataStatus,
 )
 from .activities.entities import (
     Activity,
@@ -47,7 +47,7 @@ __all__ = [
     "SceneType",
     "DataMetaTypes",
     "DataMetaValue",
-    "DataSliceStatus",
+    "DataStatus",
     "ActivityStatus",
     "ActivitySchema",
     "SchemaType",

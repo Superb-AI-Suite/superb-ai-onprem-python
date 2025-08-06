@@ -1,4 +1,4 @@
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Tuple
 
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import (
@@ -74,7 +74,7 @@ class ActivityService(BaseService):
         activity_filter: Optional[ActivitiesFilter] = None,
         cursor: Optional[str] = None,
         length: int = 10
-    ) -> tuple[List[Activity], Optional[str], int]:
+    ) -> Tuple[List[Activity], Optional[str], int]:
         """Get activities.
         
         Args:
@@ -84,7 +84,7 @@ class ActivityService(BaseService):
             length (int): The number of activities to get.
         
         Returns:
-            tuple[List[Activity], Optional[str], int]: A tuple containing the activities, the next cursor, and the total count of activities.
+            Tuple[List[Activity], Optional[str], int]: A tuple containing the activities, the next cursor, and the total count of activities.
         """
         response = self.request_gql(
             Queries.GET_ACTIVITIES,
