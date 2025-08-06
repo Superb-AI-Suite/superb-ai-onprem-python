@@ -32,7 +32,7 @@ from .enums import (
     DataType,
     SceneType,
     DataMetaValue,
-    DataSliceStatus,
+    DataStatus,
 )
 from .params import (
     DataListFilter,
@@ -658,7 +658,7 @@ class DataService(BaseService):
         dataset_id: str,
         data_id: str,
         slice_id: str,
-        status: DataSliceStatus,
+        status: DataStatus,
     ):
         """Change the status of a data slice.
 
@@ -666,7 +666,7 @@ class DataService(BaseService):
             dataset_id (str): The dataset id.
             data_id (str): The data id.
             slice_id (str): The slice id.
-            status (DataSliceStatus): The new status.
+            status (DataStatus): The new status.
 
         Returns:
             Data: The updated data.

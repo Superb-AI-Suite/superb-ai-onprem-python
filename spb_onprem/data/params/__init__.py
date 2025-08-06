@@ -10,6 +10,10 @@ from .data import (
 from .data_list import (
     get_data_id_list_params,
     get_data_list_params,
+    AnnotationFilter,
+    AnnotationRangeFilter,
+    DataFilterOptions,
+    DataListFilter,
 )
 from .remove_data_from_slice import (
     remove_data_from_slice_params
@@ -66,6 +70,10 @@ __all__ = [
     "get_params",
     "get_data_id_list_params",
     "get_data_list_params",
+    "AnnotationFilter",
+    "AnnotationRangeFilter",
+    "DataFilterOptions",
+    "DataListFilter",
     "remove_data_from_slice_params",
     "insert_data_to_slice_params",
     "delete_data_params",
