@@ -6,6 +6,7 @@ from .data.entities import (
     Prediction,
     DataMeta,
     DataSlice,
+    Frame,
 )
 from .datasets.entities import Dataset
 from .slices.entities import Slice
@@ -41,6 +42,7 @@ __all__ = [
     "ActivityHistory",
     "Export",
     "Content",
+    "Frame",
 
     # Enums
     "DataType",

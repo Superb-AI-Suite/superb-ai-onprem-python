@@ -4,9 +4,11 @@ from .data import Data
 from .prediction import Prediction
 from .scene import Scene
 from .data_slice import DataSlice
+from .frame import Frame
 
 
 __all__ = (
+    "Frame",
     "Data",
     "Scene",
     "Annotation",
