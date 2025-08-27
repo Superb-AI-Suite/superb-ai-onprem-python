@@ -23,9 +23,9 @@ def insert_annotation_version_params(
         "meta": version.meta
     }
     
-    # channel과 version 필드가 있으면 추가
-    if version.channel is not None:
-        version_data["channel"] = version.channel
+    # channels과 version 필드가 있으면 추가
+    if version.channels is not None:
+        version_data["channels"] = version.channels
     if version.version is not None:
         version_data["version"] = version.version
 

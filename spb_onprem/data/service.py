@@ -572,7 +572,7 @@ class DataService(BaseService):
         data_id: str,
         slice_id: str,
         id: str,
-        channel: Union[str, UndefinedType, None] = Undefined,
+        channels: Union[List[str], UndefinedType, None] = Undefined,
         version: Union[str, UndefinedType, None] = Undefined,
         meta: Union[dict, UndefinedType, None] = Undefined,
     ):
@@ -583,7 +583,7 @@ class DataService(BaseService):
             data_id (str): The data id.
             slice_id (str): The slice id.
             id (str): The annotation version id.
-            channel (Union[str, UndefinedType, None], optional): The channel. Defaults to Undefined.
+            channels (Union[List[str], UndefinedType, None], optional): The channels. Defaults to Undefined.
             version (Union[str, UndefinedType, None], optional): The version. Defaults to Undefined.
             meta (Union[dict, UndefinedType, None], optional): The meta. Defaults to Undefined.
 
@@ -606,7 +606,7 @@ class DataService(BaseService):
                 data_id=data_id,
                 slice_id=slice_id,
                 id=id,
-                channel=channel,
+                channels=channels,
                 version=version,
                 meta=meta,
             )
@@ -800,6 +800,37 @@ class DataService(BaseService):
                 data_id=data_id,
                 slice_id=slice_id,
                 meta=meta,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def update_frames(
+        self,
+        dataset_id: str,
+        data_id: str,
+        frames: Union[List[Frame], UndefinedType] = Undefined,  
+    ):
+        """Update frames of selected data.
+        Args:
+            dataset_id (str): dataset id which the data belongs to
+            data_id (str): data id to be updated
+            frames (list[Frame]): list of frames to be updated  
+            
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+
+        response = self.request_gql(
+            Queries.UPDATE_FRAMES,
+            Queries.UPDATE_FRAMES["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                frames=frames,
             )
         )
         data = Data.model_validate(response)

@@ -27,6 +27,7 @@ from .entities import (
     ActivityHistory,
     Export,
     Content,
+    Frame,
 
     # Enums
     DataType,
@@ -91,6 +92,7 @@ __all__ = (
     "ActivityHistory",
     "Export",
     "Content",
+    "Frame",
     
     # Enums
     "DataType",

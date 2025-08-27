@@ -8,7 +8,7 @@ def update_slice_annotation_version_params(
     data_id: str,
     slice_id: str,
     id: str,
-    channel: Union[str, UndefinedType, None] = Undefined,
+    channels: Union[List[str], UndefinedType, None] = Undefined,
     version: Union[str, UndefinedType, None] = Undefined,
     meta: Union[dict, UndefinedType, None] = Undefined,
 ):
@@ -19,7 +19,7 @@ def update_slice_annotation_version_params(
         data_id (str): The ID of the data.
         slice_id (str): The slice ID.
         id (str): The annotation version ID.
-        channel (str, optional): The channel of the annotation version.
+        channels (list[str], optional): The channels of the annotation version.
         version (str, optional): The version string of the annotation version.
         meta (dict, optional): The meta of the annotation version.
     """
@@ -30,8 +30,8 @@ def update_slice_annotation_version_params(
         "id": id,
     }
 
-    if channel is not Undefined:
-        variables["channel"] = channel
+    if channels is not Undefined:
+        variables["channels"] = channels
     if version is not Undefined:
         variables["version"] = version
     if meta is not Undefined:
