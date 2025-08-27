@@ -27,6 +27,7 @@ from .entities import (
     Annotation,
     DataMeta,
     Prediction,
+    Frame,
 )
 from .enums import (
     DataType,
