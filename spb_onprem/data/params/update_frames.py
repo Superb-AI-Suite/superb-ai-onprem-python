@@ -29,11 +29,12 @@ def update_frames_params(
                 "index": frame.index,
                 "capturedAt": frame.captured_at,
                 "meta": json.dumps(frame.meta) if frame.meta else None,
-                "geoLocation": {
+            }
+            if frame.geo_location is not None:
+                frame_data["geoLocation"] = {
                     "lat": frame.geo_location.lat,
                     "lon": frame.geo_location.lon
                 }
-            }
             result["frames"].append(frame_data)
 
     return result

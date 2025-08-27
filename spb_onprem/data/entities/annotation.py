@@ -11,7 +11,7 @@ class AnnotationVersion(CustomBaseModel):
     This has the content of the data annotation.
     """
     id: Optional[str] = None
-    channels: Optional[str] = None
+    channels: Optional[List[str]] = None
     version: Optional[str] = None
     content: Optional[BaseContent] = None
     meta: Optional[dict] = None
