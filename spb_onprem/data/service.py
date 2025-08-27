@@ -809,7 +809,7 @@ class DataService(BaseService):
         self,
         dataset_id: str,
         data_id: str,
-        frames: Union[List[Frame], UndefinedType] = Undefined,  
+        frames: Union[List[Frame], UndefinedType, None] = Undefined,  
     ):
         """Update frames of selected data.
         Args:

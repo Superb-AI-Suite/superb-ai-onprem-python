@@ -7,7 +7,7 @@ from spb_onprem.base_types import UndefinedType, Undefined
 def update_frames_params(
     dataset_id: str,
     data_id: str,
-    frames: Union[List[Frame], UndefinedType] = Undefined,  
+    frames: Union[List[Frame], UndefinedType, None] = Undefined,  
 ):
     """Update frames of selected data.
     Args:
