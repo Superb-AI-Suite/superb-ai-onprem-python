@@ -6,6 +6,7 @@ from .annotation import Annotation
 from .prediction import Prediction
 from .data_meta import DataMeta
 from .data_slice import DataSlice
+from .frame import Frame
 from spb_onprem.contents.entities import BaseContent
 
 class Data(CustomBaseModel):
@@ -18,6 +19,7 @@ class Data(CustomBaseModel):
     key: Optional[str] = None
     type: Optional[DataType] = None
     scene: Optional[List[Scene]] = None
+    frames: Optional[List[Frame]] = None
     thumbnail: Optional[BaseContent] = None
     annotation: Optional[Annotation] = None
     predictions: Optional[List[Prediction]] = None

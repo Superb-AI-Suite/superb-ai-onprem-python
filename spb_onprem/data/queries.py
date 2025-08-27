@@ -20,6 +20,7 @@ from .params import (
     change_data_labeler_params,
     change_data_reviewer_params,
     update_data_slice_params,
+    update_frames_params,
 )
 
 
@@ -46,10 +47,21 @@ class Schemas:
             }
             meta
         }
+        frames {
+            id
+            index
+            capturedAt
+            geoLocation {
+                lat
+                lon
+            }
+            meta
+        }
         annotation {
+            meta
             versions {
                 id
-                channel
+                channels
                 version
                 content {
                     id
@@ -57,19 +69,7 @@ class Schemas:
                 meta
             }
         }
-        predictions {
-            setId
-            content {
-                id
-            }
-            meta
-        }
         meta {
-            key
-            type
-            value
-        }
-        systemMeta {
             key
             type
             value
@@ -84,7 +84,7 @@ class Schemas:
             annotation {
                 versions {
                     id
-                    channel
+                    channels
                     version
                     content {
                         id
@@ -573,4 +573,24 @@ class Queries():
             }}
         ''',
         "variables": update_data_slice_params,
+    }
+    
+    UPDATE_FRAMES = {
+        "name": "updateFrames",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $frames: [DataFrameInput!],
+            ) {{
+                updateFrames(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    frames: $frames,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_frames_params,
     }
