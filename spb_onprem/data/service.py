@@ -286,7 +286,7 @@ class DataService(BaseService):
         data = Data.model_validate(response)
         return data
 
-    def remove_data_feom_slice(
+    def remove_data_from_slice(
         self,
         dataset_id: str,
         data_id: str,
