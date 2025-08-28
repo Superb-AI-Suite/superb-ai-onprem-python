@@ -171,3 +171,26 @@ class SliceService(BaseService):
         )
         slice_dict = response.get("updateSlice", {})
         return Slice.model_validate(slice_dict)
+
+    def delete_slice(
+        self,
+        dataset_id: str,
+        slice_id: str,
+    ) -> bool:
+        """Delete a slice.
+        
+        Args:
+            dataset_id (str): The ID of the dataset the slice belongs to.
+            slice_id (str): The ID of the slice to delete.
+        
+        Returns:
+            bool: True if the slice was deleted, False otherwise.
+        """
+        response = self.request_gql(
+            Queries.DELETE_SLICE,
+            Queries.DELETE_SLICE["variables"](
+                dataset_id=dataset_id,
+                slice_id=slice_id,
+            )
+        )
+        return response

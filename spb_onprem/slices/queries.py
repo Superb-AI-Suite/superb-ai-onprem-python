@@ -3,6 +3,7 @@ from spb_onprem.slices.params import (
     slice_params,
     create_slice_params,
     update_slice_params,
+    delete_slice_params,
 )
 
 
@@ -118,4 +119,17 @@ class Queries:
             }}
         ''',
         "variables": update_slice_params,
+    }
+
+    DELETE_SLICE = {
+        "name": "deleteSlice",
+        "query": '''
+            mutation deleteSlice(
+                $dataset_id: String!,
+                $id: ID!
+            ) {
+                deleteSlice(datasetId: $dataset_id, id: $id)
+            }
+        ''',
+        "variables": delete_slice_params,
     }
