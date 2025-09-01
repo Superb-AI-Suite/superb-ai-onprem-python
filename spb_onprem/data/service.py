@@ -208,17 +208,15 @@ class DataService(BaseService):
         """
         content_service = ContentService()
         if isinstance(image_content, str):
-            with open(image_content, "rb") as f:
-                content = content_service.upload_content(
-                    f.read(),
-                    key,
-                    f.name.split(".")[-1]
-                )
-        else:
             content = content_service.upload_content(
-                image_content.read(),
+                image_content,
                 key,
-                "jpg"
+            )    
+        else:
+            content = content_service.upload_content_with_data(
+                image_content,
+                "image/jpeg",
+                key,
             )
 
         response = self.request_gql(
