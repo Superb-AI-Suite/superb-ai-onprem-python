@@ -15,6 +15,9 @@ from .data_list import (
     DataFilterOptions,
     DataListFilter,
 )
+from .get_data_detail import (
+    get_data_detail_params,
+)
 from .remove_data_from_slice import (
     remove_data_from_slice_params
 )
@@ -73,6 +76,7 @@ __all__ = [
     "get_params",
     "get_data_id_list_params",
     "get_data_list_params",
+    "get_data_detail_params",
     "AnnotationFilter",
     "AnnotationRangeFilter",
     "DataFilterOptions",

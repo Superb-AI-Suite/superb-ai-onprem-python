@@ -1,6 +1,7 @@
 from .params import (
     create_variables,
     get_download_url_params,
+    delete_content_params,
 )
 
 class Queries:
@@ -32,4 +33,14 @@ class Queries:
             }
         ''',
         "variables": get_download_url_params
+    }
+    
+    DELETE = {
+        "name": "deleteContent",
+        "query": '''
+            mutation DeleteContent($id: String!) {
+                deleteContent(id: $id)
+            }
+        ''',
+        "variables": delete_content_params
     }

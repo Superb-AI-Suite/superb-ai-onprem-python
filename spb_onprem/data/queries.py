@@ -4,6 +4,7 @@ from .params import (
     get_params,
     get_data_id_list_params,
     get_data_list_params,
+    get_data_detail_params,
     remove_data_from_slice_params,
     insert_data_to_slice_params,
     delete_data_params,
@@ -105,6 +106,34 @@ class Schemas:
         data {{
             {DATA}  
         }}
+    '''
+    
+    DATA_DETAIL = '''
+        id
+        datasetId
+        scene {
+            id
+            content {
+                id
+            }
+        }
+        annotation {
+            versions {
+                id
+                content {
+                    id
+                }
+            }
+        }
+        predictions {
+            id
+            content {
+                id
+            }
+        }
+        thumbnail {
+            id
+        }
     '''
 
 
@@ -593,4 +622,16 @@ class Queries():
             }}
         ''',
         "variables": update_frames_params,
+    }
+    
+    GET_DETAIL = {
+        "name": "getDataDetail",
+        "query": f'''
+            query GetDataDetail($datasetId: String!, $id: String!) {{
+                data(datasetId: $datasetId, id: $id) {{
+                    {Schemas.DATA_DETAIL}
+                }}
+            }}
+        ''',
+        "variables": get_data_detail_params
     }

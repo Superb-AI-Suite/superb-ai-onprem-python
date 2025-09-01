@@ -836,3 +836,35 @@ class DataService(BaseService):
         )
         data = Data.model_validate(response)
         return data
+
+    def get_data_detail(
+        self,
+        dataset_id: str,
+        data_id: str,
+    ) -> Data:
+        """Get detailed data information including all nested relationships.
+        
+        This method retrieves comprehensive data information including:
+        - Scene content references
+        - Annotation versions with content references
+        - Predictions with content references
+        - Thumbnail references
+        
+        Args:
+            dataset_id (str): The dataset ID.
+            data_id (str): The data ID.
+        
+        Returns:
+            Data: The data object with all nested relationships.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+
+        response = self.request_gql(
+            Queries.GET_DETAIL,
+            Queries.GET_DETAIL["variables"](dataset_id, data_id)
+        )
+        data_dict = response.get("data", {})
+        return Data.model_validate(data_dict)
