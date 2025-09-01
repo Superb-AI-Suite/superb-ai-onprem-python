@@ -251,25 +251,28 @@ class DataService(BaseService):
                 key,
             )
 
+        # Create Data object for the create_params function
+        data_obj = Data(
+            dataset_id=dataset_id,
+            key=key,
+            type=DataType.SUPERB_IMAGE,
+            slice_ids=slices,
+            scene=[Scene(
+                id=f"{key}_scene_0",
+                type=SceneType.IMAGE,
+                content=content,
+                meta={}
+            )],
+            thumbnail=content,
+            annotation=annotation,
+            predictions=predictions,
+            meta=meta,
+            system_meta=system_meta,
+        )
+
         response = self.request_gql(
             Queries.CREATE,
-            Queries.CREATE["variables"](
-                dataset_id=dataset_id,
-                key=key,
-                type=DataType.SUPERB_IMAGE,
-                slices=slices,
-                scene=[{
-                    "id": f"{key}_scene_0",
-                    "type": SceneType.IMAGE,
-                    "content": content.model_dump(by_alias=True),
-                    "meta": {}
-                }],
-                thumbnail=content.model_dump(by_alias=True),
-                annotation=annotation,
-                predictions=predictions,
-                meta=meta,
-                system_meta=system_meta,
-            )
+            Queries.CREATE["variables"](data_obj)
         )
         data = Data.model_validate(response)
         return data
