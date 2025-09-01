@@ -177,6 +177,36 @@ class DataService(BaseService):
             response.get("totalCount", 0)
         )
 
+    def _detect_image_type(self, file_data: BytesIO) -> str:
+        """Detect image type from BytesIO data using magic numbers.
+        
+        Args:
+            file_data (BytesIO): The image data.
+            
+        Returns:
+            str: The MIME type of the image.
+            
+        Raises:
+            BadParameterError: If the file format is not a supported image type.
+        """
+        current_pos = file_data.tell()
+        file_data.seek(0)
+        header = file_data.read(12)
+        file_data.seek(current_pos)
+        
+        if header.startswith(b'\xff\xd8\xff'):
+            return 'image/jpeg'
+        elif header.startswith(b'\x89PNG\r\n\x1a\n'):
+            return 'image/png'
+        elif header.startswith(b'GIF8'):
+            return 'image/gif'
+        elif header.startswith(b'RIFF') and header[8:12] == b'WEBP':
+            return 'image/webp'
+        else:
+            raise BadParameterError(
+                "Unsupported image format. Only JPEG, PNG, GIF, and WebP formats are supported."
+            )
+
     def create_image_data(
         self,
         dataset_id: str,
@@ -213,9 +243,11 @@ class DataService(BaseService):
                 key,
             )    
         else:
+            # Detect the image type from BytesIO data
+            content_type = self._detect_image_type(image_content)
             content = content_service.upload_content_with_data(
                 image_content,
-                "image/jpeg",
+                content_type,
                 key,
             )
 
