@@ -213,3 +213,202 @@ class TestDataService:
             self.data_service.get_data_detail(dataset_id, data_id)
 
         mock_request.assert_called_once()
+
+    def test_get_evaluation_value_list_success(self):
+        """Test successful evaluation value list retrieval."""
+        # Arrange
+        dataset_id = "dataset-123"
+        prediction_set_id = "pred-set-456"
+        filter_dict = {"score": {"min": 0.8}}
+        length = 25
+        cursor = "cursor-abc"
+        
+        mock_response = {
+            "evaluationValueList": {
+                "totalCount": 100,
+                "next": "cursor-def",
+                "data": [
+                    {"dataId": "data-1"},
+                    {"dataId": "data-2"},
+                    {"dataId": "data-3"}
+                ]
+            }
+        }
+        self.data_service.request_gql.return_value = mock_response
+
+        # Act
+        result = self.data_service.get_evaluation_value_list(
+            dataset_id=dataset_id,
+            prediction_set_id=prediction_set_id,
+            filter=filter_dict,
+            length=length,
+            cursor=cursor
+        )
+
+        # Assert
+        expected_result = {
+            "totalCount": 100,
+            "next": "cursor-def",
+            "data": [
+                {"dataId": "data-1"},
+                {"dataId": "data-2"},
+                {"dataId": "data-3"}
+            ]
+        }
+        assert result == expected_result
+        self.data_service.request_gql.assert_called_once_with(
+            Queries.GET_EVALUATION_VALUE_LIST,
+            Queries.GET_EVALUATION_VALUE_LIST["variables"](
+                dataset_id=dataset_id,
+                prediction_set_id=prediction_set_id,
+                filter=filter_dict,
+                length=length,
+                cursor=cursor
+            )
+        )
+
+    def test_get_evaluation_value_list_without_filter(self):
+        """Test evaluation value list retrieval without filter."""
+        # Arrange
+        dataset_id = "dataset-123"
+        prediction_set_id = "pred-set-456"
+        
+        mock_response = {
+            "evaluationValueList": {
+                "totalCount": 50,
+                "next": None,
+                "data": [{"dataId": "data-1"}]
+            }
+        }
+        self.data_service.request_gql.return_value = mock_response
+
+        # Act
+        result = self.data_service.get_evaluation_value_list(
+            dataset_id=dataset_id,
+            prediction_set_id=prediction_set_id
+        )
+
+        # Assert
+        assert result["totalCount"] == 50
+        assert result["next"] is None
+        assert len(result["data"]) == 1
+
+    def test_get_evaluation_value_list_missing_dataset_id(self):
+        """Test evaluation value list with missing dataset_id."""
+        # Arrange
+        prediction_set_id = "pred-set-456"
+
+        # Act & Assert
+        with pytest.raises(BadParameterError, match="dataset_id is required"):
+            self.data_service.get_evaluation_value_list(
+                dataset_id=None,
+                prediction_set_id=prediction_set_id
+            )
+
+    def test_get_evaluation_value_list_missing_prediction_set_id(self):
+        """Test evaluation value list with missing prediction_set_id."""
+        # Arrange
+        dataset_id = "dataset-123"
+
+        # Act & Assert
+        with pytest.raises(BadParameterError, match="prediction_set_id is required"):
+            self.data_service.get_evaluation_value_list(
+                dataset_id=dataset_id,
+                prediction_set_id=None
+            )
+
+    def test_get_evaluation_value_list_empty_response(self):
+        """Test evaluation value list with empty response."""
+        # Arrange
+        dataset_id = "dataset-123"
+        prediction_set_id = "pred-set-456"
+        
+        mock_response = {}
+        self.data_service.request_gql.return_value = mock_response
+
+        # Act
+        result = self.data_service.get_evaluation_value_list(
+            dataset_id=dataset_id,
+            prediction_set_id=prediction_set_id
+        )
+
+        # Assert
+        assert result == {}
+
+    def test_get_total_data_id_count_in_evaluation_value_success(self):
+        """Test successful total count retrieval."""
+        # Arrange
+        dataset_id = "dataset-123"
+        prediction_set_id = "pred-set-456"
+        filter_dict = {"score": {"min": 0.8}}
+        
+        mock_response = {
+            "evaluationValueList": {
+                "totalCount": 150,
+                "next": "cursor-abc",
+                "data": [{"dataId": "data-1"}]
+            }
+        }
+        self.data_service.request_gql.return_value = mock_response
+
+        # Act
+        result = self.data_service.get_total_data_id_count_in_evaluation_value(
+            dataset_id=dataset_id,
+            prediction_set_id=prediction_set_id,
+            filter=filter_dict
+        )
+
+        # Assert
+        assert result == 150
+        self.data_service.request_gql.assert_called_once_with(
+            Queries.GET_EVALUATION_VALUE_LIST,
+            Queries.GET_EVALUATION_VALUE_LIST["variables"](
+                dataset_id=dataset_id,
+                prediction_set_id=prediction_set_id,
+                filter=filter_dict,
+                length=1,
+                cursor=None
+            )
+        )
+
+    def test_get_total_data_id_count_in_evaluation_value_zero_count(self):
+        """Test total count retrieval with zero results."""
+        # Arrange
+        dataset_id = "dataset-123"
+        prediction_set_id = "pred-set-456"
+        
+        mock_response = {
+            "evaluationValueList": {
+                "totalCount": 0,
+                "next": None,
+                "data": []
+            }
+        }
+        self.data_service.request_gql.return_value = mock_response
+
+        # Act
+        result = self.data_service.get_total_data_id_count_in_evaluation_value(
+            dataset_id=dataset_id,
+            prediction_set_id=prediction_set_id
+        )
+
+        # Assert
+        assert result == 0
+
+    def test_get_total_data_id_count_in_evaluation_value_missing_response(self):
+        """Test total count retrieval with missing response fields."""
+        # Arrange
+        dataset_id = "dataset-123"
+        prediction_set_id = "pred-set-456"
+        
+        mock_response = {}
+        self.data_service.request_gql.return_value = mock_response
+
+        # Act
+        result = self.data_service.get_total_data_id_count_in_evaluation_value(
+            dataset_id=dataset_id,
+            prediction_set_id=prediction_set_id
+        )
+
+        # Assert
+        assert result == 0
