@@ -12,7 +12,7 @@ class Frame(CustomBaseModel):
     The frame of the data.
     Frame is the representation of a single frame in a sequence of data, such as a video or time series.
     """
-    id: str
+    id: Optional[str] = None
     index: Optional[int] = None
     captured_at: Optional[str] = Field(None, alias="capturedAt")
     geo_location: Optional[GeoLocation] = Field(None, alias="geoLocation")
