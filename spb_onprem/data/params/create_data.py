@@ -36,7 +36,7 @@ def create_params(
                     "meta": version.meta,
                 }
                 for version in data.annotation.versions
-            ],
+            ] if data.annotation.versions is not None else [],
             "meta": data.annotation.meta
         } if data.annotation is not None else None,
         "predictions": [
@@ -56,13 +56,5 @@ def create_params(
                 "value": meta.value,
             }
             for meta in data.meta
-        ] if data.meta is not None else None,
-        "systemMeta": [
-            {
-                "key": meta.key,
-                "type": meta.type.value,
-                "value": meta.value,
-            }
-            for meta in data.system_meta
-        ] if data.system_meta is not None else None,
+        ] if data.meta is not None else [],
     }

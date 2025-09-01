@@ -24,7 +24,6 @@ class Data(CustomBaseModel):
     annotation: Optional[Annotation] = None
     predictions: Optional[List[Prediction]] = None
     meta: Optional[List[DataMeta]] = None
-    system_meta: Optional[List[DataMeta]] = Field(None, alias="systemMeta")
     created_at: Optional[str] = Field(None, alias="createdAt")
     created_by: Optional[str] = Field(None, alias="createdBy")
     updated_at: Optional[str] = Field(None, alias="updatedAt")

@@ -1,19 +1,13 @@
 """
-base_service.py
-
-This module defines the BaseService class, which serves as an abstract base class for services that handle data operations.
+This module defines the DataService class for handling data-related operations.
 
 Classes:
-    BaseService: An abstract base class that requires the implementation of the create_data method.
+    DataService: A service class that provides methods for data management operations.
 """
-from io import BytesIO
 from typing import (
     Optional, List, Union,
 )
 
-from spb_onprem.contents.service import (
-    ContentService
-)
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import (
     Undefined,
@@ -22,17 +16,11 @@ from spb_onprem.base_types import (
 from .queries import Queries
 from .entities import (
     Data,
-    Scene,
     AnnotationVersion,
-    Annotation,
-    DataMeta,
     Prediction,
     Frame,
 )
 from .enums import (
-    DataType,
-    SceneType,
-    DataMetaValue,
     DataStatus,
 )
 from .params import (
@@ -177,105 +165,23 @@ class DataService(BaseService):
             response.get("totalCount", 0)
         )
 
-    def _detect_image_type(self, file_data: BytesIO) -> str:
-        """Detect image type from BytesIO data using magic numbers.
-        
-        Args:
-            file_data (BytesIO): The image data.
-            
-        Returns:
-            str: The MIME type of the image.
-            
-        Raises:
-            BadParameterError: If the file format is not a supported image type.
-        """
-        current_pos = file_data.tell()
-        file_data.seek(0)
-        header = file_data.read(12)
-        file_data.seek(current_pos)
-        
-        if header.startswith(b'\xff\xd8\xff'):
-            return 'image/jpeg'
-        elif header.startswith(b'\x89PNG\r\n\x1a\n'):
-            return 'image/png'
-        elif header.startswith(b'GIF8'):
-            return 'image/gif'
-        elif header.startswith(b'RIFF') and header[8:12] == b'WEBP':
-            return 'image/webp'
-        else:
-            raise BadParameterError(
-                "Unsupported image format. Only JPEG, PNG, GIF, and WebP formats are supported."
-            )
-
-    def create_image_data(
+    def create_data(
         self,
-        dataset_id: str,
-        key: str,
-        image_content: Union[
-            BytesIO,
-            str,
-        ],
-        slices: Optional[List[str]] = None,
-        annotation: Optional[dict] = None,
-        predictions: Optional[List[dict]] = None,
-        meta: Optional[List[dict]] = None,
-        system_meta: Optional[List[dict]] = None,
+        data: Data,
     ):
-        """Create an image data.
+        """Create data in the dataset.
 
         Args:
-            dataset_id (str): The dataset id.
-            key (str): The key of the data.
-            image_content (Union[BytesIO, str]): The image content. If str, it is considered as a file path.
-            slices (Optional[List[str]]): The slices to add the data to.
-            annotation (Optional[dict]): The annotation data.
-            predictions (Optional[List[dict]]): The predictions data.
-            meta (Optional[List[dict]]): The meta data.
-            system_meta (Optional[List[dict]]): The system meta data.
+            data (Data): The data object to create.
 
         Returns:
             Data: The created data.
         """
-        content_service = ContentService()
-        if isinstance(image_content, str):
-            content = content_service.upload_content(
-                image_content,
-                key,
-            )    
-        else:
-            # Detect the image type from BytesIO data
-            content_type = self._detect_image_type(image_content)
-            content = content_service.upload_content_with_data(
-                image_content,
-                content_type,
-                key,
-            )
-
-        # Create Data object for the create_params function
-        data_obj = Data(
-            dataset_id=dataset_id,
-            key=key,
-            type=DataType.SUPERB_IMAGE,
-            slice_ids=slices,
-            scene=[Scene(
-                id=f"{key}_scene_0",
-                type=SceneType.IMAGE,
-                content=content,
-                meta={}
-            )],
-            thumbnail=content,
-            annotation=annotation,
-            predictions=predictions,
-            meta=meta,
-            system_meta=system_meta,
-        )
-
         response = self.request_gql(
             Queries.CREATE,
-            Queries.CREATE["variables"](data_obj)
+            Queries.CREATE["variables"](data)
         )
-        data = Data.model_validate(response)
-        return data
+        return Data.model_validate(response)
 
     def update_data(
         self,
@@ -289,10 +195,6 @@ class DataService(BaseService):
             List[dict],
             UndefinedType,
         ] = Undefined,
-        system_meta: Union[
-            List[dict],
-            UndefinedType,
-        ] = Undefined,
     ):
         """Update a data.
 
@@ -301,7 +203,6 @@ class DataService(BaseService):
             data_id (str): The data id.
             key (Union[str, UndefinedType], optional): The key of the data. Defaults to Undefined.
             meta (Union[List[dict], UndefinedType], optional): The meta data. Defaults to Undefined.
-            system_meta (Union[List[dict], UndefinedType], optional): The system meta data. Defaults to Undefined.
 
         Returns:
             Data: The updated data.
@@ -313,7 +214,6 @@ class DataService(BaseService):
                 data_id=data_id,
                 key=key,
                 meta=meta,
-                system_meta=system_meta,
             )
         )
         data = Data.model_validate(response)
