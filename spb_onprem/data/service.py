@@ -868,3 +868,66 @@ class DataService(BaseService):
         )
         data_dict = response.get("data", {})
         return Data.model_validate(data_dict)
+    
+    def get_evaluation_value_list(
+        self,
+        dataset_id: str,
+        prediction_set_id: str,
+        filter: Optional[dict] = None,
+        length: int = 50,
+        cursor: Optional[str] = None
+    ) -> dict:
+        """Get evaluation values list for diagnosis filtering.
+        
+        Retrieves evaluation values for diagnosis filtering with pagination support.
+        
+        Args:
+            dataset_id (str): The dataset ID.
+            prediction_set_id (str): The prediction set ID.
+            filter (Optional[dict]): Diagnosis filter for evaluation values.
+            length (int): Number of items to retrieve per page.
+            cursor (Optional[str]): Cursor for pagination.
+        
+        Returns:
+            dict: Response containing totalCount, next cursor, and data list with dataId fields.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if prediction_set_id is None:
+            raise BadParameterError("prediction_set_id is required.")
+
+        response = self.request_gql(
+            Queries.GET_EVALUATION_VALUE_LIST,
+            Queries.GET_EVALUATION_VALUE_LIST["variables"](
+                dataset_id=dataset_id,
+                prediction_set_id=prediction_set_id,
+                filter=filter,
+                length=length,
+                cursor=cursor
+            )
+        )
+        return response.get("evaluationValueList", {})
+    
+    def get_total_data_id_count_in_evaluation_value(
+        self,
+        dataset_id: str,
+        prediction_set_id: str,
+        filter: Optional[dict] = None
+    ) -> int:
+        """Get total count of data IDs in evaluation values for diagnosis filtering.
+        
+        Args:
+            dataset_id (str): The dataset ID.
+            prediction_set_id (str): The prediction set ID.
+            filter (Optional[dict]): Diagnosis filter for evaluation values.
+        
+        Returns:
+            int: Total count of evaluation values.
+        """
+        result = self.get_evaluation_value_list(
+            dataset_id=dataset_id,
+            prediction_set_id=prediction_set_id,
+            filter=filter,
+            length=1
+        )
+        return result.get("totalCount", 0)

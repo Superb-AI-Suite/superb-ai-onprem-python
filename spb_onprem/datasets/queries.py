@@ -3,6 +3,7 @@ from spb_onprem.datasets.params import (
     datasets_params,
     create_dataset_params,
     update_dataset_params,
+    delete_dataset_params,
 )
 
 class Schemas:
@@ -76,4 +77,14 @@ class Queries():
             }}
         ''',
         "variables": update_dataset_params,
+    }
+    
+    DELETE_DATASET = {
+        "name": "deleteDataset",
+        "query": '''
+            mutation DeleteDataset($dataset_id: String!) {
+                deleteDataset(datasetId: $dataset_id)
+            }
+        ''',
+        "variables": delete_dataset_params,
     }

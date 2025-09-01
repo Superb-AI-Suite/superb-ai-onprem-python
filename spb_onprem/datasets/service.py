@@ -130,3 +130,21 @@ class DatasetService(BaseService):
             ),
         )
         return Dataset.model_validate(response)
+    
+    def delete_dataset(self, dataset_id: str) -> bool:
+        """Delete the dataset.
+        
+        Args:
+            dataset_id (str): The ID of the dataset to delete.
+        
+        Returns:
+            bool: True if deletion was successful.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+
+        response = self.request_gql(
+            Queries.DELETE_DATASET,
+            Queries.DELETE_DATASET["variables"](dataset_id=dataset_id)
+        )
+        return response.get("deleteDataset", False)

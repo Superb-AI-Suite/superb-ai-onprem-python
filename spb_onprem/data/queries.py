@@ -5,6 +5,7 @@ from .params import (
     get_data_id_list_params,
     get_data_list_params,
     get_data_detail_params,
+    get_evaluation_value_list_params,
     remove_data_from_slice_params,
     insert_data_to_slice_params,
     delete_data_params,
@@ -634,4 +635,32 @@ class Queries():
             }}
         ''',
         "variables": get_data_detail_params
+    }
+    
+    GET_EVALUATION_VALUE_LIST = {
+        "name": "getEvaluationValueList",
+        "query": '''
+            query GetEvaluationValueList(
+                $datasetId: String!,
+                $predictionSetId: String!,
+                $filter: DiagnosisFilter,
+                $length: Int,
+                $cursor: String
+            ) {
+                evaluationValueList(
+                    datasetId: $datasetId,
+                    predictionSetId: $predictionSetId,
+                    filter: $filter,
+                    length: $length,
+                    cursor: $cursor
+                ) {
+                    totalCount
+                    next
+                    data {
+                        dataId
+                    }
+                }
+            }
+        ''',
+        "variables": get_evaluation_value_list_params
     }
