@@ -581,7 +581,7 @@ class Queries():
             mutation (
                 $dataset_id: ID!,
                 $data_id: ID!,
-                $frames: [DataFrameInput!],
+                $frames: [DataFrameInput!]!,
             ) {{
                 updateFrames(
                     datasetId: $dataset_id,
