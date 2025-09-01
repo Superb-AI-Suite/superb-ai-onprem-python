@@ -23,10 +23,6 @@ def update_params(
         Optional[List[DataMeta]],
         UndefinedType
     ] = Undefined,
-    system_meta: Union[
-        Optional[List[DataMeta]],
-        UndefinedType
-    ] = Undefined,
 ):
     """Make the variables for the updateData query.
 
@@ -56,17 +52,5 @@ def update_params(
             }
             for meta in meta
         ] if meta is not None else None
-    
-    if system_meta is not Undefined:
-        if system_meta is not None and not isinstance(system_meta, list):
-            raise ValueError("meta must be a list of DataMeta or None.")
-        variables["systemMeta"] = [
-            {
-                "key": meta.key,
-                "type": meta.type.value,
-                "value": meta.value,
-            }
-            for meta in system_meta
-        ] if system_meta is not None else None
 
     return variables

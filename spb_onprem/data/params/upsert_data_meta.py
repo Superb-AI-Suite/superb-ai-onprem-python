@@ -11,10 +11,6 @@ def upsert_data_meta_params(
         Optional[List[DataMeta]],
         UndefinedType
     ] = Undefined,
-    system_meta: Union[
-        Optional[List[DataMeta]],
-        UndefinedType
-    ] = Undefined,
 ):
     """Make the variables for the upsertDataMeta query.
 
@@ -36,13 +32,5 @@ def upsert_data_meta_params(
             item.model_dump(by_alias=True, exclude_unset=True)
             for item in meta
         ] if meta is not None else None
-
-    if system_meta is not Undefined:
-        if system_meta is not None and not isinstance(system_meta, list):
-            raise ValueError("system_meta must be a list of DataMeta or None.")
-        variables["system_meta"] = [
-            item.model_dump(by_alias=True, exclude_unset=True)
-            for item in system_meta
-        ] if system_meta is not None else None
 
     return variables

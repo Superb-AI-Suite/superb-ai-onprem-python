@@ -122,7 +122,6 @@ class Queries():
                 $annotation: AnnotationInput,
                 $predictions: [PredictionInput!],
                 $meta: [DataMetaInput!]
-                $systemMeta: [DataMetaInput!]
             ) {{
             createData(
                 datasetId: $datasetId,
@@ -134,7 +133,6 @@ class Queries():
                 annotation: $annotation,
                 predictions: $predictions,
                 meta: $meta,
-                systemMeta: $systemMeta
             ) 
                 {{
                     {Schemas.DATA}
@@ -151,15 +149,13 @@ class Queries():
                 $dataset_id: ID!,
                 $data_id: ID!,
                 $key: String,
-                $meta: [DataMetaInput!],
-                $systemMeta: [DataMetaInput!]
+                $meta: [DataMetaInput!]
             ) {{
             updateData(
                 datasetId: $dataset_id,
                 id: $data_id,
                 key: $key,
-                meta: $meta,
-                systemMeta: $systemMeta
+                meta: $meta
             ) 
                 {{
                     {Schemas.DATA}
