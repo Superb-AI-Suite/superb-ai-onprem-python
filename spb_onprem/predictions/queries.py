@@ -54,8 +54,8 @@ class Queries:
     DELETE_PREDICTION_FROM_DATA = {
         "name": "deletePredictionFromData",
         "query": '''
-            mutation RemovePredictionFromData($dataset_id: String!, $data_id: String!, $set_id: String!) {
-                removePredictionFromData(datasetId: $dataset_id, dataId: $data_id, setId: $set_id)
+            mutation DeletePrediction($dataset_id: String!, $data_id: String!, $set_id: String!) {
+                deletePrediction(datasetId: $dataset_id, dataId: $data_id, setId: $set_id)
             }
         ''',
         "variables": delete_prediction_from_data_params

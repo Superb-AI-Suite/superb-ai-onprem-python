@@ -200,19 +200,18 @@ class TestDataService:
         assert len(result.predictions) == 1
         assert result.thumbnail.id == "thumbnail-complex"
 
-    @patch('spb_onprem.data.service.DataService.request_gql')
-    def test_get_data_detail_exception_handling(self, mock_request):
+    def test_get_data_detail_exception_handling(self):
         """Test get_data_detail exception handling."""
         # Arrange
         dataset_id = "dataset-error"
         data_id = "data-error"
-        mock_request.side_effect = Exception("GraphQL error")
+        self.data_service.request_gql.side_effect = Exception("GraphQL error")
 
         # Act & Assert
         with pytest.raises(Exception, match="GraphQL error"):
             self.data_service.get_data_detail(dataset_id, data_id)
 
-        mock_request.assert_called_once()
+        self.data_service.request_gql.assert_called_once()
 
     def test_get_evaluation_value_list_success(self):
         """Test successful evaluation value list retrieval."""

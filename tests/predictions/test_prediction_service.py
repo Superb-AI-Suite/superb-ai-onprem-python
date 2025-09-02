@@ -276,7 +276,7 @@ class TestPredictionService:
         data_id = "data-456"
         prediction_set_id = "pred-set-789"
         
-        mock_response = {"removePredictionFromData": True}
+        mock_response = {"deletePrediction": {"id": data_id, "dataset_id": dataset_id}}
         self.prediction_service.request_gql.return_value = mock_response
 
         # Act
@@ -304,7 +304,7 @@ class TestPredictionService:
         data_id = "data-456"
         prediction_set_id = "pred-set-789"
         
-        mock_response = {"removePredictionFromData": False}
+        mock_response = {"deletePrediction": None}
         self.prediction_service.request_gql.return_value = mock_response
 
         # Act

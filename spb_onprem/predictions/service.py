@@ -129,4 +129,4 @@ class PredictionService(BaseService):
                 prediction_set_id=prediction_set_id
             )
         )
-        return response.get("removePredictionFromData", False)
+        return response.get("deletePrediction") is not None

@@ -38,7 +38,7 @@ class Queries:
     DELETE = {
         "name": "deleteContent",
         "query": '''
-            mutation DeleteContent($id: String!) {
+            mutation DeleteContent($id: ID!) {
                 deleteContent(id: $id)
             }
         ''',

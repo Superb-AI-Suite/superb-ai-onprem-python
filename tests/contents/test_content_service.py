@@ -71,7 +71,7 @@ class TestContentService:
 
         # Assert
         assert query_structure["name"] == "deleteContent"
-        assert "mutation DeleteContent($id: String!)" in query_structure["query"]
+        assert "mutation DeleteContent($id: ID!)" in query_structure["query"]
         assert "deleteContent(id: $id)" in query_structure["query"]
         assert callable(query_structure["variables"])
 
@@ -86,15 +86,14 @@ class TestContentService:
         # Assert
         assert variables == {"id": content_id}
 
-    @patch('spb_onprem.contents.service.ContentService.request_gql')
-    def test_delete_content_exception_handling(self, mock_request):
+    def test_delete_content_exception_handling(self):
         """Test content deletion exception handling."""
         # Arrange
         content_id = "test-content-error"
-        mock_request.side_effect = Exception("Network error")
+        self.content_service.request_gql.side_effect = Exception("Network error")
 
         # Act & Assert
         with pytest.raises(Exception, match="Network error"):
             self.content_service.delete_content(content_id)
 
-        mock_request.assert_called_once()
+        self.content_service.request_gql.assert_called_once()
