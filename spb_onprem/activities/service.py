@@ -65,8 +65,7 @@ class ActivityService(BaseService):
                 meta=meta,
             )
         )
-        activity_dict = response
-        return Activity.model_validate(activity_dict)
+        return Activity.model_validate(response)
     
     def get_activities(
         self,
@@ -95,7 +94,7 @@ class ActivityService(BaseService):
                 length=length,
             )
         )
-        activities_dict = response.get("jobs", [])
+        activities_dict = response.get("activities", [])
         return (
             [Activity.model_validate(activity_dict) for activity_dict in activities_dict],
             response.get("next"),

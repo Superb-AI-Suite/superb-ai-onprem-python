@@ -15,12 +15,10 @@ class TestActivityService:
     def test_create_activity(self, activity_service):
         # Given
         mock_response = {
-            "createJob": {
-                "id": "test_id",
-                "type": "test_type",
-                "name": "test_name",
-                "description": "test_description"
-            }
+            "id": "test_id",
+            "activity_type": "test_type",
+            "name": "test_name",
+            "description": "test_description"
         }
         activity_service.request_gql = MagicMock(return_value=mock_response)
         
@@ -34,29 +32,27 @@ class TestActivityService:
         # Then
         assert isinstance(activity, Activity)
         assert activity.id == "test_id"
-        assert activity.type == "test_type"
+        assert activity.activity_type == "test_type"
         assert activity.name == "test_name"
         assert activity.description == "test_description"
     
     def test_get_activities(self, activity_service):
         # Given
         mock_response = {
-            "jobs": {
-                "activities": [
-                    {
-                        "id": "test_id_1",
-                        "type": "test_type",
-                        "name": "test_name_1"
-                    },
-                    {
-                        "id": "test_id_2",
-                        "type": "test_type",
-                        "name": "test_name_2"
-                    }
-                ],
-                "next": "next_cursor",
-                "totalCount": 2
-            }
+            "activities": [
+                {
+                    "id": "test_id_1",
+                    "activity_type": "test_type",
+                    "name": "test_name_1"
+                },
+                {
+                    "id": "test_id_2",
+                    "activity_type": "test_type",
+                    "name": "test_name_2"
+                }
+            ],
+            "next": "next_cursor",
+            "totalCount": 2
         }
         activity_service.request_gql = MagicMock(return_value=mock_response)
         
@@ -74,11 +70,9 @@ class TestActivityService:
     def test_start_activity(self, activity_service):
         # Given
         mock_response = {
-            "startJob": {
-                "id": "test_history_id",
-                "jobId": "test_activity_id",
-                "status": ActivityStatus.RUNNING.value
-            }
+            "id": "test_history_id",
+            "jobId": "test_activity_id",
+            "status": ActivityStatus.RUNNING.value
         }
         activity_service.request_gql = MagicMock(return_value=mock_response)
         
@@ -97,11 +91,9 @@ class TestActivityService:
     def test_update_activity_history_status(self, activity_service):
         # Given
         mock_response = {
-            "updateJobHistory": {
-                "id": "test_history_id",
-                "jobId": "test_activity_id",
-                "status": ActivityStatus.SUCCESS.value
-            }
+            "id": "test_history_id",
+            "jobId": "test_activity_id",
+            "status": ActivityStatus.SUCCESS.value
         }
         activity_service.request_gql = MagicMock(return_value=mock_response)
         
@@ -119,11 +111,9 @@ class TestActivityService:
     def test_update_activity_history_progress(self, activity_service):
         # Given
         mock_response = {
-            "updateJobHistory": {
-                "id": "test_history_id",
-                "jobId": "test_activity_id",
-                "progress": {"current": 50, "total": 100}
-            }
+            "id": "test_history_id",
+            "jobId": "test_activity_id",
+            "progress": {"current": 50, "total": 100}
         }
         activity_service.request_gql = MagicMock(return_value=mock_response)
         
