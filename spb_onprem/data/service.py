@@ -1,19 +1,13 @@
 """
-base_service.py
-
-This module defines the BaseService class, which serves as an abstract base class for services that handle data operations.
+This module defines the DataService class for handling data-related operations.
 
 Classes:
-    BaseService: An abstract base class that requires the implementation of the create_data method.
+    DataService: A service class that provides methods for data management operations.
 """
-from io import BytesIO
 from typing import (
     Optional, List, Union,
 )
 
-from spb_onprem.contents.service import (
-    ContentService
-)
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import (
     Undefined,
@@ -22,17 +16,11 @@ from spb_onprem.base_types import (
 from .queries import Queries
 from .entities import (
     Data,
-    Scene,
     AnnotationVersion,
-    Annotation,
-    DataMeta,
     Prediction,
     Frame,
 )
 from .enums import (
-    DataType,
-    SceneType,
-    DataMetaValue,
     DataStatus,
 )
 from .params import (
@@ -177,72 +165,23 @@ class DataService(BaseService):
             response.get("totalCount", 0)
         )
 
-    def create_image_data(
+    def create_data(
         self,
-        dataset_id: str,
-        key: str,
-        image_content: Union[
-            BytesIO,
-            str,
-        ],
-        slices: Optional[List[str]] = None,
-        annotation: Optional[dict] = None,
-        predictions: Optional[List[dict]] = None,
-        meta: Optional[List[dict]] = None,
-        system_meta: Optional[List[dict]] = None,
+        data: Data,
     ):
-        """Create an image data.
+        """Create data in the dataset.
 
         Args:
-            dataset_id (str): The dataset id.
-            key (str): The key of the data.
-            image_content (Union[BytesIO, str]): The image content. If str, it is considered as a file path.
-            slices (Optional[List[str]]): The slices to add the data to.
-            annotation (Optional[dict]): The annotation data.
-            predictions (Optional[List[dict]]): The predictions data.
-            meta (Optional[List[dict]]): The meta data.
-            system_meta (Optional[List[dict]]): The system meta data.
+            data (Data): The data object to create.
 
         Returns:
             Data: The created data.
         """
-        content_service = ContentService()
-        if isinstance(image_content, str):
-            with open(image_content, "rb") as f:
-                content = content_service.upload_content(
-                    f.read(),
-                    key,
-                    f.name.split(".")[-1]
-                )
-        else:
-            content = content_service.upload_content(
-                image_content.read(),
-                key,
-                "jpg"
-            )
-
         response = self.request_gql(
             Queries.CREATE,
-            Queries.CREATE["variables"](
-                dataset_id=dataset_id,
-                key=key,
-                type=DataType.SUPERB_IMAGE,
-                slices=slices,
-                scene=[{
-                    "id": f"{key}_scene_0",
-                    "type": SceneType.IMAGE,
-                    "content": content.model_dump(by_alias=True),
-                    "meta": {}
-                }],
-                thumbnail=content.model_dump(by_alias=True),
-                annotation=annotation,
-                predictions=predictions,
-                meta=meta,
-                system_meta=system_meta,
-            )
+            Queries.CREATE["variables"](data)
         )
-        data = Data.model_validate(response)
-        return data
+        return Data.model_validate(response)
 
     def update_data(
         self,
@@ -256,10 +195,6 @@ class DataService(BaseService):
             List[dict],
             UndefinedType,
         ] = Undefined,
-        system_meta: Union[
-            List[dict],
-            UndefinedType,
-        ] = Undefined,
     ):
         """Update a data.
 
@@ -268,7 +203,6 @@ class DataService(BaseService):
             data_id (str): The data id.
             key (Union[str, UndefinedType], optional): The key of the data. Defaults to Undefined.
             meta (Union[List[dict], UndefinedType], optional): The meta data. Defaults to Undefined.
-            system_meta (Union[List[dict], UndefinedType], optional): The system meta data. Defaults to Undefined.
 
         Returns:
             Data: The updated data.
@@ -280,7 +214,6 @@ class DataService(BaseService):
                 data_id=data_id,
                 key=key,
                 meta=meta,
-                system_meta=system_meta,
             )
         )
         data = Data.model_validate(response)
