@@ -1,6 +1,7 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Tuple, Union
 
 from spb_onprem.base_service import BaseService
+from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
 from .queries import Queries
 from .entities import Model
@@ -12,20 +13,20 @@ class ModelService(BaseService):
     def get_models(
         self,
         dataset_id: str,
-        filter: Optional[Dict[str, Any]] = None,
-        cursor: Optional[str] = None,
+        filter: Union[UndefinedType, Dict[str, Any]] = Undefined,
+        cursor: Union[UndefinedType, str] = Undefined,
         length: int = 50
-    ) -> Dict[str, Any]:
+    ) -> Tuple[List[Model], Optional[str], int]:
         """Get paginated list of models for a dataset.
         
         Args:
             dataset_id (str): The dataset ID.
-            filter (Optional[Dict[str, Any]]): Filter for models.
-            cursor (Optional[str]): Cursor for pagination.
+            filter (Union[UndefinedType, Dict[str, Any]]): Filter for models.
+            cursor (Union[UndefinedType, str]): Cursor for pagination.
             length (int): Number of items to retrieve per page.
         
         Returns:
-            Dict[str, Any]: Response containing models, next cursor, and totalCount.
+            Tuple[List[Model], Optional[str], int]: A tuple containing models, next cursor, and total count.
         """
         if dataset_id is None:
             raise BadParameterError("dataset_id is required.")
@@ -39,7 +40,12 @@ class ModelService(BaseService):
                 length=length
             )
         )
-        return response.get("models", {})
+        models_list = response.get("models", [])
+        return (
+            [Model.model_validate(model) for model in models_list],
+            response.get("next"),
+            response.get("totalCount", 0)
+        )
     
     def delete_model(
         self,

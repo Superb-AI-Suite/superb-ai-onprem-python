@@ -365,8 +365,7 @@ class TestDataService:
                 dataset_id=dataset_id,
                 prediction_set_id=prediction_set_id,
                 filter=filter_dict,
-                length=1,
-                cursor=None
+                length=1
             )
         )
 

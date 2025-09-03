@@ -39,7 +39,7 @@ class TestActivityService:
     def test_get_activities(self, activity_service):
         # Given
         mock_response = {
-            "activities": [
+            "jobs": [
                 {
                     "id": "test_id_1",
                     "activity_type": "test_type",

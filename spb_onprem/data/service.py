@@ -806,9 +806,9 @@ class DataService(BaseService):
         self,
         dataset_id: str,
         prediction_set_id: str,
-        filter: Optional[dict] = None,
+        filter: Union[UndefinedType, dict] = Undefined,
         length: int = 50,
-        cursor: Optional[str] = None
+        cursor: Union[UndefinedType, str] = Undefined
     ) -> dict:
         """Get evaluation values list for diagnosis filtering.
         
@@ -817,9 +817,9 @@ class DataService(BaseService):
         Args:
             dataset_id (str): The dataset ID.
             prediction_set_id (str): The prediction set ID.
-            filter (Optional[dict]): Diagnosis filter for evaluation values.
+            filter (Union[UndefinedType, dict]): Diagnosis filter for evaluation values.
             length (int): Number of items to retrieve per page.
-            cursor (Optional[str]): Cursor for pagination.
+            cursor (Union[UndefinedType, str]): Cursor for pagination.
         
         Returns:
             dict: Response containing totalCount, next cursor, and data list with dataId fields.
@@ -845,14 +845,14 @@ class DataService(BaseService):
         self,
         dataset_id: str,
         prediction_set_id: str,
-        filter: Optional[dict] = None
+        filter: Union[UndefinedType, dict] = Undefined
     ) -> int:
         """Get total count of data IDs in evaluation values for diagnosis filtering.
         
         Args:
             dataset_id (str): The dataset ID.
             prediction_set_id (str): The prediction set ID.
-            filter (Optional[dict]): Diagnosis filter for evaluation values.
+            filter (Union[UndefinedType, dict]): Diagnosis filter for evaluation values.
         
         Returns:
             int: Total count of evaluation values.

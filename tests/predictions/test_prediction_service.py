@@ -24,14 +24,12 @@ class TestPredictionService:
         length = 25
         
         mock_response = {
-            "predictionSets": {
-                "predictionSets": [
-                    {"id": "pred-1", "name": "Prediction Set 1"},
-                    {"id": "pred-2", "name": "Prediction Set 2"}
-                ],
-                "next": "cursor-def",
-                "totalCount": 100
-            }
+            "predictionSets": [
+                {"id": "pred-1", "name": "Prediction Set 1"},
+                {"id": "pred-2", "name": "Prediction Set 2"}
+            ],
+            "next": "cursor-def",
+            "totalCount": 100
         }
         self.prediction_service.request_gql.return_value = mock_response
 
@@ -44,15 +42,14 @@ class TestPredictionService:
         )
 
         # Assert
-        expected_result = {
-            "predictionSets": [
-                {"id": "pred-1", "name": "Prediction Set 1"},
-                {"id": "pred-2", "name": "Prediction Set 2"}
-            ],
-            "next": "cursor-def",
-            "totalCount": 100
-        }
-        assert result == expected_result
+        prediction_sets, next_cursor, total_count = result
+        assert len(prediction_sets) == 2
+        assert prediction_sets[0].id == "pred-1"
+        assert prediction_sets[0].name == "Prediction Set 1"
+        assert prediction_sets[1].id == "pred-2"
+        assert prediction_sets[1].name == "Prediction Set 2"
+        assert next_cursor == "cursor-def"
+        assert total_count == 100
         self.prediction_service.request_gql.assert_called_once_with(
             Queries.GET_PREDICTION_SETS,
             Queries.GET_PREDICTION_SETS["variables"](
@@ -69,11 +66,9 @@ class TestPredictionService:
         dataset_id = "dataset-123"
         
         mock_response = {
-            "predictionSets": {
-                "predictionSets": [{"id": "pred-1", "name": "Test"}],
-                "next": None,
-                "totalCount": 1
-            }
+            "predictionSets": [{"id": "pred-1", "name": "Test"}],
+            "next": None,
+            "totalCount": 1
         }
         self.prediction_service.request_gql.return_value = mock_response
 
@@ -81,9 +76,10 @@ class TestPredictionService:
         result = self.prediction_service.get_prediction_sets(dataset_id=dataset_id)
 
         # Assert
-        assert result["totalCount"] == 1
-        assert result["next"] is None
-        assert len(result["predictionSets"]) == 1
+        prediction_sets, next_cursor, total_count = result
+        assert total_count == 1
+        assert next_cursor is None
+        assert len(prediction_sets) == 1
 
     def test_get_prediction_sets_missing_dataset_id(self):
         """Test prediction sets with missing dataset_id."""
@@ -102,7 +98,10 @@ class TestPredictionService:
         result = self.prediction_service.get_prediction_sets(dataset_id=dataset_id)
 
         # Assert
-        assert result == {}
+        prediction_sets, next_cursor, total_count = result
+        assert len(prediction_sets) == 0
+        assert next_cursor is None
+        assert total_count == 0
 
     def test_get_prediction_set_success(self):
         """Test successful single prediction set retrieval."""

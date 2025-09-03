@@ -23,14 +23,12 @@ class TestModelService:
         length = 25
         
         mock_response = {
-            "models": {
-                "models": [
-                    {"id": "model-1", "name": "Model 1"},
-                    {"id": "model-2", "name": "Model 2"}
-                ],
-                "next": "cursor-def",
-                "totalCount": 50
-            }
+            "models": [
+                {"id": "model-1", "name": "Model 1"},
+                {"id": "model-2", "name": "Model 2"}
+            ],
+            "next": "cursor-def",
+            "totalCount": 50
         }
         self.model_service.request_gql.return_value = mock_response
 
@@ -43,15 +41,14 @@ class TestModelService:
         )
 
         # Assert
-        expected_result = {
-            "models": [
-                {"id": "model-1", "name": "Model 1"},
-                {"id": "model-2", "name": "Model 2"}
-            ],
-            "next": "cursor-def",
-            "totalCount": 50
-        }
-        assert result == expected_result
+        models, next_cursor, total_count = result
+        assert len(models) == 2
+        assert models[0].id == "model-1"
+        assert models[0].name == "Model 1"
+        assert models[1].id == "model-2"
+        assert models[1].name == "Model 2"
+        assert next_cursor == "cursor-def"
+        assert total_count == 50
         self.model_service.request_gql.assert_called_once_with(
             Queries.GET_MODELS,
             Queries.GET_MODELS["variables"](
@@ -68,11 +65,9 @@ class TestModelService:
         dataset_id = "dataset-123"
         
         mock_response = {
-            "models": {
-                "models": [{"id": "model-1", "name": "Test Model"}],
-                "next": None,
-                "totalCount": 1
-            }
+            "models": [{"id": "model-1", "name": "Test Model"}],
+            "next": None,
+            "totalCount": 1
         }
         self.model_service.request_gql.return_value = mock_response
 
@@ -80,10 +75,11 @@ class TestModelService:
         result = self.model_service.get_models(dataset_id=dataset_id)
 
         # Assert
-        assert result["totalCount"] == 1
-        assert result["next"] is None
-        assert len(result["models"]) == 1
-        assert result["models"][0]["name"] == "Test Model"
+        models, next_cursor, total_count = result
+        assert total_count == 1
+        assert next_cursor is None
+        assert len(models) == 1
+        assert models[0].name == "Test Model"
 
     def test_get_models_with_pagination(self):
         """Test models retrieval with pagination parameters."""
@@ -93,14 +89,12 @@ class TestModelService:
         length = 10
         
         mock_response = {
-            "models": {
-                "models": [
-                    {"id": "model-3", "name": "Model 3"},
-                    {"id": "model-4", "name": "Model 4"}
-                ],
-                "next": "next-cursor",
-                "totalCount": 20
-            }
+            "models": [
+                {"id": "model-3", "name": "Model 3"},
+                {"id": "model-4", "name": "Model 4"}
+            ],
+            "next": "next-cursor",
+            "totalCount": 20
         }
         self.model_service.request_gql.return_value = mock_response
 
@@ -112,9 +106,10 @@ class TestModelService:
         )
 
         # Assert
-        assert result["next"] == "next-cursor"
-        assert result["totalCount"] == 20
-        assert len(result["models"]) == 2
+        models, next_cursor, total_count = result
+        assert next_cursor == "next-cursor"
+        assert total_count == 20
+        assert len(models) == 2
 
     def test_get_models_missing_dataset_id(self):
         """Test models with missing dataset_id."""
@@ -133,7 +128,10 @@ class TestModelService:
         result = self.model_service.get_models(dataset_id=dataset_id)
 
         # Assert
-        assert result == {}
+        models, next_cursor, total_count = result
+        assert len(models) == 0
+        assert next_cursor is None
+        assert total_count == 0
 
     def test_get_models_zero_results(self):
         """Test models retrieval with zero results."""
@@ -141,11 +139,9 @@ class TestModelService:
         dataset_id = "empty-dataset"
         
         mock_response = {
-            "models": {
-                "models": [],
-                "next": None,
-                "totalCount": 0
-            }
+            "models": [],
+            "next": None,
+            "totalCount": 0
         }
         self.model_service.request_gql.return_value = mock_response
 
@@ -153,9 +149,10 @@ class TestModelService:
         result = self.model_service.get_models(dataset_id=dataset_id)
 
         # Assert
-        assert result["totalCount"] == 0
-        assert result["next"] is None
-        assert len(result["models"]) == 0
+        models, next_cursor, total_count = result
+        assert total_count == 0
+        assert next_cursor is None
+        assert len(models) == 0
 
     def test_delete_model_success(self):
         """Test successful model deletion."""

@@ -94,7 +94,7 @@ class ActivityService(BaseService):
                 length=length,
             )
         )
-        activities_dict = response.get("activities", [])
+        activities_dict = response.get("jobs", [])
         return (
             [Activity.model_validate(activity_dict) for activity_dict in activities_dict],
             response.get("next"),
