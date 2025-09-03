@@ -20,7 +20,7 @@ class TestUpdateActivityHistoryParams:
         )
         
         # Then
-        assert params["activity_history_id"] == activity_history_id
+        assert params["id"] == activity_history_id
         assert params["status"] == status
         assert params["meta"] == meta
         assert "progress" not in params
@@ -37,7 +37,7 @@ class TestUpdateActivityHistoryParams:
         )
         
         # Then
-        assert params["activity_history_id"] == activity_history_id
+        assert params["id"] == activity_history_id
         assert params["progress"] == progress
         assert "status" not in params
         assert "meta" not in params

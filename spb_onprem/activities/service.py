@@ -65,8 +65,7 @@ class ActivityService(BaseService):
                 meta=meta,
             )
         )
-        activity_dict = response
-        return Activity.model_validate(activity_dict)
+        return Activity.model_validate(response)
     
     def get_activities(
         self,

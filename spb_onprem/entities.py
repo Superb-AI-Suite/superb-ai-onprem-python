@@ -26,6 +26,8 @@ from .activities.entities import (
 )
 from .exports.entities import Export
 from .contents.entities import Content
+from .predictions.entities import PredictionSet
+from .models.entities import Model
 
 __all__ = [
     # Core Entities
@@ -43,6 +45,8 @@ __all__ = [
     "Export",
     "Content",
     "Frame",
+    "PredictionSet",
+    "Model",
 
     # Enums
     "DataType",

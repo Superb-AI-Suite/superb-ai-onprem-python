@@ -1,0 +1,7 @@
+# Test dependencies for superb-ai-onprem-python SDK
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
+
+# Additional testing utilities
+coverage>=7.0.0

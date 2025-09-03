@@ -176,3 +176,22 @@ class ContentService(BaseService):
             variables=Queries.GET_DOWNLOAD_URL["variables"](content_id)
         )
         return response
+
+    def delete_content(
+        self,
+        content_id: str,
+    ) -> bool:
+        '''
+        Delete a content by ID.
+        
+        Args:
+            content_id (str): The ID of the content to delete.
+            
+        Returns:
+            bool: True if deletion was successful.
+        '''
+        response = self.request_gql(
+            query=Queries.DELETE,
+            variables=Queries.DELETE["variables"](content_id)
+        )
+        return response.get("deleteContent", False)

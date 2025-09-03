@@ -378,6 +378,7 @@ class TestExportService:
             dataset_id="test_dataset_id",
             name=Undefined,
             data_filter=Undefined,
+            location=Undefined,
             data_count=Undefined,
             frame_count=Undefined,
             annotation_count=Undefined,

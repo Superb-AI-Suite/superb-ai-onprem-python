@@ -10,6 +10,8 @@ from .slices.service import SliceService
 from .activities.service import ActivityService
 from .exports.service import ExportService
 from .contents.service import ContentService
+from .predictions.service import PredictionService
+from .models.service import ModelService
 
 # Core Entities and Enums
 from .entities import (
@@ -77,6 +79,8 @@ __all__ = (
     "ActivityService",
     "ExportService",
     "ContentService",
+    "PredictionService",
+    "ModelService",
 
     # Core Entities
     "Data",
@@ -93,6 +97,8 @@ __all__ = (
     "Export",
     "Content",
     "Frame",
+    "PredictionSet",
+    "Model",
     
     # Enums
     "DataType",
