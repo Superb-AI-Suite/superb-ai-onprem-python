@@ -12,6 +12,7 @@ from .exports.service import ExportService
 from .contents.service import ContentService
 from .predictions.service import PredictionService
 from .models.service import ModelService
+from .inferences.service import InferService
 
 # Core Entities and Enums
 from .entities import (
@@ -81,6 +82,7 @@ __all__ = (
     "ContentService",
     "PredictionService",
     "ModelService",
+    "InferService",
 
     # Core Entities
     "Data",
