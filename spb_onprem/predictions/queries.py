@@ -3,6 +3,8 @@ from .params import (
     get_prediction_set_params,
     delete_prediction_set_params,
     delete_prediction_from_data_params,
+    create_prediction_set_params,
+    update_prediction_set_data_info_params,
 )
 
 
@@ -59,4 +61,50 @@ class Queries:
             }
         ''',
         "variables": delete_prediction_from_data_params
+    }
+    
+    CREATE_PREDICTION_SET = {
+        "name": "createPredictionSet",
+        "query": '''
+            mutation CreatePredictionSet(
+                $datasetId: ID!,
+                $modelId: ID!,
+                $name: String!,
+                $description: String,
+                $type: PredictionSetTypes!,
+                $dataInfo: PredictionSetDataInfoInput
+            ) {
+                createPredictionSet(
+                    datasetId: $datasetId,
+                    modelId: $modelId,
+                    name: $name,
+                    description: $description,
+                    type: $type,
+                    dataInfo: $dataInfo
+                ) {
+                    id
+                }
+            }
+        ''',
+        "variables": create_prediction_set_params
+    }
+    
+    UPDATE_PREDICTION_SET_DATA_INFO = {
+        "name": "updatePredictionSet",
+        "query": '''
+            mutation UpdatePredictionSet(
+                $datasetId: ID!,
+                $updatePredictionSetId: ID!,
+                $dataInfo: PredictionSetDataInfoInput
+            ) {
+                updatePredictionSet(
+                    datasetId: $datasetId,
+                    id: $updatePredictionSetId,
+                    dataInfo: $dataInfo
+                ) {
+                    id
+                }
+            }
+        ''',
+        "variables": update_prediction_set_data_info_params
     }
