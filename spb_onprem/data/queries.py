@@ -311,9 +311,7 @@ class Queries():
                 deleteData(
                     datasetId: $dataset_id,
                     id: $data_id,
-                ) {{
-                    {Schemas.DATA}
-                }}
+                )
             }}
         ''',
         "variables": delete_data_params,
