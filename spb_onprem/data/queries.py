@@ -127,10 +127,11 @@ class Schemas:
             }
         }
         predictions {
-            id
+            setId
             content {
                 id
             }
+            meta
         }
         thumbnail {
             id
