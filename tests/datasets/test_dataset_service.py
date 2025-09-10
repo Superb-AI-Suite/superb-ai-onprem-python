@@ -97,7 +97,7 @@ class TestDatasetService:
 
         # Check query contains expected mutation
         assert query["name"] == "deleteDataset"
-        assert "mutation DeleteDataset" in query["query"]
+        assert "mutation DeleteDataset($dataset_id: ID!)" in query["query"]
         assert "deleteDataset(datasetId: $dataset_id)" in query["query"]
 
         # Check variables function is called correctly
