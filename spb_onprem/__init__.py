@@ -31,6 +31,7 @@ from .entities import (
     Export,
     Content,
     Frame,
+    Model,
 
     # Enums
     DataType,

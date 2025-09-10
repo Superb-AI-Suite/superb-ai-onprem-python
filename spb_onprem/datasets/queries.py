@@ -82,7 +82,7 @@ class Queries():
     DELETE_DATASET = {
         "name": "deleteDataset",
         "query": '''
-            mutation DeleteDataset($dataset_id: String!) {
+            mutation DeleteDataset($dataset_id: ID!) {
                 deleteDataset(datasetId: $dataset_id)
             }
         ''',

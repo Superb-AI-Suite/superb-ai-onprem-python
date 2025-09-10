@@ -269,7 +269,7 @@ class DataService(BaseService):
         self,
         dataset_id: str,
         data_id: str,
-    ):
+    ) -> bool:
         """Delete a data.
 
         Args:
@@ -277,14 +277,21 @@ class DataService(BaseService):
             data_id (str): The data id.
 
         Returns:
-            Data: The deleted data.
+            bool: True if deletion was successful.
+        
+        Raises:
+            BadParameterError: If required parameters are missing.
         """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+
         response = self.request_gql(
             Queries.DELETE,
             Queries.DELETE["variables"](dataset_id=dataset_id, data_id=data_id)
         )
-        data = Data.model_validate(response)
-        return data
+        return response.get("deleteData", False)
 
     def insert_prediction(
         self,
