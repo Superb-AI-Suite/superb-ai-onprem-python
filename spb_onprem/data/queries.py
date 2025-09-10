@@ -621,7 +621,7 @@ class Queries():
     }
     
     GET_DETAIL = {
-        "name": "getDataDetail",
+        "name": "data",
         "query": f'''
             query GetDataDetail($datasetId: String!, $id: ID) {{
                 data(datasetId: $datasetId, id: $id) {{
