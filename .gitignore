@@ -50,3 +50,6 @@ coverage.xml
 
 # Added from the code block
 spb_onprem/_version.py
+
+# history
+.history
