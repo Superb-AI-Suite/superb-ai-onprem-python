@@ -120,6 +120,17 @@ class BaseService():
             return data[query_name]
             
         except requests.exceptions.RequestException as e:
+            # Log detailed error information for debugging
+            if hasattr(e, 'response') and e.response is not None:
+                error_details = f"HTTP {e.response.status_code} Error"
+                response_text = e.response.text[:1000] if e.response.text else "No response body"
+                print(f"GraphQL Request Failed - {error_details}: {response_text}")
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"GraphQL Request Failed - {error_details}")
+                logger.error(f"Response body: {response_text}")
+                logger.error(f"Request URL: {e.response.url}")
+                logger.error(f"Request headers: {dict(e.response.request.headers) if e.response.request else 'N/A'}")
             raise BadResponseError(f"HTTP request failed: {str(e)}") from e
         except BaseSDKError as e:
             raise e
