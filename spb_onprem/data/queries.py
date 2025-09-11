@@ -633,7 +633,7 @@ class Queries():
     }
     
     GET_EVALUATION_VALUE_LIST = {
-        "name": "getEvaluationValueList",
+        "name": "evaluationValueList",
         "query": '''
             query GetEvaluationValueList(
                 $datasetId: String!,
