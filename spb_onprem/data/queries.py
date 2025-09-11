@@ -621,7 +621,7 @@ class Queries():
     }
     
     GET_DETAIL = {
-        "name": "getDataDetail",
+        "name": "data",
         "query": f'''
             query GetDataDetail($datasetId: String!, $id: ID) {{
                 data(datasetId: $datasetId, id: $id) {{
@@ -633,7 +633,7 @@ class Queries():
     }
     
     GET_EVALUATION_VALUE_LIST = {
-        "name": "getEvaluationValueList",
+        "name": "evaluationValueList",
         "query": '''
             query GetEvaluationValueList(
                 $datasetId: String!,

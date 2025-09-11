@@ -53,3 +53,4 @@ spb_onprem/_version.py
 
 # history
 .history
+.claude
