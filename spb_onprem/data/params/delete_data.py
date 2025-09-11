@@ -13,5 +13,5 @@ def delete_data_params(
     
     return {
         "dataset_id": dataset_id,
-        "id": data_id,
+        "data_id": data_id,
     }
