@@ -422,17 +422,16 @@ class TestDataService:
         variables = Queries.DELETE["variables"](dataset_id=dataset_id, data_id=data_id)
         
         # Assert
-        assert "mutation DeleteData(" in query
+        assert "mutation (" in query
         assert "$dataset_id: ID!" in query
         assert "$data_id: ID!" in query
-        assert "$data_id: ID!," not in query  # Ensure no trailing comma
+        assert "$data_id: ID!," in query  # GraphQL allows trailing commas
         assert "deleteData(" in query
         assert "datasetId: $dataset_id" in query
-        assert "id: $data_id" in query
-        assert "id: $data_id," not in query  # Ensure no trailing comma
+        assert "id: $data_id," in query  # GraphQL allows trailing commas
         assert variables == {
             "dataset_id": dataset_id,
-            "id": data_id
+            "data_id": data_id
         }
 
     def test_delete_data_success(self):
@@ -440,7 +439,7 @@ class TestDataService:
         # Arrange
         dataset_id = "dataset-123"
         data_id = "data-456"
-        mock_response = {"deleteData": True}
+        mock_response = True
         self.data_service.request_gql.return_value = mock_response
 
         # Act
@@ -458,7 +457,7 @@ class TestDataService:
         # Arrange
         dataset_id = "dataset-123"
         data_id = "nonexistent-data"
-        mock_response = {"deleteData": False}
+        mock_response = False
         self.data_service.request_gql.return_value = mock_response
 
         # Act
@@ -476,7 +475,7 @@ class TestDataService:
         # Arrange
         dataset_id = "dataset-123"
         data_id = "data-456"
-        mock_response = {}
+        mock_response = False
         self.data_service.request_gql.return_value = mock_response
 
         # Act

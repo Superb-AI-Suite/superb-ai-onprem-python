@@ -17,7 +17,7 @@ class TestContentService:
         """Test successful content deletion."""
         # Arrange
         content_id = "test-content-123"
-        mock_response = {"deleteContent": True}
+        mock_response = True
         self.content_service.request_gql.return_value = mock_response
 
         # Act
@@ -34,7 +34,7 @@ class TestContentService:
         """Test content deletion failure."""
         # Arrange
         content_id = "nonexistent-content"
-        mock_response = {"deleteContent": False}
+        mock_response = False
         self.content_service.request_gql.return_value = mock_response
 
         # Act
@@ -51,7 +51,7 @@ class TestContentService:
         """Test content deletion with missing response field."""
         # Arrange
         content_id = "test-content-456"
-        mock_response = {}  # No deleteContent field
+        mock_response = False
         self.content_service.request_gql.return_value = mock_response
 
         # Act

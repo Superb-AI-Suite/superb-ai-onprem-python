@@ -85,7 +85,7 @@ class SliceService(BaseService):
         return (
             slices,
             response.get("next", None),
-            response.get("totalCount", False)
+            response.get("totalCount", 0)
         )
 
     def get_slice(
