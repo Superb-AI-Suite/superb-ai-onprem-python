@@ -291,7 +291,7 @@ class DataService(BaseService):
             Queries.DELETE,
             Queries.DELETE["variables"](dataset_id=dataset_id, data_id=data_id)
         )
-        return response.get("deleteData", False)
+        return response
 
     def insert_prediction(
         self,
