@@ -102,7 +102,7 @@ class PredictionService(BaseService):
                 prediction_set_id=prediction_set_id
             )
         )
-        return response.get("deletePredictionSet", False)
+        return response
     
     def delete_prediction_from_data(
         self,

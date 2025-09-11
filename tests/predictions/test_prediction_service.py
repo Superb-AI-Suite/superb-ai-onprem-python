@@ -189,7 +189,7 @@ class TestPredictionService:
         dataset_id = "dataset-123"
         prediction_set_id = "pred-set-456"
         
-        mock_response = {"deletePredictionSet": True}
+        mock_response = True
         self.prediction_service.request_gql.return_value = mock_response
 
         # Act
@@ -214,7 +214,7 @@ class TestPredictionService:
         dataset_id = "dataset-123"
         prediction_set_id = "nonexistent-pred-set"
         
-        mock_response = {"deletePredictionSet": False}
+        mock_response = False
         self.prediction_service.request_gql.return_value = mock_response
 
         # Act
@@ -232,7 +232,7 @@ class TestPredictionService:
         dataset_id = "dataset-123"
         prediction_set_id = "pred-set-456"
         
-        mock_response = {}
+        mock_response = False
         self.prediction_service.request_gql.return_value = mock_response
 
         # Act

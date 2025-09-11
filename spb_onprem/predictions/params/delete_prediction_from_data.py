@@ -16,5 +16,5 @@ def delete_prediction_from_data_params(
     return {
         "dataset_id": dataset_id,
         "data_id": data_id,
-        "prediction_set_id": prediction_set_id
+        "set_id": prediction_set_id
     }

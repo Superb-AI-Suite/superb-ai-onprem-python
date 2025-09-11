@@ -160,7 +160,7 @@ class TestModelService:
         dataset_id = "dataset-123"
         model_id = "model-456"
         
-        mock_response = {"deleteModel": True}
+        mock_response = True
         self.model_service.request_gql.return_value = mock_response
 
         # Act
@@ -185,7 +185,7 @@ class TestModelService:
         dataset_id = "dataset-123"
         model_id = "nonexistent-model"
         
-        mock_response = {"deleteModel": False}
+        mock_response = False
         self.model_service.request_gql.return_value = mock_response
 
         # Act
@@ -203,7 +203,7 @@ class TestModelService:
         dataset_id = "dataset-123"
         model_id = "model-456"
         
-        mock_response = {}
+        mock_response = False
         self.model_service.request_gql.return_value = mock_response
 
         # Act

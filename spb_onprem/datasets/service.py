@@ -44,7 +44,7 @@ class DatasetService(BaseService):
         return (
             datasets,
             response.get("next", None),
-            response.get("totalCount", False)
+            response.get("totalCount", 0)
         )
 
     def get_dataset(
@@ -147,4 +147,4 @@ class DatasetService(BaseService):
             Queries.DELETE_DATASET,
             Queries.DELETE_DATASET["variables"](dataset_id=dataset_id)
         )
-        return response.get("deleteDataset", False)
+        return response

@@ -194,4 +194,4 @@ class ContentService(BaseService):
             query=Queries.DELETE,
             variables=Queries.DELETE["variables"](content_id)
         )
-        return response.get("deleteContent", False)
+        return response

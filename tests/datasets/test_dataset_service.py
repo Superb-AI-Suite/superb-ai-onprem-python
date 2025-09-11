@@ -18,7 +18,7 @@ class TestDatasetService:
         """Test successful dataset deletion."""
         # Arrange
         dataset_id = "dataset-123"
-        mock_response = {"deleteDataset": True}
+        mock_response = True
         self.dataset_service.request_gql.return_value = mock_response
 
         # Act
@@ -35,7 +35,7 @@ class TestDatasetService:
         """Test dataset deletion failure."""
         # Arrange
         dataset_id = "nonexistent-dataset"
-        mock_response = {"deleteDataset": False}
+        mock_response = False
         self.dataset_service.request_gql.return_value = mock_response
 
         # Act
@@ -52,7 +52,7 @@ class TestDatasetService:
         """Test dataset deletion with missing response field."""
         # Arrange
         dataset_id = "dataset-123"
-        mock_response = {}
+        mock_response = False
         self.dataset_service.request_gql.return_value = mock_response
 
         # Act
@@ -74,7 +74,7 @@ class TestDatasetService:
 
         # Act & Assert
         # Empty string should be allowed by the service, but would fail at GraphQL level
-        mock_response = {"deleteDataset": False}
+        mock_response = False
         self.dataset_service.request_gql.return_value = mock_response
 
         result = self.dataset_service.delete_dataset(dataset_id)
@@ -84,7 +84,7 @@ class TestDatasetService:
         """Test that delete dataset uses correct query structure."""
         # Arrange
         dataset_id = "test-dataset"
-        mock_response = {"deleteDataset": True}
+        mock_response = True
         self.dataset_service.request_gql.return_value = mock_response
 
         # Act
@@ -120,7 +120,7 @@ class TestDatasetService:
         """Test dataset deletion with special characters in ID."""
         # Arrange
         dataset_id = "dataset-with-special-chars_123@test"
-        mock_response = {"deleteDataset": True}
+        mock_response = True
         self.dataset_service.request_gql.return_value = mock_response
 
         # Act

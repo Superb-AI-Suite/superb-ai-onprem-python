@@ -73,4 +73,4 @@ class ModelService(BaseService):
                 model_id=model_id
             )
         )
-        return response.get("deleteModel", False)
+        return response
