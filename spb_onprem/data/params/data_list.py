@@ -133,17 +133,18 @@ class DataSliceFilter(CustomBaseModel):
     must_filter: Optional[DataSlicePropertiesFilter] = Field(None, alias="must")
     not_filter: Optional[DataSlicePropertiesFilter] = Field(None, alias="not")
 
-class DataFilter(CustomBaseModel):
-    must_filter: Optional[DataFilterOptions] = Field(None, alias="must")
-    not_filter: Optional[DataFilterOptions] = Field(None, alias="not")
-    frames: Optional[List[FrameFilter]] = None
-    slice: Optional[DataSliceFilter] = None
-
 
 class FrameFilter(CustomBaseModel):
     conditions: Optional[FrameFilterOptions] = None
     mode: Optional[Union[str, Literal["INDIVIDUAL_FRAMES", "DATA_SUMMARY"]]] = "INDIVIDUAL_FRAMES"
     matching_frame_count: Optional[NumericRangeFilter] = Field(None, alias="matchingFrameCount")
+
+
+class DataFilter(CustomBaseModel):
+    must_filter: Optional[DataFilterOptions] = Field(None, alias="must")
+    not_filter: Optional[DataFilterOptions] = Field(None, alias="not")
+    frames: Optional[List[FrameFilter]] = None
+    slice: Optional[DataSliceFilter] = None
 
 
 class DataListFilter(CustomBaseModel):
