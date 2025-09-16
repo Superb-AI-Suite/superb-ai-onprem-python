@@ -39,15 +39,30 @@ class SliceService(BaseService):
         Returns:
             Slice: The created slice object.
         """
+        # Debug logging: 파라미터 확인
+        print(f"[DEBUG] create_slice called with:")
+        print(f"  dataset_id: {dataset_id} (type: {type(dataset_id)})")
+        print(f"  name: {name} (type: {type(name)})")
+        print(f"  description: {description} (type: {type(description)})")
+
+        variables = Queries.CREATE_SLICE["variables"](
+            dataset_id=dataset_id,
+            slice_name=name,
+            slice_description=description
+        )
+        print(f"[DEBUG] GraphQL variables: {variables}")
+
         response = self.request_gql(
             Queries.CREATE_SLICE,
-            Queries.CREATE_SLICE["variables"](
-                dataset_id=dataset_id,
-                slice_name=name,
-                slice_description=description
-            )
+            variables
         )
+        # Debug logging: 실제 GraphQL 응답 확인
+        print(f"[DEBUG] GraphQL create_slice response: {response}")
+        print(f"[DEBUG] Response type: {type(response)}")
+        print(f"[DEBUG] Response keys: {response.keys() if isinstance(response, dict) else 'Not a dict'}")
+
         slice_dict = response.get("createSlice", {})
+        print(f"[DEBUG] Extracted slice_dict: {slice_dict}")
         return Slice.model_validate(slice_dict)
 
     def get_slices(
