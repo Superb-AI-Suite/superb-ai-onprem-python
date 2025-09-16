@@ -61,9 +61,9 @@ class SliceService(BaseService):
         print(f"[DEBUG] Response type: {type(response)}")
         print(f"[DEBUG] Response keys: {response.keys() if isinstance(response, dict) else 'Not a dict'}")
 
-        slice_dict = response.get("createSlice", {})
-        print(f"[DEBUG] Extracted slice_dict: {slice_dict}")
-        return Slice.model_validate(slice_dict)
+        # response는 이미 createSlice 객체 자체 (request_gql이 data.createSlice를 추출함)
+        print(f"[DEBUG] Using response directly as slice_dict: {response}")
+        return Slice.model_validate(response)
 
     def get_slices(
         self,
