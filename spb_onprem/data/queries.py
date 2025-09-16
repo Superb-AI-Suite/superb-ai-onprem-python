@@ -31,6 +31,10 @@ class Schemas:
         data {
             id
         }
+        selectedFrames {
+            id
+            selectedFrameIndex
+        }
         next
         totalCount
     '''
@@ -254,6 +258,10 @@ class Queries():
                     length: $length
                 ) {{
                     {Schemas.DATA_PAGE}
+                    selectedFrames {{
+                        dataId
+                        selectedFrameIndex
+                    }}
                     next
                     totalCount
                 }}
