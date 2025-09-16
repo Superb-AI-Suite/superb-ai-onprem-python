@@ -32,7 +32,7 @@ class Schemas:
             id
         }
         selectedFrames {
-            id
+            dataId
             selectedFrameIndex
         }
         next
