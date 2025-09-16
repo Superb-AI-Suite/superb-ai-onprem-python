@@ -124,8 +124,8 @@ class SliceService(BaseService):
                 slice_id=slice_id
             )
         )
-        slice_dict = response.get("slice", {})
-        return Slice.model_validate(slice_dict)
+        # slice_dict = response.get("slice", {})
+        return Slice.model_validate(response)
     
     def get_slice_by_name(
         self,
