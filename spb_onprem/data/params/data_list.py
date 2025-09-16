@@ -1,162 +1,157 @@
-from typing import (
-    Optional,
-    List,
-    Union,
-    Any
-)
-from enum import Enum
+from typing import Optional, List, Union, Literal
 from spb_onprem.base_model import CustomBaseModel, Field
 from spb_onprem.data.enums import DataType, DataStatus
 from spb_onprem.exceptions import BadParameterError
 
-
-class CommentStatus(str, Enum):
-    """댓글 상태를 나타내는 열거형"""
-    RESOLVED = "RESOLVED"
-    UNRESOLVED = "UNRESOLVED"
-
-
-class AnnotationFilter(CustomBaseModel):
-    type: Optional[str] = None
-    name: Optional[str] = None
-
-
-class AnnotationRangeFilter(CustomBaseModel):
-    annotation_type: Optional[str] = Field(None, alias="annotationType")
-    class_name: Optional[str] = Field(None, alias="className")
-    class_count_equals: Optional[int] = Field(None, alias="classCountEquals")
-    class_count_in: Optional[List[int]] = Field(None, alias="classCountIn")
-    class_count_max: Optional[int] = Field(None, alias="classCountMax")
-    class_count_min: Optional[int] = Field(None, alias="classCountMin")
-
-
-class DateTimeRangeFilter(CustomBaseModel):
-    """날짜/시간 범위 필터"""
-    from_date: Optional[str] = Field(None, alias="from")
-    to_date: Optional[str] = Field(None, alias="to")
+# === 기본 필터 ===
+class DateTimeRangeFilterOption(CustomBaseModel):
+    datetime_from: Optional[str] = Field(None, alias="from")
+    to: Optional[str] = None
     equals: Optional[str] = None
 
-
-class UserFilter(CustomBaseModel):
-    """사용자 필터 옵션"""
+class UserFilterOption(CustomBaseModel):
     equals: Optional[str] = None
     contains: Optional[str] = None
-    in_list: Optional[List[str]] = Field(None, alias="in")
+    user_in: Optional[List[str]] = Field(None, alias="in")
     exists: Optional[bool] = None
 
-
-class StringMetaFilter(CustomBaseModel):
-    """문자열 메타 데이터 필터"""
-    key: str
-    contains: Optional[str] = None
-    equals: Optional[str] = None
-    in_list: Optional[List[str]] = Field(None, alias="in")
-
-
-class NumberMetaFilter(CustomBaseModel):
-    """숫자 메타 데이터 필터"""
-    key: str
-    min_value: Optional[float] = Field(None, alias="min")
-    max_value: Optional[float] = Field(None, alias="max")
+class NumericRangeFilter(CustomBaseModel):
+    gt: Optional[float] = None
+    gte: Optional[float] = None
+    lt: Optional[float] = None
+    lte: Optional[float] = None
     equals: Optional[float] = None
-    in_list: Optional[List[float]] = Field(None, alias="in")
 
+class GeoLocationFilter(CustomBaseModel):
+    latitude: float
+    longitude: float
+    radius_in_meters: float = Field(..., alias="radiusInMeters")
 
-class DateTimeMetaFilter(CustomBaseModel):
-    """날짜/시간 메타 데이터 필터"""
+# === Meta 필터 ===
+class NumberMetaFilter(CustomBaseModel):
     key: str
-    from_date: Optional[str] = Field(None, alias="from")
-    to_date: Optional[str] = Field(None, alias="to")
+    range: Optional[NumericRangeFilter] = None
+
+class KeywordMetaFilter(CustomBaseModel):
+    key: str
     equals: Optional[str] = None
+    contains: Optional[str] = None
+    keyword_in: Optional[List[str]] = Field(None, alias="in")
 
+class DateMetaFilter(CustomBaseModel):
+    key: str
+    range: Optional[DateTimeRangeFilterOption] = None
 
-class MetaFilterOptions(CustomBaseModel):
-    """메타 데이터 필터 옵션들"""
-    string_meta: Optional[List[StringMetaFilter]] = Field(None, alias="stringMeta")
-    number_meta: Optional[List[NumberMetaFilter]] = Field(None, alias="numberMeta")
-    date_time_meta: Optional[List[DateTimeMetaFilter]] = Field(None, alias="dateTimeMeta")
+class MiscMetaFilter(CustomBaseModel):
+    key: str
+    equals: str
 
+class MetaFilter(CustomBaseModel):
+    num: Optional[List[NumberMetaFilter]] = None
+    keyword: Optional[List[KeywordMetaFilter]] = None
+    date: Optional[List[DateMetaFilter]] = None
+    misc: Optional[List[MiscMetaFilter]] = None
 
-class DataSliceStatusFilter(CustomBaseModel):
-    """데이터 슬라이스 상태 필터"""
-    in_list: Optional[List[DataStatus]] = Field(None, alias="in")
-    equals: Optional[DataStatus] = None
-    not_in: Optional[List[DataStatus]] = Field(None, alias="notIn")
+# === Count 필터 ===
+class CountFilter(CustomBaseModel):
+    key: str
+    range: Optional[NumericRangeFilter] = None
 
+class DistanceCountFilter(CustomBaseModel):
+    key: str
+    distance_range: NumericRangeFilter = Field(..., alias="distanceRange")
+    count_range: NumericRangeFilter = Field(..., alias="countRange")
 
-class DataSliceUserFilter(CustomBaseModel):
-    """데이터 슬라이스 사용자 필터 (labeler, reviewer용)"""
+class FrameCountsFilter(CustomBaseModel):
+    annotation_class: Optional[List[CountFilter]] = Field(None, alias="class")
+    group: Optional[List[CountFilter]] = None
+    sub_class: Optional[List[CountFilter]] = Field(None, alias="subClass")
+    distance: Optional[List[DistanceCountFilter]] = None
+
+# === Frame 필터 ===
+class FrameFilterOptions(CustomBaseModel):
+    index: Optional[NumericRangeFilter] = None
+    version_contains: Optional[str] = Field(None, alias="versionContains")
+    channels_in: Optional[List[str]] = Field(None, alias="channelsIn")
+    timestamp: Optional[DateTimeRangeFilterOption] = None
+    location: Optional[GeoLocationFilter] = None
+    meta: Optional[MetaFilter] = None
+    counts: Optional[FrameCountsFilter] = None
+
+# === Data 필터 ===
+class DataFilterOptions(CustomBaseModel):
+    id_in: Optional[List[str]] = Field(None, alias="idIn")
+    slice_id_in: Optional[List[str]] = Field(None, alias="sliceIdIn")
+    key_contains: Optional[str] = Field(None, alias="keyContains")
+    key_matches: Optional[str] = Field(None, alias="keyMatches")
+    sub_type_contains: Optional[str] = Field(None, alias="subTypeContains")
+    sub_type_matches: Optional[str] = Field(None, alias="subTypeMatches")
+    type_in: Optional[List[str]] = Field(None, alias="typeIn")
+    created_at: Optional[DateTimeRangeFilterOption] = Field(None, alias="createdAt")
+    updated_at: Optional[DateTimeRangeFilterOption] = Field(None, alias="updatedAt")
+    created_by: Optional[UserFilterOption] = Field(None, alias="createdBy")
+    updated_by: Optional[UserFilterOption] = Field(None, alias="updatedBy")
+    meta: Optional[MetaFilter] = None
+    assigned_to_user: Optional[str] = Field(None, alias="assignedToUser")
+
+class DataSliceStatusFilterOption(CustomBaseModel):
+    status_in: Optional[List[str]] = Field(None, alias="in")
     equals: Optional[str] = None
-    in_list: Optional[List[str]] = Field(None, alias="in")
+    status_not_in: Optional[List[str]] = Field(None, alias="notIn")
+
+class DataSliceUserFilterOption(CustomBaseModel):
+    equals: Optional[str] = None
+    user_in: Optional[List[str]] = Field(None, alias="in")
     exists: Optional[bool] = None
 
-
-class DataSliceTagsFilter(CustomBaseModel):
-    """데이터 슬라이스 태그 필터"""
+class DataSliceTagsFilterOption(CustomBaseModel):
     contains: Optional[str] = None
     has_any: Optional[List[str]] = Field(None, alias="hasAny")
     has_all: Optional[List[str]] = Field(None, alias="hasAll")
     exists: Optional[bool] = None
 
-
-class DataSliceCommentFilter(CustomBaseModel):
-    """데이터 슬라이스 댓글 필터"""
+class DataSliceCommentFilterOption(CustomBaseModel):
     comment_contains: Optional[str] = Field(None, alias="commentContains")
     category: Optional[str] = None
-    status: Optional[CommentStatus] = None
-    created_by: Optional[UserFilter] = Field(None, alias="createdBy")
-    created_at: Optional[DateTimeRangeFilter] = Field(None, alias="createdAt")
+    status: Optional[str] = None
+    created_by: Optional[UserFilterOption] = Field(None, alias="createdBy")
+    created_at: Optional[DateTimeRangeFilterOption] = Field(None, alias="createdAt")
     exists: Optional[bool] = None
 
-
 class DataSlicePropertiesFilter(CustomBaseModel):
-    """슬라이스 속성 필터 (ID 제외)"""
-    status: Optional[DataSliceStatusFilter] = None
-    labeler: Optional[DataSliceUserFilter] = None
-    reviewer: Optional[DataSliceUserFilter] = None
-    tags: Optional[DataSliceTagsFilter] = None
-    status_changed_at: Optional[DateTimeRangeFilter] = Field(None, alias="statusChangedAt")
-    comments: Optional[DataSliceCommentFilter] = None
-    meta: Optional[MetaFilterOptions] = None
-
+    status: Optional[DataSliceStatusFilterOption] = None
+    labeler: Optional[DataSliceUserFilterOption] = None
+    reviewer: Optional[DataSliceUserFilterOption] = None
+    tags: Optional[DataSliceTagsFilterOption] = None
+    status_changed_at: Optional[DateTimeRangeFilterOption] = Field(None, alias="statusChangedAt")
+    comments: Optional[DataSliceCommentFilterOption] = None
+    meta: Optional[MetaFilter] = None
+    assigned_to_user: Optional[str] = Field(None, alias="assignedToUser")
 
 class DataSliceFilter(CustomBaseModel):
-    """슬라이스 필터 (ID + must/not 구조)"""
-    id: str  # 검색할 슬라이스 ID (필수)
-    must: Optional[DataSlicePropertiesFilter] = None  # 만족해야 하는 조건
-    not_filter: Optional[DataSlicePropertiesFilter] = Field(None, alias="not")  # 만족하지 않아야 하는 조건
+    id: str
+    must_filter: Optional[DataSlicePropertiesFilter] = Field(None, alias="must")
+    not_filter: Optional[DataSlicePropertiesFilter] = Field(None, alias="not")
 
 
-class DataFilterOptions(CustomBaseModel):
-    id_in: Optional[List[str]] = Field(None, alias="idIn")
-    slice_id: Optional[str] = Field(None, alias="sliceId")
-    slice_id_in: Optional[List[str]] = Field(None, alias="sliceIdIn")
-    slice_id_any: Optional[List[str]] = Field(None, alias="sliceIdAny")  # 추가된 필드
-    slice_id_exists: Optional[bool] = Field(None, alias="sliceIdExists")  # 추가된 필드
-    key_contains: Optional[str] = Field(None, alias="keyContains")
-    key_matches: Optional[str] = Field(None, alias="keyMatches")
-    sub_type_contains: Optional[str] = Field(None, alias="subTypeContains")  # 추가된 필드
-    sub_type_matches: Optional[str] = Field(None, alias="subTypeMatches")  # 추가된 필드
-    type_in: Optional[List[DataType]] = Field(None, alias="typeIn")
-    annotation_any: Optional[List[AnnotationFilter]] = Field(None, alias="annotationAny")
-    annotation_in: Optional[List[AnnotationFilter]] = Field(None, alias="annotationIn")
-    annotation_exists: Optional[bool] = Field(None, alias="annotationExists")
-    annotation_range: Optional[List[AnnotationRangeFilter]] = Field(None, alias="annotationRange")
-    prediction_set_id_in: Optional[List[str]] = Field(None, alias="predictionSetIdIn")
-    prediction_set_id_exists: Optional[bool] = Field(None, alias="predictionSetIdExists")
-    
-    # 추가된 필드들 (GraphQL과 매칭)
-    created_at: Optional[DateTimeRangeFilter] = Field(None, alias="createdAt")
-    updated_at: Optional[DateTimeRangeFilter] = Field(None, alias="updatedAt")
-    created_by: Optional[UserFilter] = Field(None, alias="createdBy")
-    updated_by: Optional[UserFilter] = Field(None, alias="updatedBy")
-    meta: Optional[MetaFilterOptions] = None
+class FrameFilter(CustomBaseModel):
+    conditions: Optional[FrameFilterOptions] = None
+    mode: Optional[Union[str, Literal["INDIVIDUAL_FRAMES", "DATA_SUMMARY"]]] = "INDIVIDUAL_FRAMES"
+    matching_frame_count: Optional[NumericRangeFilter] = Field(None, alias="matchingFrameCount")
+
+
+class DataFilter(CustomBaseModel):
+    must_filter: Optional[DataFilterOptions] = Field(None, alias="must")
+    not_filter: Optional[DataFilterOptions] = Field(None, alias="not")
+    frames: Optional[List[FrameFilter]] = None
+    slice: Optional[DataSliceFilter] = None
 
 
 class DataListFilter(CustomBaseModel):
     must_filter: Optional[DataFilterOptions] = Field(None, alias="must")
     not_filter: Optional[DataFilterOptions] = Field(None, alias="not")
     slice: Optional[DataSliceFilter] = Field(None, alias="slice")
+    frames: Optional[List[FrameFilter]] = Field(None, alias="frames")
 
 
 def get_data_id_list_params(
@@ -181,12 +176,9 @@ def get_data_id_list_params(
     """
     if length > 200:
         raise BadParameterError("The maximum length is 200.")
-
     return {
         "dataset_id": dataset_id,
-        "filter": data_filter.model_dump(
-            by_alias=True, exclude_unset=True
-        ) if data_filter else None,
+        "filter": data_filter.model_dump(by_alias=True, exclude_unset=True) if data_filter else None,
         "cursor": cursor,
         "length": length
     }
@@ -215,12 +207,9 @@ def get_data_list_params(
 
     if length > 50:
         raise BadParameterError("The maximum length is 50.")
-
     return {
         "dataset_id": dataset_id,
-        "filter": data_filter.model_dump(
-            by_alias=True, exclude_unset=True
-        ) if data_filter else None,
+        "filter": data_filter.model_dump(by_alias=True, exclude_unset=True) if data_filter else None,
         "cursor": cursor,
         "length": length
     }

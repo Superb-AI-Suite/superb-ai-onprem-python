@@ -121,10 +121,13 @@ class DataService(BaseService):
         )
         data_list = response.get("data", [])
         data = [Data.model_validate(data_dict) for data_dict in data_list]
+        
+        selected_frames = response.get("selectedFrames", [])
+        
         return (
             data,
             response.get("next", None),
-            response.get("totalCount", 0)
+            response.get("totalCount", 0),
         )
 
     def get_data_id_list(
