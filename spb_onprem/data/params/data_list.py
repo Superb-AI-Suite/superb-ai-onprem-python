@@ -178,7 +178,7 @@ def get_data_id_list_params(
         raise BadParameterError("The maximum length is 200.")
     return {
         "dataset_id": dataset_id,
-        "filter": data_filter.filter.model_dump(by_alias=True, exclude_unset=True) if data_filter and data_filter.filter else None,
+        "filter": data_filter.model_dump(by_alias=True, exclude_unset=True) if data_filter else None,
         "cursor": cursor,
         "length": length
     }
@@ -209,7 +209,7 @@ def get_data_list_params(
         raise BadParameterError("The maximum length is 50.")
     return {
         "dataset_id": dataset_id,
-        "filter": data_filter.filter.model_dump(by_alias=True, exclude_unset=True) if data_filter and data_filter.filter else None,
+        "filter": data_filter.model_dump(by_alias=True, exclude_unset=True) if data_filter else None,
         "cursor": cursor,
         "length": length
     }
