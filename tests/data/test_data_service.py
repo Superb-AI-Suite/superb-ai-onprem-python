@@ -125,7 +125,7 @@ class TestDataService:
         query_structure = Queries.GET_DETAIL
 
         # Assert
-        assert query_structure["name"] == "getDataDetail"
+        assert query_structure["name"] == "data"
         assert "query GetDataDetail($datasetId: ID!, $id: ID!)" in query_structure["query"]
         assert "data(datasetId: $datasetId, id: $id)" in query_structure["query"]
         assert callable(query_structure["variables"])

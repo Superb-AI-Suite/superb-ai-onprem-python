@@ -631,7 +631,7 @@ class Queries():
     GET_DETAIL = {
         "name": "data",
         "query": f'''
-            query GetDataDetail($datasetId: String!, $id: ID) {{
+            query GetDataDetail($datasetId: ID!, $id: ID!) {{
                 data(datasetId: $datasetId, id: $id) {{
                     {Schemas.DATA_DETAIL}
                 }}
