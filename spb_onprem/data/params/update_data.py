@@ -28,10 +28,9 @@ def update_params(
 
     Args:
         dataset_id (str): The dataset ID of the data.
-        id (str): The ID of the data.
+        data_id (str): The ID of the data.
         key (str): The key of the data.
         meta (List[DataMeta]): The meta of the data.
-        system_meta (List[DataMeta]): The system meta of the data.
     """
     variables = {
         "datasetId": dataset_id,
@@ -46,11 +45,11 @@ def update_params(
             raise ValueError("meta must be a list of DataMeta or None.")
         variables["meta"] = [
             {
-                "key": meta.key,
-                "type": meta.type.value,
-                "value": meta.value,
+                "key": meta_item.key,
+                "type": meta_item.type.value,
+                "value": meta_item.value,
             }
-            for meta in meta
+            for meta_item in meta
         ] if meta is not None else None
 
     return variables
