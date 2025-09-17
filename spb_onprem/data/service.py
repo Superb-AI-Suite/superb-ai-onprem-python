@@ -19,6 +19,7 @@ from .entities import (
     AnnotationVersion,
     Prediction,
     Frame,
+    DataMeta,
 )
 from .enums import (
     DataStatus,
@@ -195,7 +196,7 @@ class DataService(BaseService):
             UndefinedType,
         ] = Undefined,
         meta: Union[
-            List[dict],
+            List[DataMeta],
             UndefinedType,
         ] = Undefined,
     ):
@@ -205,7 +206,7 @@ class DataService(BaseService):
             dataset_id (str): The dataset id.
             data_id (str): The data id.
             key (Union[str, UndefinedType], optional): The key of the data. Defaults to Undefined.
-            meta (Union[List[dict], UndefinedType], optional): The meta data. Defaults to Undefined.
+            meta (Union[List[DataMeta], UndefinedType], optional): The meta data. Defaults to Undefined.
 
         Returns:
             Data: The updated data.
@@ -715,7 +716,10 @@ class DataService(BaseService):
         dataset_id: str,
         data_id: str,
         slice_id: str,
-        meta: dict,
+        meta: Union[
+            Optional[dict],
+            UndefinedType
+        ] = Undefined,
     ):
         """Update the metadata of a data slice.
 
@@ -734,8 +738,6 @@ class DataService(BaseService):
             raise BadParameterError("data_id is required.")
         if slice_id is None:
             raise BadParameterError("slice_id is required.")
-        if meta is None:
-            raise BadParameterError("meta is required.")
         
         response = self.request_gql(
             Queries.UPDATE_DATA_SLICE,

@@ -24,7 +24,7 @@ class DataMeta(CustomBaseModel):
                     DataMetaTypes.NUMBER if isinstance(val, (int, float)) else
                     DataMetaTypes.DATETIME if isinstance(val, datetime) else
                     DataMetaTypes.STRING if isinstance(val, str) else
-                    DataMetaTypes.ANNOTATION  # list or dict
+                    DataMetaTypes.STRING
                 ),
             )
             for key, val in meta.items()

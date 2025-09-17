@@ -1,142 +1,167 @@
-# Superb AI On-premise SDK
+# 🚀 Superb AI On-premise Python SDK
 
-Python SDK for Superb AI's On-premise solution. This SDK provides a simple interface to interact with your on-premise Superb AI installation.
+![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Version](https://img.shields.io/pypi/v/superb-ai-onprem.svg)
 
-## Installation
+**Superb AI On-premise Python SDK** is a comprehensive Python library that provides a simple and intuitive interface to interact with your on-premise Superb AI installation. Build powerful data management, annotation, and machine learning workflows with ease.
+
+## 🌟 Key Features
+
+- **🗂️ Dataset Management**: Create, organize, and manage your datasets
+- **📊 Data Operations**: Upload, annotate, and manipulate your data with powerful filtering
+- **🔍 Advanced Filtering**: Sophisticated filtering system for precise data queries  
+- **🏷️ Annotation Management**: Handle annotations and versions seamlessly
+- **📤 Export & Import**: Flexible data export and content management
+- **⚡ Activity Tracking**: Monitor and manage long-running tasks
+- **🔧 Slice Management**: Organize data into logical groups
+
+## 🔧 Installation
+
+### Step 1: Install the SDK
+
+Install the SDK using pip:
 
 ```bash
 pip install superb-ai-onprem
 ```
 
-## Quick Start
+**Requirements:**
+- Python 3.7 or higher
+- Active Superb AI On-premise installation
+
+> ⚠️ **Important**: The SDK will not work without this configuration file. Make sure to replace the values with your actual credentials from your Superb AI administrator.
+
+## 🚀 Quick Start
+
+Get up and running with Superb AI SDK in minutes:
+
+### Step 1: Authentication Setup
+
+First, set up your authentication credentials:
+
+**Option A: Config file (Recommended for local development)**
+```bash
+# Create config directory
+mkdir -p ~/.spb
+
+# Create config file
+cat > ~/.spb/onprem-config << EOF
+[default]
+host=https://your-superb-ai-host.com
+access_key=your-access-key
+access_key_secret=your-access-key-secret
+EOF
+```
+
+### Step 2: Your First Workflow
 
 ```python
 from spb_onprem import DatasetService, DataService
-from spb_onprem.data.enums import DataType
 
 # Initialize services
 dataset_service = DatasetService()
 data_service = DataService()
 
-# Create a dataset
-dataset = dataset_service.create_dataset(
-    name="my-dataset",
-    description="My first dataset"
-)
+# 1. Find existing datasets
+datasets, cursor, total = dataset_service.get_dataset_list(length=10)
+print(f"📂 Found {total} datasets")
 
-# Upload an image with annotation
-with open("image.jpg", "rb") as f:
-    image_data = BytesIO(f.read())
-
-data = data_service.create_image_data(
-    dataset_id=dataset.id,
-    key="image_1",
-    image_content=image_data,
-    annotation={
-        "labels": ["car", "person"],
-        "boxes": [
-            {"x": 100, "y": 100, "width": 200, "height": 200}
-        ]
-    }
-)
-```
-
-## Features
-
-- Dataset Management
-  - Create, update, and delete datasets
-  - List and filter datasets
-- Data Management
-  - Upload images with annotations
-  - Update annotations
-  - Add/remove data from slices
-  - Manage metadata
-- Slice Management
-  - Create and manage data slices
-  - Filter and organize your data
-
-## Usage Examples
-
-### Dataset Operations
-
-```python
-from spb_onprem import DatasetService
-from spb_onprem import DatasetsFilter, DatasetsFilterOptions
-
-# Initialize service
-dataset_service = DatasetService()
-
-# Create a dataset
-dataset = dataset_service.create_dataset(
-    name="my-dataset",
-    description="Dataset description"
-)
-
-# List datasets with filtering
-filter = DatasetsFilter(
-    must_filter=DatasetsFilterOptions(
-        name_contains="test"
+if datasets:
+    # Use the first available dataset
+    dataset = datasets[0]
+    print(f"✅ Using dataset: {dataset.name} (ID: {dataset.id})")
+    
+    # 2. Get data list from the dataset
+    data_list, cursor, total = data_service.get_data_list(
+        dataset_id=dataset.id,
+        length=10
     )
-)
-datasets = dataset_service.get_datasets(filter=filter)
+    
+    print(f"📊 Dataset contains {total} data items")
+    
+    # 3. Display data information
+    for i, data in enumerate(data_list, 1):
+        print(f"  {i}. Key: {data.key}, Type: {data.type}, ID: {data.id}")
+        
+    if total > len(data_list):
+        print(f"  ... and {total - len(data_list)} more items")
+else:
+    print("❌ No datasets found. Please create a dataset first.")
 ```
 
-### Data Operations
+**🎉 Congratulations!** You've successfully:
+- ✅ Connected to your Superb AI instance
+- ✅ Found existing datasets
+- ✅ Retrieved and displayed data information
 
-```python
-from spb_onprem import DataService
-from spb_onprem import DataListFilter, DataFilterOptions
+Ready for more? Check out our [comprehensive documentation](#-documentation) below!
 
-# Initialize service
-data_service = DataService()
+## 📚 Module Documentation
 
-# List data with filtering
-filter = DataListFilter(
-    must_filter=DataFilterOptions(
-        key_contains="image_",
-        annotation_exists=True
-    )
-)
-data_list = data_service.get_data_list(
-    dataset_id="your-dataset-id",
-    filter=filter
-)
+### 🏗️ Core Modules
 
-# Update annotation
-data_service.update_annotation(
-    dataset_id="your-dataset-id",
-    data_id="your-data-id",
-    annotation={
-        "labels": ["updated_label"],
-        "boxes": [...]
-    }
-)
+Comprehensive guides for each SDK module with detailed examples and best practices:
+
+| Module | Purpose | Key Features | Documentation |
+|--------|---------|--------------|---------------|
+| **📁 Datasets** | Dataset lifecycle management | Create, organize, manage data collections | [📂 Dataset Guide](spb_onprem/datasets/README.md) |
+| **📊 Data** | Individual data management | CRUD operations, advanced filtering, annotations | [📊 Data Guide](spb_onprem/data/README.md) |
+| **🔪 Slices** | Data organization & filtering | Create filtered views, team collaboration | [� Slice Guide](spb_onprem/slices/README.md) |
+| **⚡ Activities** | Workflow & task management | Process automation, progress tracking | [⚡ Activity Guide](spb_onprem/activities/README.md) |
+| **📤 Exports** | Data & annotation export | Multi-format export (COCO, YOLO, Custom) | [📤 Export Guide](spb_onprem/exports/README.md) |
+
+### 🎯 Getting Started Paths
+
+Choose your learning path based on your use case:
+
+#### **📊 Data Management Workflow**
+1. Start with [� Datasets](spb_onprem/datasets/README.md) - Create and organize your data collections
+2. Then explore [📊 Data](spb_onprem/data/README.md) - Manage individual items and annotations  
+3. Use [🔪 Slices](spb_onprem/slices/README.md) - Organize data into logical groups
+
+#### **🚀 ML Pipeline Integration**
+1. Begin with [� Data](spb_onprem/data/README.md) - Understand data structure and filtering
+2. Configure [⚡ Activities](spb_onprem/activities/README.md) - Automate labeling and review workflows
+3. Setup [� Exports](spb_onprem/exports/README.md) - Export to ML training formats
+
+#### **👥 Team Collaboration**
+1. Setup [📁 Datasets](spb_onprem/datasets/README.md) - Organize team projects  
+2. Create [🔪 Slices](spb_onprem/slices/README.md) - Assign work to team members
+3. Implement [⚡ Activities](spb_onprem/activities/README.md) - Track progress and quality
+
+### 🔧 Advanced Features
+
+Each module includes:
+- **🎯 Quick Start Examples** - Get running immediately
+- **📋 Detailed Entity Documentation** - Pydantic models with comprehensive field descriptions  
+- **🔍 Advanced Usage Patterns** - Best practices and complex workflows
+- **🔗 Cross-Module Integration** - How modules work together
+- **⚡ Performance Tips** - Optimization recommendations
+
+### 🌐 Module Relationships
+
+```
+📁 Datasets (containers)
+├── 📊 Data (individual items) 
+│   ├── 🔪 Slices (filtered views)
+│   └── ⚡ Activities (processing workflows)
+└── 📤 Exports (output formats)
 ```
 
-### Slice Operations
+### ⚠️ Deprecated Modules
 
-```python
-from spb_onprem import SliceService
+| Module | Status | Migration Path |
+|--------|--------|----------------|
+| **ModelService** | 🚫 Deprecated | Use external ML frameworks |
+| **PredictionService** | 🚫 Deprecated | Use [📊 Data](spb_onprem/data/README.md) prediction entities |
+| **InferService** | 🚫 Deprecated | Use [⚡ Activities](spb_onprem/activities/README.md) for inference workflows |
 
-# Initialize service
-slice_service = SliceService()
 
-# Create a slice
-slice = slice_service.create_slice(
-    dataset_id="your-dataset-id",
-    name="validation-set",
-    description="Validation data slice"
-)
 
-# Add data to slice
-data_service.add_data_to_slice(
-    dataset_id="your-dataset-id",
-    data_id="your-data-id",
-    slice_id=slice.id
-)
-```
 
-## Error Handling
+
+## ⚠️ Error Handling
 
 The SDK provides specific error types for different scenarios:
 
@@ -157,63 +182,77 @@ except UnknownError as e:
     print(f"An unexpected error occurred: {e}")
 ```
 
-## Configuration
 
-The SDK supports two authentication methods:
-
-### 1. Config File Authentication (Default)
-
-Create a config file at `~/.spb/onprem-config`:
-
-```ini
-[default]
-host=https://your-onprem-host
-access_key=your-access-key
-access_key_secret=your-access-key-secret
-```
-
-This is the default authentication method when `SUPERB_SYSTEM_SDK=false` or not set.
-
-### 2. Environment Variables (for Airflow DAGs)
-
-When running in an Airflow DAG or other system environments, you can use environment variables for authentication. This method is activated by setting `SUPERB_SYSTEM_SDK=true`.
-
-Required environment variables:
-```bash
-# Enable system SDK mode
-export SUPERB_SYSTEM_SDK=true
-
-# Set the host URL (either one is required)
-export SUPERB_SYSTEM_SDK_HOST=https://your-superb-ai-host
-# or
-export SUNRISE_SERVER_URL=https://your-superb-ai-host
-
-# Set the user email
-export SUPERB_SYSTEM_SDK_USER_EMAIL=user@example.com
-```
-
-You can set these environment variables:
-- Directly in your shell
-- In your Airflow DAG configuration
-- Through your deployment environment
-- Using a `.env` file with your preferred method of loading environment variables
-
-Note: 
-- When `SUPERB_SYSTEM_SDK=true`, the SDK will ignore the config file (`~/.spb/onprem-config`) and use environment variables exclusively.
-- When `SUPERB_SYSTEM_SDK=false` or not set, the SDK will look for authentication credentials in `~/.spb/onprem-config`.
-
-## Requirements
+## 🧪 Requirements
 
 - Python >= 3.7
 - requests >= 2.22.0
 - urllib3 >= 1.21.1
 - pydantic >= 1.8.0
 
-## License
+## 🤝 Contributing
+
+We welcome contributions to the Superb AI On-premise SDK! Here's how you can help:
+
+### Development Setup
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/Superb-AI-Suite/superb-ai-onprem-python.git
+cd superb-ai-onprem-python
+```
+
+2. **Install development dependencies:**
+```bash
+pip install -e ".[dev]"
+```
+
+### Contribution Guidelines
+
+- **Code Style:** Follow PEP 8 guidelines
+- **Testing:** Add tests for new features
+- **Documentation:** Update docstrings and README
+- **Pull Requests:** Use descriptive titles and include test results
+
+### Reporting Issues
+
+When reporting issues, please include:
+- SDK version (`spb_onprem.__version__`)
+- Python version
+- Error messages and stack traces
+- Minimal reproduction example
+- Expected vs actual behavior
+
+## 📞 Support
+
+### Community Support
+- **GitHub Issues:** [Report bugs and request features](https://github.com/Superb-AI-Suite/superb-ai-onprem-python/issues)
+- **Documentation:** [Official API documentation](https://docs.superb-ai.com)
+
+### Enterprise Support
+- **Technical Support:** Contact your Superb AI representative
+- **Custom Integration:** Professional services available
+- **Training:** SDK workshops and onboarding sessions
+
+### Quick Help
+
+**Common Issues:**
+- **Authentication errors:** Check config file format and credentials
+- **Connection issues:** Verify host URL and network connectivity  
+- **Import errors:** Ensure SDK is properly installed (`pip install superb-ai-onprem`)
+- **Performance issues:** Use appropriate pagination and filtering
+
+**Need immediate help?** Check our [FAQ section](https://docs.superb-ai.com/faq) or contact support.
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+---
 
-For support or feature requests, please contact the Superb AI team or create an issue in this repository.
+**🚀 Ready to build something amazing?** Start with our [Quick Start Guide](#-quick-start) and explore the powerful features of Superb AI On-premise SDK!
+
+<div align="center">
+  <sub>Built with ❤️ by the <a href="https://superb-ai.com">Superb AI</a> team</sub>
+</div>
 

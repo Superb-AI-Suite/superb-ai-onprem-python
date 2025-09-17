@@ -5,13 +5,16 @@ from .annotation import Annotation
 
 class DataSlice(CustomBaseModel):
     """
-    데이터 슬라이스 정보를 담는 클래스
+    데이터 슬라이스 멤버십 엔터티
+    
+    특정 슬라이스 내에서의 데이터 상태와 워크플로 정보를 나타냅니다.
+    라벨링, 리뷰 등의 작업 진행 상황을 추적합니다.
     """
-    id: Optional[str] = None
-    status: Optional[DataStatus] = DataStatus.PENDING
-    labeler: Optional[str] = None
-    reviewer: Optional[str] = None
-    tags: Optional[List[str]] = None
-    status_changed_at: Optional[str] = Field(None, alias="statusChangedAt")
-    annotation: Optional[Annotation] = None
-    meta: Optional[Any] = None 
+    id: Optional[str] = Field(None, description="슬라이스 고유 식별자")
+    status: Optional[DataStatus] = Field(DataStatus.PENDING, description="워크플로 상태 (UNLABELED, LABELED, REVIEWED 등)")
+    labeler: Optional[str] = Field(None, description="할당된 라벨러")
+    reviewer: Optional[str] = Field(None, description="할당된 리뷰어")
+    tags: Optional[List[str]] = Field(None, description="슬라이스 태그 목록")
+    status_changed_at: Optional[str] = Field(None, alias="statusChangedAt", description="상태 변경일시")
+    annotation: Optional[Annotation] = Field(None, description="슬라이스별 어노테이션")
+    meta: Optional[dict] = Field(None, description="슬라이스별 메타데이터") 

@@ -11,21 +11,35 @@ from spb_onprem.contents.entities import BaseContent
 
 class Data(CustomBaseModel):
     """
-    THE DATA.
+    메인 데이터 엔터티 - 데이터셋 내의 개별 데이터 항목
+    
+    데이터는 이미지, 비디오, 텍스트 등 다양한 형태의 컨텐츠를 나타내며,
+    어노테이션, 메타데이터, 슬라이스 정보 등을 포함합니다.
     """
-    id: Optional[str] = None
-    dataset_id: Optional[str] = Field(None, alias="datasetId")
-    slice_ids: Optional[List[str]] = Field(None, alias="sliceIds")
-    key: Optional[str] = None
-    type: Optional[DataType] = None
-    scene: Optional[List[Scene]] = None
-    frames: Optional[List[Frame]] = None
-    thumbnail: Optional[BaseContent] = None
-    annotation: Optional[Annotation] = None
-    predictions: Optional[List[Prediction]] = None
-    meta: Optional[List[DataMeta]] = None
-    created_at: Optional[str] = Field(None, alias="createdAt")
-    created_by: Optional[str] = Field(None, alias="createdBy")
-    updated_at: Optional[str] = Field(None, alias="updatedAt")
-    updated_by: Optional[str] = Field(None, alias="updatedBy")
-    slices: Optional[List[DataSlice]] = None
+    # 식별자
+    id: Optional[str] = Field(None, description="데이터 고유 식별자")
+    dataset_id: Optional[str] = Field(None, alias="datasetId", description="상위 데이터셋 ID")
+    slice_ids: Optional[List[str]] = Field(None, alias="sliceIds", description="소속된 슬라이스 ID 목록")
+    key: Optional[str] = Field(None, description="사용자 정의 고유 키")
+    
+    # 데이터 타입 및 내용
+    type: Optional[DataType] = Field(None, description="데이터 타입 (IMAGE, VIDEO 등)")
+    scene: Optional[List[Scene]] = Field(None, description="컨텐츠/파일 정보")
+    frames: Optional[List[Frame]] = Field(None, description="프레임 정보 (비디오 데이터용)")
+    thumbnail: Optional[BaseContent] = Field(None, description="썸네일 이미지")
+    
+    # 어노테이션 및 예측
+    annotation: Optional[Annotation] = Field(None, description="어노테이션 데이터")
+    predictions: Optional[List[Prediction]] = Field(None, description="ML 모델 예측 결과")
+    
+    # 메타데이터
+    meta: Optional[List[DataMeta]] = Field(None, description="커스텀 메타데이터 목록")
+    
+    # 시간 정보
+    created_at: Optional[str] = Field(None, alias="createdAt", description="생성일시 (ISO 8601)")
+    created_by: Optional[str] = Field(None, alias="createdBy", description="생성자")
+    updated_at: Optional[str] = Field(None, alias="updatedAt", description="수정일시 (ISO 8601)")
+    updated_by: Optional[str] = Field(None, alias="updatedBy", description="수정자")
+    
+    # 슬라이스 정보
+    slices: Optional[List[DataSlice]] = Field(None, description="슬라이스 멤버십 정보")

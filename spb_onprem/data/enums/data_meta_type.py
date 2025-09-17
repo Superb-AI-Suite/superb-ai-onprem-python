@@ -9,7 +9,6 @@ class DataMetaTypes(str, Enum):
     NUMBER = "Number"
     BOOLEAN = "Boolean"
     DATETIME = "DateTime"
-    ANNOTATION = "Annotation"
 
 
 DataMetaValue = Union[str, int, float, bool, datetime, dict, list]
