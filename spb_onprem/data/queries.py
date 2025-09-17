@@ -101,35 +101,6 @@ class Schemas:
             }
             meta
         }
-        createdAt
-        updatedAt
-        createdBy
-        updatedBy
-    '''
-
-    DATA_PAGE = f'''
-        data {{
-            {DATA}  
-        }}
-    '''
-    
-    DATA_DETAIL = '''
-        id
-        datasetId
-        scene {
-            id
-            content {
-                id
-            }
-        }
-        annotation {
-            versions {
-                id
-                content {
-                    id
-                }
-            }
-        }
         predictions {
             setId
             content {
@@ -140,6 +111,16 @@ class Schemas:
         thumbnail {
             id
         }
+        createdAt
+        updatedAt
+        createdBy
+        updatedBy
+    '''
+
+    DATA_PAGE = f'''
+        data {{
+            {DATA}  
+        }}
     '''
 
 
@@ -626,18 +607,6 @@ class Queries():
             }}
         ''',
         "variables": update_frames_params,
-    }
-    
-    GET_DETAIL = {
-        "name": "data",
-        "query": f'''
-            query GetDataDetail($datasetId: ID!, $id: ID!) {{
-                data(datasetId: $datasetId, id: $id) {{
-                    {Schemas.DATA_DETAIL}
-                }}
-            }}
-        ''',
-        "variables": get_data_detail_params
     }
     
     GET_EVALUATION_VALUE_LIST = {
