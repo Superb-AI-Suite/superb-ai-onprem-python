@@ -1,4 +1,5 @@
 from .annotation import Annotation, AnnotationVersion
+from .comment import Comment, Reply
 from .data_meta import DataMeta
 from .data import Data
 from .prediction import Prediction
@@ -13,6 +14,8 @@ __all__ = (
     "Scene",
     "Annotation",
     "AnnotationVersion",
+    "Comment",
+    "Reply",
     "Prediction",
     "DataMeta",
     "DataSlice",

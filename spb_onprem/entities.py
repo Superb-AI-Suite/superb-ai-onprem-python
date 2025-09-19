@@ -7,7 +7,10 @@ from .data.entities import (
     DataMeta,
     DataSlice,
     Frame,
+    Comment,
+    Reply,
 )
+from .data.entities.comment import CommentStatus
 from .datasets.entities import Dataset
 from .slices.entities import Slice
 from .data.enums import (
@@ -47,6 +50,8 @@ __all__ = [
     "Frame",
     "PredictionSet",
     "Model",
+    "Comment",
+    "Reply",
 
     # Enums
     "DataType",
@@ -57,4 +62,5 @@ __all__ = [
     "ActivityStatus",
     "ActivitySchema",
     "SchemaType",
+    "CommentStatus",
 ] 

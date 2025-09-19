@@ -32,6 +32,8 @@ from .entities import (
     Content,
     Frame,
     Model,
+    Comment,
+    Reply,
 
     # Enums
     DataType,
@@ -42,6 +44,7 @@ from .entities import (
     ActivityStatus,
     ActivitySchema,
     SchemaType,
+    CommentStatus,
 )
 
 # Filters
@@ -108,6 +111,8 @@ __all__ = (
     "Frame",
     "PredictionSet",
     "Model",
+    "Comment",
+    "Reply",
     
     # Enums
     "DataType",
