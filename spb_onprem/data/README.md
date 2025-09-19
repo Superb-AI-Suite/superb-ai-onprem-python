@@ -194,7 +194,8 @@ For detailed entity documentation with comprehensive field descriptions, see the
 ### Core Entities
 - **[📄 Data](entities/data.py)** - Main data entity with detailed field descriptions
 - **[📝 Annotation & AnnotationVersion](entities/annotation.py)** - Annotation management entities
-- **[🔧 DataSlice](entities/data_slice.py)** - Slice membership and workflow information
+- **[� Comment & Reply](entities/comment.py)** - Feedback and discussion system for annotations
+- **[�🔧 DataSlice](entities/data_slice.py)** - Slice membership and workflow information
 - **[🎬 Frame](entities/frame.py)** - Video frame entities with timestamp/geo data
 - **[🎭 Scene](entities/scene.py)** - File content representation (images, videos, text)
 - **[🏷️ DataMeta](entities/data_meta.py)** - Structured custom metadata entities
@@ -211,7 +212,9 @@ Each entity file contains:
 ```python
 from spb_onprem.data.entities import (
     Data,           # Main data container with metadata, annotations, predictions
-    Annotation,     # Annotation management with version control
+    Annotation,     # Annotation management with version control and comments
+    Comment,        # Feedback and discussion on annotations
+    Reply,          # Threaded replies to comments
     DataSlice,      # Slice membership with workflow status (labeling, review)
     Frame,          # Video frame data with timestamps and geo-location
     Scene,          # File content representation (images, videos, documents)  
@@ -219,12 +222,24 @@ from spb_onprem.data.entities import (
     Prediction      # ML model results with confidence and performance metrics
 )
 
-# Entity relationship example
+# Entity relationship example with comment system
 data = Data(
     key="image_001.jpg",
     type=DataType.IMAGE,
     scene=[Scene(type=SceneType.IMAGE, content=image_content)],
-    annotation=Annotation(meta={"quality": "high"}),
+    annotation=Annotation(
+        meta={"quality": "high"},
+        comments=[
+            Comment(
+                category="질문",
+                comment="이 바운딩 박스가 정확한가요?",
+                status="열림",
+                replies=[
+                    Reply(comment="네, 검증 완료했습니다.", created_by="reviewer_01")
+                ]
+            )
+        ]
+    ),
     predictions=[Prediction(set_id="model_v1.0", meta={"confidence": 0.95})],
     meta=[DataMeta(key="camera_model", value="Canon EOS", type=DataMetaTypes.STRING)]
 )
