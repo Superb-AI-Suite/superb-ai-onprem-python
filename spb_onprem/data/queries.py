@@ -97,26 +97,26 @@ class Schemas:
                     }
                     meta
                 }
-                comments {
+                meta
+            }
+            comments {
+                id
+                category
+                comment
+                status
+                replies {
                     id
-                    category
                     comment
-                    status
-                    replies {
-                        id
-                        comment
-                        createdAt
-                        createdBy
-                        updatedAt
-                        updatedBy
-                    }
-                    meta
-                    updatedAt
-                    updatedBy
                     createdAt
                     createdBy
+                    updatedAt
+                    updatedBy
                 }
                 meta
+                updatedAt
+                updatedBy
+                createdAt
+                createdBy
             }
             meta
         }
