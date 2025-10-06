@@ -19,9 +19,9 @@ def insert_slice_annotation_version_params(
         dict: the params for graphql query
     """
     version_data = {
-        "content": version.content.model_dump(
-            by_alias=True, exclude_unset=True
-        ),
+        "content": {
+            "id": version.content.id,
+        },
         "meta": version.meta
     }
 
