@@ -176,7 +176,7 @@ class ContentService(BaseService):
             query=Queries.GET_UPLOAD_URL,
             variables=Queries.GET_UPLOAD_URL["variables"](content_id, file_name, content_type)
         )
-        return response['uploadURL']
+        return response
 
     def get_download_url(
         self,
