@@ -158,6 +158,26 @@ class ContentService(BaseService):
         # Retrieve the uploaded content details
         content = response['content']
         return BaseContent.model_validate(content)
+    
+    def get_upload_url(
+        self,
+        content_id: str,
+        file_name: str,
+        content_type: str,
+    ) -> str:
+        '''
+        Gets the upload URL for the content.
+        Args:
+            content_id (str): The ID of the content to get the upload URL for.
+            file_name (str): The name of the file to be uploaded.
+            content_type (str): The MIME type of the file being uploaded.
+        '''
+        response = self.request_gql(
+            query=Queries.GET_UPLOAD_URL,
+            variables=Queries.GET_UPLOAD_URL["variables"](content_id, file_name, content_type)
+        )
+        return response['uploadURL']
+    )
 
     def get_download_url(
         self,
