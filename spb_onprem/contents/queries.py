@@ -28,8 +28,8 @@ class Queries:
     GET_UPLOAD_URL = {
         "name": "generateFileUploadURL",
         "query": '''
-            mutation GenerateFileUploadURL($id: ID!, $file_name: String!, $content_type: String) {
-                generateFileUploadURL(id: $id, fileName: $file_name, contentType: $content_type) 
+            mutation GenerateFileUploadURL($content_id: ID!, $file_name: String!, $content_type: String) {
+                generateFileUploadURL(contentId: $content_id, fileName: $file_name, contentType: $content_type) 
             }
         ''',
         "variables": get_upload_url_params
