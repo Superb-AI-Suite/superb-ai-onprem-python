@@ -3,7 +3,6 @@ from .data.entities import (
     Scene,
     Annotation,
     AnnotationVersion,
-    Prediction,
     DataMeta,
     DataSlice,
     Frame,
@@ -29,7 +28,6 @@ from .activities.entities import (
 )
 from .exports.entities import Export
 from .contents.entities import Content
-from .predictions.entities import PredictionSet
 from .models.entities import Model
 
 __all__ = [
@@ -38,7 +36,6 @@ __all__ = [
     "Scene",
     "Annotation",
     "AnnotationVersion",
-    "Prediction",
     "DataMeta",
     "DataSlice",
     "Dataset",
@@ -48,7 +45,6 @@ __all__ = [
     "Export",
     "Content",
     "Frame",
-    "PredictionSet",
     "Model",
     "Comment",
     "Reply",

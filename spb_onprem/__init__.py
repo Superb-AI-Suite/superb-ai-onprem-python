@@ -10,7 +10,6 @@ from .slices.service import SliceService
 from .activities.service import ActivityService
 from .exports.service import ExportService
 from .contents.service import ContentService
-from .predictions.service import PredictionService
 from .models.service import ModelService
 from .inferences.service import InferService
 
@@ -21,7 +20,6 @@ from .entities import (
     Scene,
     Annotation,
     AnnotationVersion,
-    Prediction,
     DataMeta,
     Dataset,
     Slice,
@@ -90,7 +88,6 @@ __all__ = (
     "ActivityService",
     "ExportService",
     "ContentService",
-    "PredictionService",
     "ModelService",
     "InferService",
 
@@ -99,7 +96,6 @@ __all__ = (
     "Scene",
     "Annotation",
     "AnnotationVersion",
-    "Prediction",
     "DataMeta",
     "Dataset",
     "Slice",
@@ -109,7 +105,6 @@ __all__ = (
     "Export",
     "Content",
     "Frame",
-    "PredictionSet",
     "Model",
     "Comment",
     "Reply",
