@@ -5,12 +5,9 @@ from .params import (
     get_data_id_list_params,
     get_data_list_params,
     get_data_detail_params,
-    get_evaluation_value_list_params,
     remove_data_from_slice_params,
     insert_data_to_slice_params,
     delete_data_params,
-    insert_prediction_params,
-    delete_prediction_params,
     update_annotation_params,
     insert_annotation_version_params,
     delete_annotation_version_params,
@@ -42,7 +39,6 @@ class Schemas:
     DATA = '''
         id
         datasetId
-        sliceIds
         key
         type
         scene {
@@ -120,13 +116,6 @@ class Schemas:
             }
             meta
         }
-        predictions {
-            setId
-            content {
-                id
-            }
-            meta
-        }
         thumbnail {
             id
         }
@@ -155,7 +144,6 @@ class Queries():
                 $scene: [SceneInput!],
                 $thumbnail: ContentBaseInput,
                 $annotation: AnnotationInput,
-                $predictions: [PredictionInput!],
                 $meta: [DataMetaInput!]
             ) {{
             createData(
@@ -166,7 +154,6 @@ class Queries():
                 scene: $scene,
                 thumbnail: $thumbnail,
                 annotation: $annotation,
-                predictions: $predictions,
                 meta: $meta,
             ) 
                 {{
@@ -324,46 +311,6 @@ class Queries():
             }}
         ''',
         "variables": delete_data_params,
-    }
-
-    INSERT_PREDICTION = {
-        "name": "insertPrediction",
-        "query": f'''
-            mutation (
-                $dataset_id: ID!,
-                $data_id: ID!,
-                $prediction: PredictionInput!,
-            ) {{
-                insertPrediction(
-                    datasetId: $dataset_id,
-                    dataId: $data_id,
-                    prediction: $prediction,
-                ) {{
-                    {Schemas.DATA}
-                }}
-            }}
-        ''',
-        "variables": insert_prediction_params,
-    }
-
-    DELETE_PREDICTION = {
-        "name": "deletePrediction",
-        "query": f'''
-            mutation (
-                $dataset_id: ID!,
-                $data_id: ID!,
-                $set_id: ID!,
-            ) {{
-                deletePrediction(
-                    datasetId: $dataset_id,
-                    dataId: $data_id,
-                    setId: $set_id,
-                ) {{
-                    {Schemas.DATA}
-                }}
-            }}
-        ''',
-        "variables": delete_prediction_params,
     }
     
     UPDATE_ANNOTATION = {
@@ -626,32 +573,4 @@ class Queries():
             }}
         ''',
         "variables": update_frames_params,
-    }
-    
-    GET_EVALUATION_VALUE_LIST = {
-        "name": "evaluationValueList",
-        "query": '''
-            query GetEvaluationValueList(
-                $datasetId: String!,
-                $predictionSetId: String!,
-                $filter: DiagnosisFilter,
-                $length: Int,
-                $cursor: String
-            ) {
-                evaluationValueList(
-                    datasetId: $datasetId,
-                    predictionSetId: $predictionSetId,
-                    filter: $filter,
-                    length: $length,
-                    cursor: $cursor
-                ) {
-                    totalCount
-                    next
-                    data {
-                        dataId
-                    }
-                }
-            }
-        ''',
-        "variables": get_evaluation_value_list_params
     }

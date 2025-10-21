@@ -3,7 +3,6 @@ from spb_onprem.base_model import CustomBaseModel, Field
 from spb_onprem.data.enums import DataType
 from .scene import Scene
 from .annotation import Annotation
-from .prediction import Prediction
 from .data_meta import DataMeta
 from .data_slice import DataSlice
 from .frame import Frame
@@ -19,7 +18,6 @@ class Data(CustomBaseModel):
     # 식별자
     id: Optional[str] = Field(None, description="데이터 고유 식별자")
     dataset_id: Optional[str] = Field(None, alias="datasetId", description="상위 데이터셋 ID")
-    slice_ids: Optional[List[str]] = Field(None, alias="sliceIds", description="소속된 슬라이스 ID 목록")
     key: Optional[str] = Field(None, description="사용자 정의 고유 키")
     
     # 데이터 타입 및 내용
@@ -30,8 +28,7 @@ class Data(CustomBaseModel):
     
     # 어노테이션 및 예측
     annotation: Optional[Annotation] = Field(None, description="어노테이션 데이터")
-    predictions: Optional[List[Prediction]] = Field(None, description="ML 모델 예측 결과")
-    
+
     # 메타데이터
     meta: Optional[List[DataMeta]] = Field(None, description="커스텀 메타데이터 목록")
     

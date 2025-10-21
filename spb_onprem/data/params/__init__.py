@@ -37,9 +37,6 @@ from .data_list import (
 from .get_data_detail import (
     get_data_detail_params,
 )
-from .get_evaluation_value_list import (
-    get_evaluation_value_list_params,
-)
 from .remove_data_from_slice import (
     remove_data_from_slice_params
 )
@@ -48,12 +45,6 @@ from .insert_data_to_slice import (
 )
 from .delete_data import (
     delete_data_params
-)
-from .insert_prediction import (
-    insert_prediction_params
-)
-from .delete_prediction import (
-    delete_prediction_params
 )
 from .update_annotation import (
     update_annotation_params
@@ -99,7 +90,6 @@ __all__ = [
     "get_data_id_list_params",
     "get_data_list_params",
     "get_data_detail_params",
-    "get_evaluation_value_list_params",
     "DateTimeRangeFilterOption",
     "UserFilterOption",
     "NumericRangeFilter",
@@ -126,8 +116,6 @@ __all__ = [
     "remove_data_from_slice_params",
     "insert_data_to_slice_params",
     "delete_data_params",
-    "insert_prediction_params",
-    "delete_prediction_params",
     "update_annotation_params",
     "insert_annotation_version_params",
     "delete_annotation_version_params",

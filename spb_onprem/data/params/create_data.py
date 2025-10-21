@@ -13,7 +13,7 @@ def create_params(
         "datasetId": data.dataset_id,
         "key": data.key,
         "type": data.type.value,
-        "slices": data.slice_ids if data.slice_ids is not None else [],
+        "slices": [slice.id for slice in data.slices] if data.slices is not None else [],
         "scene": [
             {
                 "type": scene.type.value,
@@ -39,16 +39,6 @@ def create_params(
             ] if data.annotation.versions is not None else [],
             "meta": data.annotation.meta
         } if data.annotation is not None else None,
-        "predictions": [
-            {
-                "setId": prediction.set_id,
-                "content": {
-                    "id": prediction.content.id,
-                },
-                "meta": prediction.meta,
-            }
-            for prediction in data.predictions
-        ] if data.predictions is not None else [],
         "meta": [
             {
                 "key": meta.key,

@@ -17,7 +17,6 @@ from .queries import Queries
 from .entities import (
     Data,
     AnnotationVersion,
-    Prediction,
     Frame,
     DataMeta,
 )
@@ -297,60 +296,6 @@ class DataService(BaseService):
         )
         return response
 
-    def insert_prediction(
-        self,
-        dataset_id: str,
-        data_id: str,
-        prediction: Prediction,
-    ):
-        """Insert a prediction.
-
-        Args:
-            dataset_id (str): The dataset id.
-            data_id (str): The data id.
-            prediction (Prediction): The prediction.
-
-        Returns:
-            Data: The updated data.
-        """
-        response = self.request_gql(
-            Queries.INSERT_PREDICTION,
-            Queries.INSERT_PREDICTION["variables"](
-                dataset_id=dataset_id,
-                data_id=data_id,
-                prediction=prediction,
-            )
-        )
-        data = Data.model_validate(response)
-        return data
-    
-    def delete_prediction(
-        self,
-        dataset_id: str,
-        data_id: str,
-        set_id: str,
-    ):
-        """Delete a prediction.
-
-        Args:
-            dataset_id (str): The dataset id.
-            data_id (str): The data id.
-            set_id (str): The set id.
-
-        Returns:
-            Data: The updated data.
-        """
-        response = self.request_gql(
-            Queries.DELETE_PREDICTION,
-            Queries.DELETE_PREDICTION["variables"](
-                dataset_id=dataset_id,
-                data_id=data_id,
-                set_id=set_id,
-            )
-        )
-        data = Data.model_validate(response)
-        return data
-    
     def update_annotation(
         self,
         dataset_id: str,
@@ -781,66 +726,3 @@ class DataService(BaseService):
         )
         data = Data.model_validate(response)
         return data
-    
-    def get_evaluation_value_list(
-        self,
-        dataset_id: str,
-        prediction_set_id: str,
-        filter: Union[UndefinedType, dict] = Undefined,
-        length: int = 50,
-        cursor: Union[UndefinedType, str] = Undefined
-    ) -> dict:
-        """Get evaluation values list for diagnosis filtering.
-        
-        Retrieves evaluation values for diagnosis filtering with pagination support.
-        
-        Args:
-            dataset_id (str): The dataset ID.
-            prediction_set_id (str): The prediction set ID.
-            filter (Union[UndefinedType, dict]): Diagnosis filter for evaluation values.
-            length (int): Number of items to retrieve per page.
-            cursor (Union[UndefinedType, str]): Cursor for pagination.
-        
-        Returns:
-            dict: Response containing totalCount, next cursor, and data list with dataId fields.
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        if prediction_set_id is None:
-            raise BadParameterError("prediction_set_id is required.")
-
-        response = self.request_gql(
-            Queries.GET_EVALUATION_VALUE_LIST,
-            Queries.GET_EVALUATION_VALUE_LIST["variables"](
-                dataset_id=dataset_id,
-                prediction_set_id=prediction_set_id,
-                filter=filter,
-                length=length,
-                cursor=cursor
-            )
-        )
-        return response.get("evaluationValueList", {})
-    
-    def get_total_data_id_count_in_evaluation_value(
-        self,
-        dataset_id: str,
-        prediction_set_id: str,
-        filter: Union[UndefinedType, dict] = Undefined
-    ) -> int:
-        """Get total count of data IDs in evaluation values for diagnosis filtering.
-        
-        Args:
-            dataset_id (str): The dataset ID.
-            prediction_set_id (str): The prediction set ID.
-            filter (Union[UndefinedType, dict]): Diagnosis filter for evaluation values.
-        
-        Returns:
-            int: Total count of evaluation values.
-        """
-        result = self.get_evaluation_value_list(
-            dataset_id=dataset_id,
-            prediction_set_id=prediction_set_id,
-            filter=filter,
-            length=1
-        )
-        return result.get("totalCount", 0)
