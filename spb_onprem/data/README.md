@@ -199,7 +199,6 @@ For detailed entity documentation with comprehensive field descriptions, see the
 - **[🎬 Frame](entities/frame.py)** - Video frame entities with timestamp/geo data
 - **[🎭 Scene](entities/scene.py)** - File content representation (images, videos, text)
 - **[🏷️ DataMeta](entities/data_meta.py)** - Structured custom metadata entities
-- **[🔮 Prediction](entities/prediction.py)** - ML model prediction results with confidence scores
 
 Each entity file contains:
 - **Comprehensive class documentation**
@@ -219,7 +218,6 @@ from spb_onprem.data.entities import (
     Frame,          # Video frame data with timestamps and geo-location
     Scene,          # File content representation (images, videos, documents)  
     DataMeta,       # Structured custom metadata with type validation
-    Prediction      # ML model results with confidence and performance metrics
 )
 
 # Entity relationship example with comment system
@@ -240,7 +238,6 @@ data = Data(
             )
         ]
     ),
-    predictions=[Prediction(set_id="model_v1.0", meta={"confidence": 0.95})],
     meta=[DataMeta(key="camera_model", value="Canon EOS", type=DataMetaTypes.STRING)]
 )
 ```
