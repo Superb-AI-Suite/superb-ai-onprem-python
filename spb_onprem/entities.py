@@ -8,6 +8,7 @@ from .data.entities import (
     Frame,
     Comment,
     Reply,
+    DataAnnotationStat,
 )
 from .data.entities.comment import CommentStatus
 from .datasets.entities import Dataset
@@ -48,6 +49,7 @@ __all__ = [
     "Model",
     "Comment",
     "Reply",
+    "DataAnnotationStat",
 
     # Enums
     "DataType",

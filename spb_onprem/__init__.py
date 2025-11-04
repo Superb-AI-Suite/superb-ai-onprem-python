@@ -32,6 +32,7 @@ from .entities import (
     Model,
     Comment,
     Reply,
+    DataAnnotationStat,
 
     # Enums
     DataType,
@@ -108,6 +109,7 @@ __all__ = (
     "Model",
     "Comment",
     "Reply",
+    "DataAnnotationStat",
     
     # Enums
     "DataType",

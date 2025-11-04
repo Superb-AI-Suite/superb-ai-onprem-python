@@ -71,6 +71,13 @@ class Schemas:
                 meta
             }
         }
+        annotationStats {
+            type
+            group
+            annotationClass
+            subClass
+            count
+        }
         meta {
             key
             type

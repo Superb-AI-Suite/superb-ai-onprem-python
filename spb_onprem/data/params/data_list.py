@@ -173,10 +173,14 @@ class DistanceCountFilter(CustomBaseModel):
     distance_range: NumericRangeFilter = Field(..., alias="distanceRange")
     count_range: NumericRangeFilter = Field(..., alias="countRange")
 
-class FrameCountsFilter(CustomBaseModel):
+
+class AnnotationCountsFilter(CustomBaseModel):
     annotation_class: Optional[List[CountFilter]] = Field(None, alias="class")
     group: Optional[List[CountFilter]] = None
     sub_class: Optional[List[CountFilter]] = Field(None, alias="subClass")
+
+
+class FrameCountsFilter(AnnotationCountsFilter):
     distance: Optional[List[DistanceCountFilter]] = None
 
 # === Frame 필터 ===
@@ -227,6 +231,7 @@ class DataFilterOptions(CustomBaseModel):
     # 메타데이터 및 기타
     meta: Optional[MetaFilter] = Field(None, description="커스텀 메타데이터 필터")
     assigned_to_user: Optional[str] = Field(None, alias="assignedToUser", description="할당된 사용자")
+    annotation_counts: Optional[AnnotationCountsFilter] = Field(None, alias="annotationCounts", description="어노테이션 개수 필터")
 
 class DataSliceStatusFilterOption(CustomBaseModel):
     status_in: Optional[List[str]] = Field(None, alias="in")
@@ -261,6 +266,7 @@ class DataSlicePropertiesFilter(CustomBaseModel):
     comments: Optional[DataSliceCommentFilterOption] = None
     meta: Optional[MetaFilter] = None
     assigned_to_user: Optional[str] = Field(None, alias="assignedToUser")
+    annotation_counts: Optional[AnnotationCountsFilter] = Field(None, alias="annotationCounts")
 
 class DataSliceFilter(CustomBaseModel):
     id: str
@@ -270,7 +276,6 @@ class DataSliceFilter(CustomBaseModel):
 
 class FrameFilter(CustomBaseModel):
     conditions: Optional[FrameFilterOptions] = None
-    mode: Optional[Union[str, Literal["INDIVIDUAL_FRAMES", "DATA_SUMMARY"]]] = "INDIVIDUAL_FRAMES"
     matching_frame_count: Optional[NumericRangeFilter] = Field(None, alias="matchingFrameCount")
 
 
