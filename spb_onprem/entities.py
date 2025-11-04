@@ -8,6 +8,7 @@ from .data.entities import (
     Frame,
     Comment,
     Reply,
+    DataAnnotationStat,
 )
 from .data.entities.comment import CommentStatus
 from .datasets.entities import Dataset
@@ -28,7 +29,17 @@ from .activities.entities import (
 )
 from .exports.entities import Export
 from .contents.entities import Content
-from .models.entities import Model
+from .models.entities import (
+    Model,
+    ModelTrainClass,
+    ModelPageInfo,
+)
+from .reports.entities import (
+    AnalyticsReport,
+    AnalyticsReportItem,
+    AnalyticsReportItemType,
+    AnalyticsReportPageInfo,
+)
 
 __all__ = [
     # Core Entities
@@ -45,9 +56,20 @@ __all__ = [
     "Export",
     "Content",
     "Frame",
-    "Model",
     "Comment",
     "Reply",
+    "DataAnnotationStat",
+    
+    # Models Entities
+    "Model",
+    "ModelTrainClass",
+    "ModelPageInfo",
+    
+    # Reports Entities
+    "AnalyticsReport",
+    "AnalyticsReportItem",
+    "AnalyticsReportItemType",
+    "AnalyticsReportPageInfo",
 
     # Enums
     "DataType",

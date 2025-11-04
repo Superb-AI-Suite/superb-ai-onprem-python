@@ -1,7 +1,17 @@
 # 🚀 Superb AI On-premise Python SDK
 
 ![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![License](https://i#### **📊 Data Management Workflow**
+1. Start with [📁 Datasets](spb_onprem/datasets/README.md) - Create and organize your data collections
+2. Then explore [📊 Data](spb_onprem/data/README.md) - Manage individual items and annotations  
+3. Use [🔪 Slices](spb_onprem/slices/README.md) - Organize data into logical groups
+
+#### **🚀 ML Pipeline Integration**
+1. Begin with [📊 Data](spb_onprem/data/README.md) - Understand data structure and filtering
+2. Configure [⚡ Activities](spb_onprem/activities/README.md) - Automate labeling and review workflows
+3. Setup [📤 Exports](spb_onprem/exports/README.md) - Export to ML training formats
+4. Track with [🤖 Models](spb_onprem/models/README.md) - Register and monitor model performance
+5. Visualize with [📈 Reports](spb_onprem/reports/README.md) - Generate analytics dashboardss.io/badge/license-MIT-green.svg)
 ![Version](https://img.shields.io/pypi/v/superb-ai-onprem.svg)
 
 **Superb AI On-premise Python SDK** is a comprehensive Python library that provides a simple and intuitive interface to interact with your on-premise Superb AI installation. Build powerful data management, annotation, and machine learning workflows with ease.
@@ -57,14 +67,16 @@ EOF
 ### Step 2: Your First Workflow
 
 ```python
-from spb_onprem import DatasetService, DataService
+from spb_onprem import DatasetService, DataService, ModelService, ReportService
 
 # Initialize services
 dataset_service = DatasetService()
 data_service = DataService()
+model_service = ModelService()
+report_service = ReportService()
 
 # 1. Find existing datasets
-datasets, cursor, total = dataset_service.get_dataset_list(length=10)
+datasets, cursor, total = dataset_service.get_datasets(length=10)
 print(f"📂 Found {total} datasets")
 
 if datasets:
@@ -86,6 +98,28 @@ if datasets:
         
     if total > len(data_list):
         print(f"  ... and {total - len(data_list)} more items")
+    
+    # 4. Check models in the dataset
+    models, _, model_count = model_service.get_models(
+        dataset_id=dataset.id,
+        length=5
+    )
+    
+    if model_count > 0:
+        print(f"\n🤖 Found {model_count} models")
+        for model in models:
+            print(f"  - {model.name} ({model.baseline_model})")
+    
+    # 5. Check analytics reports
+    reports, _, report_count = report_service.get_analytics_reports(
+        dataset_id=dataset.id,
+        length=5
+    )
+    
+    if report_count > 0:
+        print(f"\n📈 Found {report_count} analytics reports")
+        for report in reports:
+            print(f"  - {report.title}")
 else:
     print("❌ No datasets found. Please create a dataset first.")
 ```
@@ -94,6 +128,7 @@ else:
 - ✅ Connected to your Superb AI instance
 - ✅ Found existing datasets
 - ✅ Retrieved and displayed data information
+- ✅ Explored models and reports
 
 Ready for more? Check out our [comprehensive documentation](#-documentation) below!
 
@@ -107,9 +142,11 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 |--------|---------|--------------|---------------|
 | **📁 Datasets** | Dataset lifecycle management | Create, organize, manage data collections | [📂 Dataset Guide](spb_onprem/datasets/README.md) |
 | **📊 Data** | Individual data management | CRUD operations, advanced filtering, annotations | [📊 Data Guide](spb_onprem/data/README.md) |
-| **🔪 Slices** | Data organization & filtering | Create filtered views, team collaboration | [� Slice Guide](spb_onprem/slices/README.md) |
+| **🔪 Slices** | Data organization & filtering | Create filtered views, team collaboration | [🔪 Slice Guide](spb_onprem/slices/README.md) |
 | **⚡ Activities** | Workflow & task management | Process automation, progress tracking | [⚡ Activity Guide](spb_onprem/activities/README.md) |
 | **📤 Exports** | Data & annotation export | Multi-format export (COCO, YOLO, Custom) | [📤 Export Guide](spb_onprem/exports/README.md) |
+| **🤖 Models** | ML model management | Track models, training configs, performance metrics | [🤖 Model Guide](spb_onprem/models/README.md) |
+| **📈 Reports** | Analytics & visualization | Create reports, charts, dashboards | [📈 Report Guide](spb_onprem/reports/README.md) |
 
 ### 🎯 Getting Started Paths
 
@@ -145,17 +182,24 @@ Each module includes:
 📁 Datasets (containers)
 ├── 📊 Data (individual items) 
 │   ├── 🔪 Slices (filtered views)
+│   │   └── 🤖 Models (training configs)
 │   └── ⚡ Activities (processing workflows)
-└── 📤 Exports (output formats)
+├── 📤 Exports (output formats)
+└── 📈 Reports (analytics & visualizations)
 ```
+
+### 🆕 New Modules (v2.0+)
+
+| Module | Added | Status | Description |
+|--------|-------|--------|-------------|
+| **🤖 Models** | v2.0 | ✅ Stable | ML model lifecycle management and performance tracking |
+| **📈 Reports** | v2.0 | ✅ Stable | Analytics reports and visualization dashboards |
 
 ### ⚠️ Deprecated Modules
 
 | Module | Status | Migration Path |
 |--------|--------|----------------|
-| **ModelService** | 🚫 Deprecated | Use external ML frameworks |
-| **PredictionService** | 🚫 Deprecated | Use [📊 Data](spb_onprem/data/README.md) prediction entities |
-| **InferService** | 🚫 Deprecated | Use [⚡ Activities](spb_onprem/activities/README.md) for inference workflows |
+| **InferService** | 🚫 Deprecated | Use [🤖 Models](spb_onprem/models/README.md) for model management and [⚡ Activities](spb_onprem/activities/README.md) for inference workflows |
 
 
 

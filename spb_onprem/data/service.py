@@ -198,6 +198,10 @@ class DataService(BaseService):
             List[DataMeta],
             UndefinedType,
         ] = Undefined,
+        annotation_stats: Union[
+            Optional[List[DataAnnotationStat]],
+            UndefinedType,
+        ] = Undefined,
     ):
         """Update a data.
 
@@ -217,6 +221,7 @@ class DataService(BaseService):
                 data_id=data_id,
                 key=key,
                 meta=meta,
+                annotation_stats=annotation_stats,
             )
         )
         data = Data.model_validate(response)
@@ -663,6 +668,10 @@ class DataService(BaseService):
         slice_id: str,
         meta: Union[
             Optional[dict],
+            UndefinedType
+        ] = Undefined,
+        annotation_stats: Union]
+            Optional[List[DataAnnotationStat]],
             UndefinedType
         ] = Undefined,
     ):

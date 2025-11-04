@@ -23,6 +23,7 @@ from .data.params.data_list import (
     FrameFilter,
     DataFilter,
     DataListFilter,
+    AnnotationCountsFilter
 )
 from .datasets.params.datasets import (
     DatasetsFilter,
@@ -39,6 +40,16 @@ from .activities.params.activities import (
 from .exports.params.exports import (
     ExportFilter,
     ExportFilterOptions,
+)
+from .models.params.models import (
+    ModelsFilter,
+    ModelsFilterOptions,
+)
+from .reports.params.analytics_reports import (
+    AnalyticsReportsFilter,
+    AnalyticsReportsFilterOptions,
+    AnalyticsReportsOrderBy,
+    AnalyticsReportListOrderFields,
 )
 
 __all__ = [
@@ -73,4 +84,11 @@ __all__ = [
     "ActivitiesFilterOptions",
     "ExportFilter",
     "ExportFilterOptions",
+    "AnnotationCountsFilter",
+    "ModelsFilter",
+    "ModelsFilterOptions",
+    "AnalyticsReportsFilter",
+    "AnalyticsReportsFilterOptions",
+    "AnalyticsReportsOrderBy",
+    "AnalyticsReportListOrderFields",
 ]

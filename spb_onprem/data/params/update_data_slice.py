@@ -1,7 +1,10 @@
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, List
 from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
+)
+from spb_onprem.data.entities import (
+    DataAnnotationStat,
 )
 
 
@@ -13,6 +16,10 @@ def update_data_slice_params(
         Optional[dict],
         UndefinedType
     ] = Undefined,
+    annotation_stats: Union[
+        Optional[List[DataAnnotationStat]],
+        UndefinedType
+    ] = Undefined
 ):
     """Make the variables for the updateDataSlice query.
 
@@ -27,7 +34,12 @@ def update_data_slice_params(
         "data_id": data_id,
         "slice_id": slice_id,
     }
-    
+
+    if annotation_stats is not Undefined:
+        params["annotation_stats"] = [
+            stat.model_dump(by_alias=True, exclude_unset=True) for stat in annotation_stats
+        ] if annotation_stats is not None else None
+
     if meta is not Undefined:
         params["meta"] = meta
 

@@ -11,7 +11,7 @@ from .activities.service import ActivityService
 from .exports.service import ExportService
 from .contents.service import ContentService
 from .models.service import ModelService
-from .inferences.service import InferService
+from .reports.service import ReportService
 
 # Core Entities and Enums
 from .entities import (
@@ -29,9 +29,9 @@ from .entities import (
     Export,
     Content,
     Frame,
-    Model,
     Comment,
     Reply,
+    DataAnnotationStat,
 
     # Enums
     DataType,
@@ -43,6 +43,24 @@ from .entities import (
     ActivitySchema,
     SchemaType,
     CommentStatus,
+)
+
+# Models and Reports Entities
+from .models import (
+    Model,
+    ModelTrainClass,
+    ModelPageInfo,
+    ModelsFilter,
+    ModelsFilterOptions,
+)
+
+from .reports import (
+    AnalyticsReport,
+    AnalyticsReportItem,
+    AnalyticsReportItemType,
+    AnalyticsReportPageInfo,
+    AnalyticsReportsFilter,
+    AnalyticsReportsFilterOptions,
 )
 
 # Filters
@@ -78,6 +96,7 @@ from .searches import (
     ActivitiesFilterOptions,
     ExportFilter,
     ExportFilterOptions,
+    AnnotationCountsFilter
 )
 
 __all__ = (
@@ -89,7 +108,7 @@ __all__ = (
     "ExportService",
     "ContentService",
     "ModelService",
-    "InferService",
+    "ReportService",
 
     # Core Entities
     "Data",
@@ -105,9 +124,24 @@ __all__ = (
     "Export",
     "Content",
     "Frame",
-    "Model",
     "Comment",
     "Reply",
+    "DataAnnotationStat",
+    
+    # Models Entities
+    "Model",
+    "ModelTrainClass",
+    "ModelPageInfo",
+    "ModelsFilter",
+    "ModelsFilterOptions",
+    
+    # Reports Entities
+    "AnalyticsReport",
+    "AnalyticsReportItem",
+    "AnalyticsReportItemType",
+    "AnalyticsReportPageInfo",
+    "AnalyticsReportsFilter",
+    "AnalyticsReportsFilterOptions",
     
     # Enums
     "DataType",
@@ -152,4 +186,5 @@ __all__ = (
     "ActivitiesFilterOptions",
     "ExportFilter",
     "ExportFilterOptions",
+    "AnnotationCountsFilter",
 )

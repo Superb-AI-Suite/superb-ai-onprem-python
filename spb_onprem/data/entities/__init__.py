@@ -5,6 +5,7 @@ from .data import Data
 from .scene import Scene
 from .data_slice import DataSlice
 from .frame import Frame
+from .data_annotation_stats import DataAnnotationStat
 
 
 __all__ = (
@@ -17,4 +18,5 @@ __all__ = (
     "Reply",
     "DataMeta",
     "DataSlice",
+    "DataAnnotationStat",
 )
