@@ -178,7 +178,7 @@ class Queries():
                 $dataset_id: ID!,
                 $data_id: ID!,
                 $key: String,
-                $meta: [DataMetaInput!]
+                $meta: [DataMetaInput!],
                 $annotation_stats: [DataAnnotationStatInput!]
             ) {{
             updateData(
@@ -549,7 +549,7 @@ class Queries():
                 $dataset_id: ID!,
                 $data_id: ID!,
                 $slice_id: ID!,
-                $meta: JSONObject!,
+                $meta: JSONObject,
                 $annotation_stats: [DataAnnotationStatInput!],
             ) {{
                 updateDataSlice(
