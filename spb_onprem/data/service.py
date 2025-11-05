@@ -670,7 +670,7 @@ class DataService(BaseService):
             Optional[dict],
             UndefinedType
         ] = Undefined,
-        annotation_stats: Union]
+        annotation_stats: Union[
             Optional[List[DataAnnotationStat]],
             UndefinedType
         ] = Undefined,
@@ -700,6 +700,7 @@ class DataService(BaseService):
                 data_id=data_id,
                 slice_id=slice_id,
                 meta=meta,
+                annotation_stats=annotation_stats,
             )
         )
         data = Data.model_validate(response)
