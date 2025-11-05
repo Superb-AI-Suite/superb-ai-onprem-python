@@ -19,6 +19,7 @@ from .entities import (
     AnnotationVersion,
     Frame,
     DataMeta,
+    DataAnnotationStat,
 )
 from .enums import (
     DataStatus,
