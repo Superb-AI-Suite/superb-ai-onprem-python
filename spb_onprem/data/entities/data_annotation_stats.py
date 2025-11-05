@@ -1,4 +1,5 @@
-
+from typing import Optional
+from spb_onprem.base_model import CustomBaseModel, Field
 
 class DataAnnotationStat(CustomBaseModel):
     type: Optional[str] = Field(None, description="어노테이션 타입")
