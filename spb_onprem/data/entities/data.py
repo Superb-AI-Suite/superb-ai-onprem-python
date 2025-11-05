@@ -29,7 +29,7 @@ class Data(CustomBaseModel):
     
     # 어노테이션 및 예측
     annotation: Optional[Annotation] = Field(None, description="어노테이션 데이터")
-    annotation_stats: Optional[List[AnnotationStat]] = Field(None, alias="annotationStats", description="어노테이션 통계 정보")
+    annotation_stats: Optional[List[DataAnnotationStat]] = Field(None, alias="annotationStats", description="어노테이션 통계 정보")
 
     # 메타데이터
     meta: Optional[List[DataMeta]] = Field(None, description="커스텀 메타데이터 목록")
