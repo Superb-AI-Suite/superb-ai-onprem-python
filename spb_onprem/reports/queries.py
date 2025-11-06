@@ -18,7 +18,6 @@ class Schemas:
         description
         content {
             id
-            downloadURL
         }
         meta
         createdAt
@@ -27,7 +26,7 @@ class Schemas:
         updatedBy
     '''
     
-    ANALYTICS_REPORT = '''
+    ANALYTICS_REPORT = f'''
         datasetId
         id
         title
@@ -37,21 +36,9 @@ class Schemas:
         updatedAt
         createdBy
         updatedBy
-        items {
-            id
-            type
-            title
-            description
-            content {
-                id
-                downloadURL
-            }
-            meta
-            createdAt
-            createdBy
-            updatedAt
-            updatedBy
-        }
+        items {{
+            {Schemas.ANALYTICS_REPORT_ITEM}
+        }}
     '''
 
 
