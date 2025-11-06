@@ -26,7 +26,7 @@ class Schemas:
         updatedBy
     '''
     
-    ANALYTICS_REPORT = f'''
+    ANALYTICS_REPORT = '''
         datasetId
         id
         title
@@ -36,9 +36,20 @@ class Schemas:
         updatedAt
         createdBy
         updatedBy
-        items {{
-            {Schemas.ANALYTICS_REPORT_ITEM}
-        }}
+        items {
+            id
+            type
+            title
+            description
+            content {
+                id
+            }
+            meta
+            createdAt
+            createdBy
+            updatedAt
+            updatedBy
+        }
     '''
 
 
