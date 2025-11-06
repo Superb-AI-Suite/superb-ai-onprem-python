@@ -58,14 +58,26 @@ class BaseService():
     ) -> requests.Session:
         if BaseService._retry_session is None:
             session = session or requests.Session()
-            retry = RetryWithJitter(
-                total=retries,
-                read=retries,
-                connect=retries,
-                backoff_factor=backoff_factor,
-                status_forcelist=status_forcelist,
-                allowed_methods=frozenset(allowed_methods),
-            )
+            # urllib3 < 1.26에서는 method_whitelist, >= 1.26에서는 allowed_methods 사용
+            try:
+                retry = RetryWithJitter(
+                    total=retries,
+                    read=retries,
+                    connect=retries,
+                    backoff_factor=backoff_factor,
+                    status_forcelist=status_forcelist,
+                    allowed_methods=frozenset(allowed_methods),
+                )
+            except TypeError:
+                # Fallback for older urllib3 versions
+                retry = RetryWithJitter(
+                    total=retries,
+                    read=retries,
+                    connect=retries,
+                    backoff_factor=backoff_factor,
+                    status_forcelist=status_forcelist,
+                    method_whitelist=frozenset(allowed_methods),
+                )
             adapter = HTTPAdapter(max_retries=retry)
             session.mount('http://', adapter)
             session.mount('https://', adapter)
