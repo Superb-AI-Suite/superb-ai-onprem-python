@@ -1,4 +1,4 @@
-from spb_onprem import ReportService, DatasetService, AnalyticsReportItemType
+from spb_onprem import ReportService, DatasetService, AnalyticsReportItemType, ContentService
 
 
 def test_analytics_report_workflow():
@@ -123,13 +123,60 @@ def test_analytics_report_workflow():
         AnalyticsReportItemType.HEATMAP,
     ]
     
-    # Fixed ULID strings for content_id
-    content_ids = {
-        AnalyticsReportItemType.PIE: "01K9C0TESTPIE000000000001",
-        AnalyticsReportItemType.HORIZONTAL_BAR: "01K9C0TESTHBAR00000000002",
-        AnalyticsReportItemType.VERTICAL_BAR: "01K9C0TESTVBAR00000000003",
-        AnalyticsReportItemType.HEATMAP: "01K9C0TESTHEAT00000000004",
-    }
+    # Create folder content IDs using ContentService
+    content_service = ContentService()
+    content_ids = {}
+    
+    print("   Creating folder content IDs...")
+    for item_type in item_types:
+        folder_content_id = content_service.create_folder_content()
+        content_ids[item_type] = folder_content_id
+        print(f"   ✓ Created folder content for {item_type.value}: {folder_content_id}")
+    
+    # Upload sample JSON data for each content
+    print("   Uploading sample JSON data to folder contents...")
+    uploaded_data = {}  # Store uploaded data for verification
+    for item_type, content_id in content_ids.items():
+        # Upload reports.json
+        reports_data = {
+            "chart_type": item_type.value,
+            "data": [{"x": i, "y": i * 2} for i in range(5)]
+        }
+        report_service.upload_reports_json(content_id, reports_data)
+        
+        # Upload data_ids.json
+        data_ids = {
+            "ids": [f"data_{i}" for i in range(10)]
+        }
+        report_service.upload_data_ids_json(content_id, data_ids)
+        
+        # Store for later verification
+        uploaded_data[item_type] = {
+            "reports": reports_data,
+            "data_ids": data_ids
+        }
+        print(f"   ✓ Uploaded JSON files for {item_type.value}")
+    
+    # Verify uploaded files by downloading them
+    print("   Verifying uploaded files by downloading...")
+    import requests
+    import json as json_lib
+    for item_type, content_id in content_ids.items():
+        # Get download URLs
+        reports_download_url = content_service.get_download_url(content_id, "reports.json")
+        data_ids_download_url = content_service.get_download_url(content_id, "data_ids.json")
+        
+        # Download and verify reports.json
+        reports_response = requests.get(reports_download_url)
+        downloaded_reports = reports_response.json()
+        assert downloaded_reports == uploaded_data[item_type]["reports"], f"reports.json mismatch for {item_type.value}"
+        
+        # Download and verify data_ids.json
+        data_ids_response = requests.get(data_ids_download_url)
+        downloaded_data_ids = data_ids_response.json()
+        assert downloaded_data_ids == uploaded_data[item_type]["data_ids"], f"data_ids.json mismatch for {item_type.value}"
+        
+        print(f"   ✓ Verified downloaded JSON files for {item_type.value}")
     
     created_items = {}
     
@@ -165,12 +212,60 @@ def test_analytics_report_workflow():
     # Step 8: Update all report items
     print("\n[Step 8] Updating all report items...")
     
-    updated_content_ids = {
-        AnalyticsReportItemType.PIE: "01K9C0UPDTPIE000000000001",
-        AnalyticsReportItemType.HORIZONTAL_BAR: "01K9C0UPDTHBAR00000000002",
-        AnalyticsReportItemType.VERTICAL_BAR: "01K9C0UPDTVBAR00000000003",
-        AnalyticsReportItemType.HEATMAP: "01K9C0UPDTHEAT00000000004",
-    }
+    # Create new folder content IDs for updates
+    updated_content_ids = {}
+    
+    print("   Creating new folder content IDs for updates...")
+    for item_type in item_types:
+        folder_content_id = content_service.create_folder_content()
+        updated_content_ids[item_type] = folder_content_id
+        print(f"   ✓ Created updated folder content for {item_type.value}: {folder_content_id}")
+    
+    # Upload updated JSON data
+    print("   Uploading updated JSON data...")
+    updated_uploaded_data = {}  # Store updated data for verification
+    for item_type, content_id in updated_content_ids.items():
+        # Upload updated reports.json
+        updated_reports_data = {
+            "chart_type": item_type.value,
+            "data": [{"x": i, "y": i * 3} for i in range(8)],
+            "version": "2.0"
+        }
+        report_service.upload_reports_json(content_id, updated_reports_data)
+        
+        # Upload updated data_ids.json
+        updated_data_ids = {
+            "ids": [f"updated_data_{i}" for i in range(15)]
+        }
+        report_service.upload_data_ids_json(content_id, updated_data_ids)
+        
+        # Store for later verification
+        updated_uploaded_data[item_type] = {
+            "reports": updated_reports_data,
+            "data_ids": updated_data_ids
+        }
+        print(f"   ✓ Uploaded updated JSON files for {item_type.value}")
+    
+    # Verify updated uploaded files by downloading them
+    print("   Verifying updated uploaded files by downloading...")
+    for item_type, content_id in updated_content_ids.items():
+        # Get download URLs
+        reports_download_url = content_service.get_download_url(content_id, "reports.json")
+        data_ids_download_url = content_service.get_download_url(content_id, "data_ids.json")
+        
+        # Download and verify updated reports.json
+        reports_response = requests.get(reports_download_url)
+        downloaded_reports = reports_response.json()
+        assert downloaded_reports == updated_uploaded_data[item_type]["reports"], f"Updated reports.json mismatch for {item_type.value}"
+        assert downloaded_reports["version"] == "2.0", f"Version should be 2.0 for {item_type.value}"
+        
+        # Download and verify updated data_ids.json
+        data_ids_response = requests.get(data_ids_download_url)
+        downloaded_data_ids = data_ids_response.json()
+        assert downloaded_data_ids == updated_uploaded_data[item_type]["data_ids"], f"Updated data_ids.json mismatch for {item_type.value}"
+        assert len(downloaded_data_ids["ids"]) == 15, f"Should have 15 IDs for {item_type.value}"
+        
+        print(f"   ✓ Verified downloaded updated JSON files for {item_type.value}")
     
     for item_type, item in created_items.items():
         updated_item = report_service.update_analytics_report_item(

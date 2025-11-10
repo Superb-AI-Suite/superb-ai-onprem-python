@@ -159,18 +159,31 @@ class ContentService(BaseService):
         content = response['content']
         return BaseContent.model_validate(content)
     
+    def create_folder_content(self) -> str:
+        '''
+        Creates a folder content ID for S3 upload.
+        
+        Returns:
+            str: The folder content ID.
+        '''
+        response = self.request_gql(
+            query=Queries.CREATE_FOLDER_CONTENT,
+            variables=Queries.CREATE_FOLDER_CONTENT["variables"]()
+        )
+        return response['id']
+    
     def get_upload_url(
         self,
         content_id: str,
         file_name: str,
-        content_type: str,
+        content_type: Optional[str] = None,
     ) -> str:
         '''
         Gets the upload URL for the content.
         Args:
             content_id (str): The ID of the content to get the upload URL for.
             file_name (str): The name of the file to be uploaded.
-            content_type (str): The MIME type of the file being uploaded.
+            content_type (Optional[str]): The MIME type of the file being uploaded.
         '''
         response = self.request_gql(
             query=Queries.GET_UPLOAD_URL,
@@ -181,19 +194,26 @@ class ContentService(BaseService):
     def get_download_url(
         self,
         content_id: str,
+        file_name: Optional[str] = None,
     ) -> str:
         '''
-        Gets the content from the server.
+        Gets the download URL for the content.
         Args:
             content_id (str): The ID of the content to get.
+            file_name (Optional[str]): The name of the file to download. If provided, uses generateFileDownloadURL mutation.
         Returns:
-            Content: The content object.
+            str: The download URL.
         '''
-        
-        response = self.request_gql(
-            query=Queries.GET_DOWNLOAD_URL,
-            variables=Queries.GET_DOWNLOAD_URL["variables"](content_id)
-        )
+        if file_name is not None:
+            response = self.request_gql(
+                query=Queries.GET_FILE_DOWNLOAD_URL,
+                variables=Queries.GET_FILE_DOWNLOAD_URL["variables"](content_id, file_name)
+            )
+        else:
+            response = self.request_gql(
+                query=Queries.GET_DOWNLOAD_URL,
+                variables=Queries.GET_DOWNLOAD_URL["variables"](content_id)
+            )
         return response
 
     def delete_content(
