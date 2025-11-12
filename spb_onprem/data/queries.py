@@ -102,6 +102,13 @@ class Schemas:
                 }
                 meta
             }
+            annotationStats {
+                type
+                group
+                annotationClass
+                subClass
+                count
+            }
             comments {
                 id
                 category

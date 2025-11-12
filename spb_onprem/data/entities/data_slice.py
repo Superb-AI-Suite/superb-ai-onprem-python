@@ -3,6 +3,7 @@ from spb_onprem.base_model import CustomBaseModel, Field
 from spb_onprem.data.enums.data_status import DataStatus
 from .comment import Comment
 from .annotation import Annotation
+from .data_annotation_stats import DataAnnotationStat
 
 class DataSlice(CustomBaseModel):
     """
@@ -18,5 +19,6 @@ class DataSlice(CustomBaseModel):
     tags: Optional[List[str]] = Field(None, description="슬라이스 태그 목록")
     status_changed_at: Optional[str] = Field(None, alias="statusChangedAt", description="상태 변경일시")
     annotation: Optional[Annotation] = Field(None, description="슬라이스별 어노테이션")
+    annotation_stats: Optional[List[DataAnnotationStat]] = Field(None, alias="annotationStats", description="슬라이스 어노테이션 통계")
     comments: Optional[List[Comment]] = Field(None, description="슬라이스에 대한 댓글 및 피드백")
     meta: Optional[dict] = Field(None, description="슬라이스별 메타데이터") 
