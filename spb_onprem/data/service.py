@@ -365,6 +365,49 @@ class DataService(BaseService):
         )
         data = Data.model_validate(response)
         return data
+
+    def update_annotation_version(
+        self,
+        dataset_id: str,
+        data_id: str,
+        version_id: str,
+        channels: Union[List[str], UndefinedType, None] = Undefined,
+        version: Union[str, UndefinedType, None] = Undefined,
+        meta: Union[dict, UndefinedType, None] = Undefined,
+    ):
+        """Update an annotation version.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            version_id (str): The annotation version id.
+            channels (Union[List[str], UndefinedType, None], optional): The channels. Defaults to Undefined.
+            version (Union[str, UndefinedType, None], optional): The version. Defaults to Undefined.
+            meta (Union[dict, UndefinedType, None], optional): The meta. Defaults to Undefined.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if version_id is None:
+            raise BadParameterError("version_id is required.")
+        
+        response = self.request_gql(
+            Queries.UPDATE_ANNOTATION_VERSION,
+            Queries.UPDATE_ANNOTATION_VERSION["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                version_id=version_id,
+                channels=channels,
+                version=version,
+                meta=meta,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
     
     def delete_annotation_version(
         self,
@@ -467,7 +510,7 @@ class DataService(BaseService):
         dataset_id: str,
         data_id: str,
         slice_id: str,
-        id: str,
+        version_id: str,
         channels: Union[List[str], UndefinedType, None] = Undefined,
         version: Union[str, UndefinedType, None] = Undefined,
         meta: Union[dict, UndefinedType, None] = Undefined,
@@ -478,7 +521,7 @@ class DataService(BaseService):
             dataset_id (str): The dataset id.
             data_id (str): The data id.
             slice_id (str): The slice id.
-            id (str): The annotation version id.
+            version_id (str): The annotation version id.
             channels (Union[List[str], UndefinedType, None], optional): The channels. Defaults to Undefined.
             version (Union[str, UndefinedType, None], optional): The version. Defaults to Undefined.
             meta (Union[dict, UndefinedType, None], optional): The meta. Defaults to Undefined.
@@ -501,7 +544,7 @@ class DataService(BaseService):
                 dataset_id=dataset_id,
                 data_id=data_id,
                 slice_id=slice_id,
-                id=id,
+                version_id=version_id,
                 channels=channels,
                 version=version,
                 meta=meta,

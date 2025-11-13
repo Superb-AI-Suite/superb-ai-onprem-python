@@ -52,6 +52,9 @@ from .update_annotation import (
 from .insert_annotation_version import (
     insert_annotation_version_params,
 )
+from .update_annotation_version import (
+    update_annotation_version_params,
+)
 from .delete_annotation_version import (
     delete_annotation_version_params,
 )
@@ -118,6 +121,7 @@ __all__ = [
     "delete_data_params",
     "update_annotation_params",
     "insert_annotation_version_params",
+    "update_annotation_version_params",
     "delete_annotation_version_params",
     "update_slice_annotation_params",
     "insert_slice_annotation_version_params",
