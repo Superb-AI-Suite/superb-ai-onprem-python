@@ -10,6 +10,7 @@ from .params import (
     delete_data_params,
     update_annotation_params,
     insert_annotation_version_params,
+    update_annotation_version_params,
     delete_annotation_version_params,
     update_slice_annotation_params,
     insert_slice_annotation_version_params,
@@ -368,6 +369,32 @@ class Queries():
         ''',
         "variables": insert_annotation_version_params,
     }
+
+    UPDATE_ANNOTATION_VERSION = {
+        "name": "updateAnnotationVersion",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $version_id: ID!,
+                $channels: [String!],
+                $version: String,
+                $meta: JSONObject,
+            ) {{
+                updateAnnotationVersion(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    id: $version_id,
+                    channels: $channels,
+                    version: $version,
+                    meta: $meta,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_annotation_version_params,
+    }
     
     DELETE_ANNOTATION_VERSION = {
         "name": "deleteAnnotationVersion",
@@ -440,7 +467,7 @@ class Queries():
                 $dataset_id: ID!,
                 $data_id: ID!,
                 $slice_id: ID!,
-                $id: ID!,
+                $version_id: ID!,
                 $channel: String,
                 $version: String,
                 $meta: JSONObject,
@@ -449,7 +476,7 @@ class Queries():
                     datasetId: $dataset_id,
                     dataId: $data_id,
                     sliceId: $slice_id,
-                    id: $id,
+                    id: $version_id,
                     channel: $channel,
                     version: $version,
                     meta: $meta,
