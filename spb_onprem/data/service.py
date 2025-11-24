@@ -20,6 +20,7 @@ from .entities import (
     Frame,
     DataMeta,
     DataAnnotationStat,
+    Scene,
 )
 from .enums import (
     DataStatus,
@@ -776,6 +777,43 @@ class DataService(BaseService):
                 dataset_id=dataset_id,
                 data_id=data_id,
                 frames=frames,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def update_scene(
+        self,
+        dataset_id: str,
+        data_id: str,
+        scene: Scene,
+    ):
+        """Update scene of selected data.
+
+        Args:
+            dataset_id (str): The dataset id which the data belongs to.
+            data_id (str): The data id to be updated.
+            scene (Scene): The scene to be updated. Must include scene.id and scene.type.
+
+        Returns:
+            Data: The updated data.
+
+        Raises:
+            BadParameterError: If required parameters are missing.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if scene is None:
+            raise BadParameterError("scene is required.")
+
+        response = self.request_gql(
+            Queries.UPDATE_SCENE,
+            Queries.UPDATE_SCENE["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                scene=scene,
             )
         )
         data = Data.model_validate(response)

@@ -21,6 +21,7 @@ from .params import (
     change_data_reviewer_params,
     update_data_slice_params,
     update_frames_params,
+    update_scene_params,
 )
 
 
@@ -618,4 +619,26 @@ class Queries():
             }}
         ''',
         "variables": update_frames_params,
+    }
+
+    UPDATE_SCENE = {
+        "name": "updateScene",
+        "query": f'''
+            mutation updateScene(
+                $scene: UpdateSceneInput!,
+                $id: ID!,
+                $data_id: ID!,
+                $dataset_id: ID!
+            ) {{
+                updateScene(
+                    scene: $scene,
+                    id: $id,
+                    dataId: $data_id,
+                    datasetId: $dataset_id
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_scene_params,
     }
