@@ -40,7 +40,7 @@ def update_params(
     """
     variables = {
         "dataset_id": dataset_id,
-        "id": data_id,
+        "data_id": data_id,
     }
     
     if key is not Undefined:
