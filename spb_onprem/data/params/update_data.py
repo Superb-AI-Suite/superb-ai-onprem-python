@@ -39,7 +39,7 @@ def update_params(
         annotation_stats (List[DataAnnotationStat]): The annotation stats of the data.
     """
     variables = {
-        "datasetId": dataset_id,
+        "dataset_id": dataset_id,
         "id": data_id,
     }
     
