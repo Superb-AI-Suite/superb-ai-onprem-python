@@ -96,7 +96,8 @@ class DataService(BaseService):
         dataset_id: str,
         data_filter: Optional[DataListFilter] = None,
         cursor: Optional[str] = None,
-        length: int = 10
+        length: int = 10,
+        include_selected_frames: bool = False
     ):
         """Get data list of a dataset.
 
@@ -105,9 +106,11 @@ class DataService(BaseService):
             data_filter (Optional[DataListFilter]): The filter to apply to the data.
             cursor (Optional[str]): The cursor to use for pagination.
             length (int): The length of the data to retrieve.
+            include_selected_frames (bool): If True, returns selected frames as 4th element in tuple. Defaults to False.
 
         Returns:
-            tuple: A tuple containing the data, the next cursor, and the total count of data.
+            tuple: A tuple containing the data, the next cursor, the total count of data, 
+                   and optionally selected_frames (if include_selected_frames=True).
         """
         if length > 50:
             raise ValueError("Length must be less than or equal to 50.")
@@ -124,7 +127,14 @@ class DataService(BaseService):
         data_list = response.get("data", [])
         data = [Data.model_validate(data_dict) for data_dict in data_list]
         
-        selected_frames = response.get("selectedFrames", [])
+        if include_selected_frames:
+            selected_frames = response.get("selectedFrames", [])
+            return (
+                data,
+                response.get("next", None),
+                response.get("totalCount", 0),
+                selected_frames,
+            )
         
         return (
             data,
@@ -137,7 +147,8 @@ class DataService(BaseService):
         dataset_id: str,
         data_filter: Optional[DataListFilter] = None,
         cursor: Optional[str] = None,
-        length: int = 10
+        length: int = 10,
+        include_selected_frames: bool = False,
     ):
         """Get data id list of a dataset.
 
@@ -146,9 +157,11 @@ class DataService(BaseService):
             data_filter (Optional[DataListFilter]): The filter to apply to the data.
             cursor (Optional[str]): The cursor to use for pagination.
             length (int): The length of the data to retrieve.
+            include_selected_frames (bool): If True, returns selected frames as 4th element in tuple. Defaults to False.
 
         Returns:
-            tuple: A tuple containing the data, the next cursor, and the total count of data.
+            tuple: A tuple containing the data, the next cursor, the total count of data,
+                   and optionally selected_frames (if include_selected_frames=True).
         """
         if length > 50:
             raise ValueError("Length must be less than or equal to 50.")
@@ -164,10 +177,20 @@ class DataService(BaseService):
         )
         data_list = response.get("data", [])
         data = [Data.model_validate(data_dict) for data_dict in data_list]
+
+        if include_selected_frames:
+            selected_frames = response.get("selectedFrames", [])
+            return (
+                data,
+                response.get("next", None),
+                response.get("totalCount", 0),
+                selected_frames,
+            )
+
         return (
             data,
             response.get("next", None),
-            response.get("totalCount", 0)
+            response.get("totalCount", 0),
         )
 
     def create_data(
