@@ -1,17 +1,7 @@
 # 🚀 Superb AI On-premise Python SDK
 
 ![Python](https://img.shields.io/badge/python-3.7+-blue.svg)
-![License](https://i#### **📊 Data Management Workflow**
-1. Start with [📁 Datasets](spb_onprem/datasets/README.md) - Create and organize your data collections
-2. Then explore [📊 Data](spb_onprem/data/README.md) - Manage individual items and annotations  
-3. Use [🔪 Slices](spb_onprem/slices/README.md) - Organize data into logical groups
-
-#### **🚀 ML Pipeline Integration**
-1. Begin with [📊 Data](spb_onprem/data/README.md) - Understand data structure and filtering
-2. Configure [⚡ Activities](spb_onprem/activities/README.md) - Automate labeling and review workflows
-3. Setup [📤 Exports](spb_onprem/exports/README.md) - Export to ML training formats
-4. Track with [🤖 Models](spb_onprem/models/README.md) - Register and monitor model performance
-5. Visualize with [📈 Reports](spb_onprem/reports/README.md) - Generate analytics dashboardss.io/badge/license-MIT-green.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Version](https://img.shields.io/pypi/v/superb-ai-onprem.svg)
 
 **Superb AI On-premise Python SDK** is a comprehensive Python library that provides a simple and intuitive interface to interact with your on-premise Superb AI installation. Build powerful data management, annotation, and machine learning workflows with ease.
@@ -22,9 +12,11 @@
 - **📊 Data Operations**: Upload, annotate, and manipulate your data with powerful filtering
 - **🔍 Advanced Filtering**: Sophisticated filtering system for precise data queries  
 - **🏷️ Annotation Management**: Handle annotations and versions seamlessly
-- **📤 Export & Import**: Flexible data export and content management
+- **📁 Content Management**: Upload and manage file content
 - **⚡ Activity Tracking**: Monitor and manage long-running tasks
 - **🔧 Slice Management**: Organize data into logical groups
+- **🤖 Model Tracking**: Register and monitor ML model performance
+- **📈 Analytics Reports**: Generate and visualize dataset analytics
 
 ## 🔧 Installation
 
@@ -144,7 +136,6 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 | **📊 Data** | Individual data management | CRUD operations, advanced filtering, annotations | [📊 Data Guide](spb_onprem/data/README.md) |
 | **🔪 Slices** | Data organization & filtering | Create filtered views, team collaboration | [🔪 Slice Guide](spb_onprem/slices/README.md) |
 | **⚡ Activities** | Workflow & task management | Process automation, progress tracking | [⚡ Activity Guide](spb_onprem/activities/README.md) |
-| **📤 Exports** | Data & annotation export | Multi-format export (COCO, YOLO, Custom) | [📤 Export Guide](spb_onprem/exports/README.md) |
 | **🤖 Models** | ML model management | Track models, training configs, performance metrics | [🤖 Model Guide](spb_onprem/models/README.md) |
 | **📈 Reports** | Analytics & visualization | Create reports, charts, dashboards | [📈 Report Guide](spb_onprem/reports/README.md) |
 
@@ -153,14 +144,15 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 Choose your learning path based on your use case:
 
 #### **📊 Data Management Workflow**
-1. Start with [� Datasets](spb_onprem/datasets/README.md) - Create and organize your data collections
+1. Start with [📁 Datasets](spb_onprem/datasets/README.md) - Create and organize your data collections
 2. Then explore [📊 Data](spb_onprem/data/README.md) - Manage individual items and annotations  
 3. Use [🔪 Slices](spb_onprem/slices/README.md) - Organize data into logical groups
 
 #### **🚀 ML Pipeline Integration**
-1. Begin with [� Data](spb_onprem/data/README.md) - Understand data structure and filtering
+1. Begin with [📊 Data](spb_onprem/data/README.md) - Understand data structure and filtering
 2. Configure [⚡ Activities](spb_onprem/activities/README.md) - Automate labeling and review workflows
-3. Setup [� Exports](spb_onprem/exports/README.md) - Export to ML training formats
+3. Track with [🤖 Models](spb_onprem/models/README.md) - Register and monitor model performance
+4. Visualize with [📈 Reports](spb_onprem/reports/README.md) - Generate analytics dashboards
 
 #### **👥 Team Collaboration**
 1. Setup [📁 Datasets](spb_onprem/datasets/README.md) - Organize team projects  
@@ -184,7 +176,6 @@ Each module includes:
 │   ├── 🔪 Slices (filtered views)
 │   │   └── 🤖 Models (training configs)
 │   └── ⚡ Activities (processing workflows)
-├── 📤 Exports (output formats)
 └── 📈 Reports (analytics & visualizations)
 ```
 
