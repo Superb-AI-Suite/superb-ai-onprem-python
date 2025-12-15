@@ -82,6 +82,9 @@ from .update_data_slice import (
 from .update_frames import (
     update_frames_params,
 )
+from .update_tags import (
+    update_tags_params,
+)
 
 __all__ = [
     "create_params",
@@ -128,4 +131,5 @@ __all__ = [
     "change_data_reviewer_params",
     "update_data_slice_params",
     "update_frames_params",
+    "update_tags_params",
 ]
