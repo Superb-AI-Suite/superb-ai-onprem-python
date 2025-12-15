@@ -20,6 +20,7 @@ from .entities import (
     Frame,
     DataMeta,
     DataAnnotationStat,
+    Scene,
 )
 from .enums import (
     DataStatus,
@@ -95,7 +96,8 @@ class DataService(BaseService):
         dataset_id: str,
         data_filter: Optional[DataListFilter] = None,
         cursor: Optional[str] = None,
-        length: int = 10
+        length: int = 10,
+        include_selected_frames: bool = False
     ):
         """Get data list of a dataset.
 
@@ -104,9 +106,11 @@ class DataService(BaseService):
             data_filter (Optional[DataListFilter]): The filter to apply to the data.
             cursor (Optional[str]): The cursor to use for pagination.
             length (int): The length of the data to retrieve.
+            include_selected_frames (bool): If True, returns selected frames as 4th element in tuple. Defaults to False.
 
         Returns:
-            tuple: A tuple containing the data, the next cursor, and the total count of data.
+            tuple: A tuple containing the data, the next cursor, the total count of data, 
+                   and optionally selected_frames (if include_selected_frames=True).
         """
         if length > 50:
             raise ValueError("Length must be less than or equal to 50.")
@@ -123,7 +127,14 @@ class DataService(BaseService):
         data_list = response.get("data", [])
         data = [Data.model_validate(data_dict) for data_dict in data_list]
         
-        selected_frames = response.get("selectedFrames", [])
+        if include_selected_frames:
+            selected_frames = response.get("selectedFrames", [])
+            return (
+                data,
+                response.get("next", None),
+                response.get("totalCount", 0),
+                selected_frames,
+            )
         
         return (
             data,
@@ -136,7 +147,8 @@ class DataService(BaseService):
         dataset_id: str,
         data_filter: Optional[DataListFilter] = None,
         cursor: Optional[str] = None,
-        length: int = 10
+        length: int = 10,
+        include_selected_frames: bool = False,
     ):
         """Get data id list of a dataset.
 
@@ -145,9 +157,11 @@ class DataService(BaseService):
             data_filter (Optional[DataListFilter]): The filter to apply to the data.
             cursor (Optional[str]): The cursor to use for pagination.
             length (int): The length of the data to retrieve.
+            include_selected_frames (bool): If True, returns selected frames as 4th element in tuple. Defaults to False.
 
         Returns:
-            tuple: A tuple containing the data, the next cursor, and the total count of data.
+            tuple: A tuple containing the data, the next cursor, the total count of data,
+                   and optionally selected_frames (if include_selected_frames=True).
         """
         if length > 50:
             raise ValueError("Length must be less than or equal to 50.")
@@ -163,10 +177,20 @@ class DataService(BaseService):
         )
         data_list = response.get("data", [])
         data = [Data.model_validate(data_dict) for data_dict in data_list]
+
+        if include_selected_frames:
+            selected_frames = response.get("selectedFrames", [])
+            return (
+                data,
+                response.get("next", None),
+                response.get("totalCount", 0),
+                selected_frames,
+            )
+
         return (
             data,
             response.get("next", None),
-            response.get("totalCount", 0)
+            response.get("totalCount", 0),
         )
 
     def create_data(
@@ -365,6 +389,49 @@ class DataService(BaseService):
         )
         data = Data.model_validate(response)
         return data
+
+    def update_annotation_version(
+        self,
+        dataset_id: str,
+        data_id: str,
+        version_id: str,
+        channels: Union[List[str], UndefinedType, None] = Undefined,
+        version: Union[str, UndefinedType, None] = Undefined,
+        meta: Union[dict, UndefinedType, None] = Undefined,
+    ):
+        """Update an annotation version.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            version_id (str): The annotation version id.
+            channels (Union[List[str], UndefinedType, None], optional): The channels. Defaults to Undefined.
+            version (Union[str, UndefinedType, None], optional): The version. Defaults to Undefined.
+            meta (Union[dict, UndefinedType, None], optional): The meta. Defaults to Undefined.
+
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if version_id is None:
+            raise BadParameterError("version_id is required.")
+        
+        response = self.request_gql(
+            Queries.UPDATE_ANNOTATION_VERSION,
+            Queries.UPDATE_ANNOTATION_VERSION["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                version_id=version_id,
+                channels=channels,
+                version=version,
+                meta=meta,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
     
     def delete_annotation_version(
         self,
@@ -467,7 +534,7 @@ class DataService(BaseService):
         dataset_id: str,
         data_id: str,
         slice_id: str,
-        id: str,
+        version_id: str,
         channels: Union[List[str], UndefinedType, None] = Undefined,
         version: Union[str, UndefinedType, None] = Undefined,
         meta: Union[dict, UndefinedType, None] = Undefined,
@@ -478,7 +545,7 @@ class DataService(BaseService):
             dataset_id (str): The dataset id.
             data_id (str): The data id.
             slice_id (str): The slice id.
-            id (str): The annotation version id.
+            version_id (str): The annotation version id.
             channels (Union[List[str], UndefinedType, None], optional): The channels. Defaults to Undefined.
             version (Union[str, UndefinedType, None], optional): The version. Defaults to Undefined.
             meta (Union[dict, UndefinedType, None], optional): The meta. Defaults to Undefined.
@@ -501,7 +568,7 @@ class DataService(BaseService):
                 dataset_id=dataset_id,
                 data_id=data_id,
                 slice_id=slice_id,
-                id=id,
+                version_id=version_id,
                 channels=channels,
                 version=version,
                 meta=meta,
@@ -769,6 +836,43 @@ class DataService(BaseService):
                 slice_id=slice_id,
                 data_id=data_id,
                 tags=tags,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
+    def update_scene(
+        self,
+        dataset_id: str,
+        data_id: str,
+        scene: Scene,
+    ):
+        """Update scene of selected data.
+
+        Args:
+            dataset_id (str): The dataset id which the data belongs to.
+            data_id (str): The data id to be updated.
+            scene (Scene): The scene to be updated. Must include scene.id and scene.type.
+
+        Returns:
+            Data: The updated data.
+
+        Raises:
+            BadParameterError: If required parameters are missing.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+        if scene is None:
+            raise BadParameterError("scene is required.")
+
+        response = self.request_gql(
+            Queries.UPDATE_SCENE,
+            Queries.UPDATE_SCENE["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                scene=scene,
             )
         )
         data = Data.model_validate(response)

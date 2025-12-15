@@ -9,28 +9,29 @@ The Slices module provides powerful tools for creating filtered views of your da
 ## ⚡ Quick Start
 
 ```python
-from spb_onprem.slices import SliceService
+from spb_onprem import SliceService, DataService
 from spb_onprem.slices.entities import Slice
 
-# Initialize service
-service = SliceService()
+# Initialize services
+slice_service = SliceService()
+data_service = DataService()
 
 # Create a new slice
-slice_obj = service.create_slice(
+slice_obj = slice_service.create_slice(
     dataset_id="dataset_123",
     name="High Quality Images",
     description="Images with quality score > 0.9"
 )
 
-# Add data to slice
-service.add_data_to_slice(
+# Add data to slice (using DataService)
+data_service.add_data_to_slice(
     dataset_id="dataset_123",
     slice_id=slice_obj.id,
     data_ids=["data_1", "data_2", "data_3"]
 )
 
-# Get slice with its data
-slice_with_data = service.get_slice(
+# Get slice information
+slice_with_data = slice_service.get_slice(
     dataset_id="dataset_123", 
     slice_id=slice_obj.id
 )
@@ -57,26 +58,37 @@ review_slice = service.create_slice(
 ```
 
 ### Data Management
+
+**Note:** Data-to-slice operations are handled by `DataService`, not `SliceService`.
+
 ```python
-# Add multiple data items to slice
-service.add_data_to_slice(
+from spb_onprem import DataService, SliceService
+from spb_onprem.data.params import DataListFilter
+
+data_service = DataService()
+slice_service = SliceService()
+
+# Add multiple data items to slice (using DataService)
+data_service.add_data_to_slice(
     dataset_id="dataset_123",
     slice_id="slice_456", 
     data_ids=["data_001", "data_002", "data_003"]
 )
 
-# Remove data from slice
-service.remove_data_from_slice(
+# Remove data from slice (using DataService)
+data_service.remove_data_from_slice(
     dataset_id="dataset_123",
     slice_id="slice_456",
     data_ids=["data_001"]
 )
 
-# Get slice data with filtering
-slice_data = service.get_slice_data(
+# Get data in a specific slice with filtering (using DataService)
+data_list, cursor, total = data_service.get_data_list(
     dataset_id="dataset_123",
-    slice_id="slice_456",
-    filter_options={"status": "LABELED"}
+    data_filter=DataListFilter(
+        slice={"id": "slice_456", "must": {"status": {"in": ["LABELED"]}}}
+    ),
+    length=10
 )
 ```
 
@@ -91,11 +103,14 @@ updated_slice = service.update_slice(
     is_pinned=False
 )
 
-# List all slices in dataset
-all_slices = service.get_slice_list(dataset_id="dataset_123")
+# List all slices in dataset with pagination
+slices, cursor, total = slice_service.get_slices(
+    dataset_id="dataset_123",
+    length=10
+)
 
 # Delete slice (data remains in dataset)
-service.delete_slice(
+slice_service.delete_slice(
     dataset_id="dataset_123",
     slice_id="slice_456"
 )
@@ -138,7 +153,7 @@ print(f"Pinned field: {field_info['is_pinned'].description}")
 - **[📊 Data Service](../data/README.md)** - Manage individual data items within slices
 - **[📁 Dataset Service](../datasets/README.md)** - Organize datasets that contain slices
 - **[⚡ Activity Service](../activities/README.md)** - Execute workflows on slice data
-- **[📤 Export Service](../exports/README.md)** - Export data from specific slices
+- **[🤖 Models Service](../models/README.md)** - Track ML models trained on slice data
 
 ## 📚 Best Practices
 
@@ -166,10 +181,13 @@ critical_slice = service.create_slice(
 ### 3. **Lifecycle Management**
 ```python
 # Clean up temporary slices
-temp_slices = service.get_slice_list(dataset_id="dataset_123")
-for slice_obj in temp_slices:
+slices, cursor, total = slice_service.get_slices(
+    dataset_id="dataset_123",
+    length=50
+)
+for slice_obj in slices:
     if "temp_" in slice_obj.name and not slice_obj.is_pinned:
-        service.delete_slice(dataset_id="dataset_123", slice_id=slice_obj.id)
+        slice_service.delete_slice(dataset_id="dataset_123", slice_id=slice_obj.id)
 ```
 
 ## 🎯 Common Use Cases

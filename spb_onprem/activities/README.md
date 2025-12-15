@@ -132,7 +132,7 @@ history = ActivityHistory(
 - **[📊 Data Service](../data/README.md)** - Manage data items processed by activities
 - **[📁 Dataset Service](../datasets/README.md)** - Organize datasets for activity execution
 - **[🔪 Slice Service](../slices/README.md)** - Target specific data subsets for processing
-- **[📤 Export Service](../exports/README.md)** - Export processed results
+- **[📈 Reports Service](../reports/README.md)** - Track activity progress and results
 
 ## 🎯 Common Activity Types
 

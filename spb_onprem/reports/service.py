@@ -2,6 +2,7 @@ from typing import Optional, Union, Any
 from spb_onprem.base_service import BaseService
 from spb_onprem.exceptions import BadParameterError
 from spb_onprem.base_types import Undefined, UndefinedType
+from spb_onprem.contents.service import ContentService
 from .queries import Queries
 from .entities import (
     AnalyticsReport,
@@ -326,3 +327,83 @@ class ReportService(BaseService):
             )
         )
         return response
+    
+    def upload_reports_json(
+        self,
+        content_id: str,
+        data: dict,
+    ) -> bool:
+        """Upload reports.json to S3 for the given content ID.
+        
+        Args:
+            content_id (str): The folder content ID where reports.json will be uploaded
+            data (dict): The reports data to be uploaded as JSON
+        
+        Returns:
+            bool: True if upload was successful
+        """
+        if content_id is None:
+            raise BadParameterError("content_id is required.")
+        
+        if data is None:
+            raise BadParameterError("data is required.")
+        
+        # Get upload URL using ContentService
+        content_service = ContentService()
+        upload_url = content_service.get_upload_url(
+            content_id=content_id,
+            file_name="reports.json",
+            content_type="application/json"
+        )
+        
+        # Upload the JSON data
+        self.request(
+            method="PUT",
+            url=upload_url,
+            headers={
+                'Content-Type': 'application/json'
+            },
+            json_data=data,
+        )
+        
+        return True
+    
+    def upload_data_ids_json(
+        self,
+        content_id: str,
+        data: dict,
+    ) -> bool:
+        """Upload data_ids.json to S3 for the given content ID.
+        
+        Args:
+            content_id (str): The folder content ID where data_ids.json will be uploaded
+            data (dict): The data IDs to be uploaded as JSON
+        
+        Returns:
+            bool: True if upload was successful
+        """
+        if content_id is None:
+            raise BadParameterError("content_id is required.")
+        
+        if data is None:
+            raise BadParameterError("data is required.")
+        
+        # Get upload URL using ContentService
+        content_service = ContentService()
+        upload_url = content_service.get_upload_url(
+            content_id=content_id,
+            file_name="data_ids.json",
+            content_type="application/json"
+        )
+        
+        # Upload the JSON data
+        self.request(
+            method="PUT",
+            url=upload_url,
+            headers={
+                'Content-Type': 'application/json'
+            },
+            json_data=data,
+        )
+        
+        return True

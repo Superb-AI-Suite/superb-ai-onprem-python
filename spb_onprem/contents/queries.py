@@ -3,6 +3,7 @@ from .params import (
     get_download_url_params,
     delete_content_params,
     get_upload_url_params,
+    get_file_download_url_params,
 )
 
 class Queries:
@@ -43,6 +44,28 @@ class Queries:
             }
         ''',
         "variables": get_download_url_params
+    }
+    
+    GET_FILE_DOWNLOAD_URL = {
+        "name": "generateFileDownloadURL",
+        "query": '''
+            mutation GenerateFileDownloadURL($content_id: ID!, $file_name: String!) {
+                generateFileDownloadURL(contentId: $content_id, fileName: $file_name) 
+            }
+        ''',
+        "variables": get_file_download_url_params
+    }
+    
+    CREATE_FOLDER_CONTENT = {
+        "name": "createFolderContent",
+        "query": '''
+            mutation CreateFolderContent {
+                createFolderContent {
+                    id
+                }
+            }
+        ''',
+        "variables": lambda: {}
     }
     
     DELETE = {

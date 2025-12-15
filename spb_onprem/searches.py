@@ -37,10 +37,6 @@ from .activities.params.activities import (
     ActivitiesFilter,
     ActivitiesFilterOptions,
 )
-from .exports.params.exports import (
-    ExportFilter,
-    ExportFilterOptions,
-)
 from .models.params.models import (
     ModelsFilter,
     ModelsFilterOptions,
@@ -82,8 +78,6 @@ __all__ = [
     "SlicesFilterOptions",
     "ActivitiesFilter",
     "ActivitiesFilterOptions",
-    "ExportFilter",
-    "ExportFilterOptions",
     "AnnotationCountsFilter",
     "ModelsFilter",
     "ModelsFilterOptions",

@@ -10,6 +10,7 @@ from .params import (
     delete_data_params,
     update_annotation_params,
     insert_annotation_version_params,
+    update_annotation_version_params,
     delete_annotation_version_params,
     update_slice_annotation_params,
     insert_slice_annotation_version_params,
@@ -21,6 +22,7 @@ from .params import (
     update_data_slice_params,
     update_frames_params,
     update_tags_params,
+    update_scene_params,
 )
 
 
@@ -102,6 +104,13 @@ class Schemas:
                     meta
                 }
                 meta
+            }
+            annotationStats {
+                type
+                group
+                annotationClass
+                subClass
+                count
             }
             comments {
                 id
@@ -362,6 +371,32 @@ class Queries():
         ''',
         "variables": insert_annotation_version_params,
     }
+
+    UPDATE_ANNOTATION_VERSION = {
+        "name": "updateAnnotationVersion",
+        "query": f'''
+            mutation (
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $version_id: ID!,
+                $channels: [String!],
+                $version: String,
+                $meta: JSONObject,
+            ) {{
+                updateAnnotationVersion(
+                    datasetId: $dataset_id,
+                    dataId: $data_id,
+                    id: $version_id,
+                    channels: $channels,
+                    version: $version,
+                    meta: $meta,
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_annotation_version_params,
+    }
     
     DELETE_ANNOTATION_VERSION = {
         "name": "deleteAnnotationVersion",
@@ -434,7 +469,7 @@ class Queries():
                 $dataset_id: ID!,
                 $data_id: ID!,
                 $slice_id: ID!,
-                $id: ID!,
+                $version_id: ID!,
                 $channel: String,
                 $version: String,
                 $meta: JSONObject,
@@ -443,7 +478,7 @@ class Queries():
                     datasetId: $dataset_id,
                     dataId: $data_id,
                     sliceId: $slice_id,
-                    id: $id,
+                    id: $version_id,
                     channel: $channel,
                     version: $version,
                     meta: $meta,
@@ -607,4 +642,26 @@ class Queries():
             }}
         ''',
         "variables": update_tags_params,
+    }
+
+    UPDATE_SCENE = {
+        "name": "updateScene",
+        "query": f'''
+            mutation updateScene(
+                $scene: UpdateSceneInput!,
+                $id: ID!,
+                $data_id: ID!,
+                $dataset_id: ID!
+            ) {{
+                updateScene(
+                    scene: $scene,
+                    id: $id,
+                    dataId: $data_id,
+                    datasetId: $dataset_id
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_scene_params,
     }

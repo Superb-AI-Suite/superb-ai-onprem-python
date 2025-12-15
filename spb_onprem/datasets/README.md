@@ -24,8 +24,8 @@ dataset = service.create_dataset(
 # Get existing dataset
 dataset = service.get_dataset(dataset_id="dataset_123")
 
-# List all datasets
-datasets = service.get_dataset_list()
+# List all datasets with pagination
+datasets, cursor, total = service.get_datasets(length=10)
 ```
 
 ## 🏗️ Core Operations
@@ -58,12 +58,19 @@ service.delete_dataset(dataset_id="dataset_123")
 
 ### Dataset Listing
 ```python
-# Get all datasets
-all_datasets = service.get_dataset_list()
+# Get all datasets with pagination
+datasets, cursor, total = service.get_datasets(length=10)
 
 # Iterate through datasets
-for dataset in all_datasets:
-    print(f"{dataset.name}: {len(dataset.data)} data items")
+for dataset in datasets:
+    print(f"{dataset.name}: {dataset.id}")
+    
+# Get next page if available
+if cursor:
+    next_datasets, next_cursor, total = service.get_datasets(
+        cursor=cursor,
+        length=10
+    )
 ```
 
 ## 📋 Key Dataset Entity
@@ -101,8 +108,9 @@ print(f"Description field: {field_info['description'].description}")
 
 - **[📊 Data Service](../data/README.md)** - Manage individual data items within datasets
 - **[🔪 Slice Service](../slices/README.md)** - Create filtered views of dataset data  
-- **[📤 Export Service](../exports/README.md)** - Export dataset data and annotations
 - **[⚡ Activity Service](../activities/README.md)** - Process dataset workflows
+- **[🤖 Models Service](../models/README.md)** - Track ML models and training configurations
+- **[📈 Reports Service](../reports/README.md)** - Generate analytics and visualizations
 
 ## 📚 Best Practices
 
