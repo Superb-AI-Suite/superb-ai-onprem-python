@@ -805,6 +805,42 @@ class DataService(BaseService):
         data = Data.model_validate(response)
         return data
 
+    def update_tags(
+        self,
+        dataset_id: str,
+        slice_id: str,
+        data_id: str,
+        tags: Union[List[str], UndefinedType, None] = Undefined,
+    ):
+        """Update tags of selected data slice.
+        Args:
+            dataset_id (str): dataset id which the data belongs to
+            slice_id (str): slice id which the data belongs to
+            data_id (str): data id to be updated
+            tags (list[str]): list of tags to be updated  
+            
+        Returns:
+            Data: The updated data.
+        """
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if slice_id is None:
+            raise BadParameterError("slice_id is required.")
+        if data_id is None:
+            raise BadParameterError("data_id is required.")
+
+        response = self.request_gql(
+            Queries.UPDATE_TAGS,
+            Queries.UPDATE_TAGS["variables"](
+                dataset_id=dataset_id,
+                slice_id=slice_id,
+                data_id=data_id,
+                tags=tags,
+            )
+        )
+        data = Data.model_validate(response)
+        return data
+
     def update_scene(
         self,
         dataset_id: str,

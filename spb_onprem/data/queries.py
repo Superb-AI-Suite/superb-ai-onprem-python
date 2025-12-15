@@ -21,6 +21,7 @@ from .params import (
     change_data_reviewer_params,
     update_data_slice_params,
     update_frames_params,
+    update_tags_params,
     update_scene_params,
 )
 
@@ -619,6 +620,28 @@ class Queries():
             }}
         ''',
         "variables": update_frames_params,
+    }
+
+    UPDATE_TAGS = {
+        "name": "updateDataTags",
+        "query": f'''
+            mutation (
+                $dataId: ID!,
+                $sliceId: ID!,
+                $datasetId: ID!,
+                $tags: [String!]
+            ) {{
+                updateDataTags(
+                    dataId: $dataId,
+                    sliceId: $sliceId,
+                    datasetId: $datasetId,
+                    tags: $tags
+                ) {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_tags_params,
     }
 
     UPDATE_SCENE = {
