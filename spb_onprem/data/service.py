@@ -398,6 +398,7 @@ class DataService(BaseService):
         channels: Union[List[str], UndefinedType, None] = Undefined,
         version: Union[str, UndefinedType, None] = Undefined,
         meta: Union[dict, UndefinedType, None] = Undefined,
+        content_id: Union[str, UndefinedType, None] = Undefined,
     ):
         """Update an annotation version.
 
@@ -428,6 +429,7 @@ class DataService(BaseService):
                 channels=channels,
                 version=version,
                 meta=meta,
+                content_id=content_id,
             )
         )
         data = Data.model_validate(response)
@@ -538,6 +540,7 @@ class DataService(BaseService):
         channels: Union[List[str], UndefinedType, None] = Undefined,
         version: Union[str, UndefinedType, None] = Undefined,
         meta: Union[dict, UndefinedType, None] = Undefined,
+        content_id: Union[str, UndefinedType, None] = Undefined,
     ):
         """Update a slice annotation version.
 
@@ -572,6 +575,7 @@ class DataService(BaseService):
                 channels=channels,
                 version=version,
                 meta=meta,
+                content_id=content_id,
             )
         )
         data = Data.model_validate(response)
