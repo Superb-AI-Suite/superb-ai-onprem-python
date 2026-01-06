@@ -382,6 +382,7 @@ class Queries():
                 $channels: [String!],
                 $version: String,
                 $meta: JSONObject,
+                $content_id: ID,
             ) {{
                 updateAnnotationVersion(
                     datasetId: $dataset_id,
@@ -390,6 +391,7 @@ class Queries():
                     channels: $channels,
                     version: $version,
                     meta: $meta,
+                    contentId: $content_id,
                 ) {{
                     {Schemas.DATA}
                 }}
@@ -432,6 +434,7 @@ class Queries():
                     dataId: $data_id,
                     sliceId: $slice_id,
                     meta: $meta,
+                    content
                 ) {{
                     {Schemas.DATA}
                 }}
@@ -473,6 +476,7 @@ class Queries():
                 $channel: String,
                 $version: String,
                 $meta: JSONObject,
+                $content_id: ID,
             ) {{
                 updateSliceAnnotationVersion(
                     datasetId: $dataset_id,
@@ -482,6 +486,7 @@ class Queries():
                     channel: $channel,
                     version: $version,
                     meta: $meta,
+                    contentId: $content_id,
                 ) {{
                     {Schemas.DATA}
                 }}

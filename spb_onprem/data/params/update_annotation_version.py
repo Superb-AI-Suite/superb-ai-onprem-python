@@ -9,6 +9,7 @@ def update_annotation_version_params(
     channels: Union[List[str], UndefinedType, None] = Undefined,
     version: Union[str, UndefinedType, None] = Undefined,
     meta: Union[dict, UndefinedType, None] = Undefined,
+    content_id: Union[str, UndefinedType, None] = Undefined,
 ):
     """Make the variables for the updateAnnotationVersion query.
 
@@ -32,5 +33,7 @@ def update_annotation_version_params(
         variables["version"] = version
     if meta is not Undefined:
         variables["meta"] = meta
+    if content_id is not Undefined:
+        variables["content_id"] = content_id
 
     return variables
