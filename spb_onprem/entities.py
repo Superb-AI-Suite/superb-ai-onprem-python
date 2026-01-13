@@ -28,17 +28,14 @@ from .activities.entities import (
     SchemaType,
 )
 from .contents.entities import Content
-from .models.entities import (
-    Model,
-    ModelTrainClass,
-    ModelPageInfo,
-)
 from .reports.entities import (
     AnalyticsReport,
     AnalyticsReportItem,
     AnalyticsReportItemType,
     AnalyticsReportPageInfo,
 )
+from .models.entities import Model
+from .trainingreports.entities import TrainingReport
 
 __all__ = [
     # Core Entities
@@ -54,15 +51,12 @@ __all__ = [
     "ActivityHistory",
     "Content",
     "Frame",
+    "Model",
+    "TrainingReport",
     "Comment",
     "Reply",
     "DataAnnotationStat",
-    
-    # Models Entities
-    "Model",
-    "ModelTrainClass",
-    "ModelPageInfo",
-    
+
     # Reports Entities
     "AnalyticsReport",
     "AnalyticsReportItem",

@@ -1,70 +1,48 @@
-from typing import List, Union, Any, Optional
-from spb_onprem.base_types import Undefined, UndefinedType
-from spb_onprem.models.entities.model_train_class import ModelTrainClass
+from typing import Optional
+
+from spb_onprem.exceptions import BadParameterError
+
+from ..enums import ModelTaskType
 
 
 def create_model_params(
     dataset_id: str,
     name: str,
-    baseline_model: str,
-    training_slice_ids: List[str],
-    validation_slice_ids: List[str],
-    description: Union[str, UndefinedType] = Undefined,
-    training_classes: Union[List[ModelTrainClass], UndefinedType] = Undefined,
-    model_content_id: Union[str, UndefinedType] = Undefined,
-    is_trained: Union[bool, UndefinedType] = Undefined,
-    trained_at: Union[str, UndefinedType] = Undefined,
-    is_pinned: Union[bool, UndefinedType] = Undefined,
-    meta: Union[Any, UndefinedType] = Undefined,
+    task_type: ModelTaskType,
+    description: Optional[str] = None,
+    custom_dag_id: Optional[str] = None,
+    total_data_count: Optional[int] = None,
+    train_data_count: Optional[int] = None,
+    validation_data_count: Optional[int] = None,
+    training_parameters: Optional[dict] = None,
+    train_slice_id: Optional[str] = None,
+    validation_slice_id: Optional[str] = None,
+    is_pinned: Optional[bool] = None,
+    score_key: Optional[str] = None,
+    score_value: Optional[float] = None,
+    score_unit: Optional[str] = None,
 ):
-    """Get parameters for creating a model.
-    
-    Args:
-        dataset_id: The dataset ID
-        name: The model name
-        baseline_model: The baseline model used
-        training_slice_ids: The IDs of the training slices
-        validation_slice_ids: The IDs of the validation slices
-        description: Optional model description
-        training_classes: Optional training classes
-        model_content_id: Optional model content ID
-        is_trained: Optional trained status
-        trained_at: Optional trained timestamp
-        is_pinned: Optional pinned status
-        meta: Optional metadata
-        
-    Returns:
-        dict: Parameters for creating a model
-    """
-    params = {
-        "datasetId": dataset_id,
+    if dataset_id is None:
+        raise BadParameterError("dataset_id is required.")
+    if name is None:
+        raise BadParameterError("name is required.")
+    if task_type is None:
+        raise BadParameterError("task_type is required.")
+
+    return {
+        "dataset_id": dataset_id,
         "name": name,
-        "baselineModel": baseline_model,
-        "trainingSliceIds": training_slice_ids,
-        "validationSliceIds": validation_slice_ids,
+        "description": description,
+        "task_type": task_type.value,
+        "custom_dag_id": custom_dag_id,
+        "total_data_count": total_data_count,
+        "train_data_count": train_data_count,
+        "validation_data_count": validation_data_count,
+        "training_parameters": training_parameters,
+        "train_slice_id": train_slice_id,
+        "validation_slice_id": validation_slice_id,
+        "is_pinned": is_pinned,
+        "score_key": score_key,
+        "score_value": score_value,
+        "score_unit": score_unit,
     }
-    
-    if not isinstance(description, UndefinedType):
-        params["description"] = description
-    
-    if not isinstance(training_classes, UndefinedType):
-        params["trainingClasses"] = [
-            tc.model_dump(by_alias=True, exclude_unset=True) for tc in training_classes
-        ] if training_classes is not None else None
-    
-    if not isinstance(model_content_id, UndefinedType):
-        params["modelContentId"] = model_content_id
-    
-    if not isinstance(is_trained, UndefinedType):
-        params["isTrained"] = is_trained
-    
-    if not isinstance(trained_at, UndefinedType):
-        params["trainedAt"] = trained_at
-    
-    if not isinstance(is_pinned, UndefinedType):
-        params["isPinned"] = is_pinned
-    
-    if not isinstance(meta, UndefinedType):
-        params["meta"] = meta
-    
-    return params

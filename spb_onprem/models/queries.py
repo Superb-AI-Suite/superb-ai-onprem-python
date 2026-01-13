@@ -1,90 +1,91 @@
-from spb_onprem.models.params import (
-    models_params,
-    model_params,
+from .params import (
+    get_model_params,
+    get_models_params,
     create_model_params,
     update_model_params,
-    pin_model_params,
-    unpin_model_params,
     delete_model_params,
 )
 
 
 class Schemas:
-    MODEL_TRAIN_CLASS = '''
-        class
-        annotationType
-        ap
-        trainingAnnotationsCount
-        validationAnnotationsCount
-    '''
-    
-    MODEL = '''
+    TRAINING_REPORT = """
         id
+        name
+        modelId
+        contentId
+        description
+        createdAt
+        updatedAt
+        createdBy
+        updatedBy
+    """
+
+    MODEL = f"""
         datasetId
-        baselineModel
+        id
         name
         description
-        trainingClasses {
-            class
-            annotationType
-            ap
-            trainingAnnotationsCount
-            validationAnnotationsCount
-        }
-        trainingDataCount
+        status
+        taskType
+        customDagId
+        totalDataCount
+        trainDataCount
         validationDataCount
+        trainingParameters
+        trainingReport {{
+            {TRAINING_REPORT}
+        }}
+        trainSliceId
+        validationSliceId
+        completedAt
         isPinned
-        isTrained
-        trainedAt
-        modelContent {
-            id
-            downloadURL
-        }
-        createdBy
+        scoreKey
+        scoreValue
+        scoreUnit
         createdAt
-        updatedBy
         updatedAt
-        meta
-        trainingSlices {
-            id
-            datasetId
-            name
-            description
-            isPinned
-            createdAt
-            createdBy
-            updatedAt
-            updatedBy
-        }
-        validationSlices {
-            id
-            datasetId
-            name
-            description
-            isPinned
-            createdAt
-            createdBy
-            updatedAt
-            updatedBy
-        }
-    '''
+        createdBy
+        updatedBy
+    """
 
 
-class Queries():
-    MODELS = {
+class Queries:
+    GET = {
+        "name": "model",
+        "query": f"""
+            query Query(
+                $dataset_id: ID!,
+                $model_id: ID,
+                $name: String,
+            ) {{
+                model(
+                    datasetId: $dataset_id,
+                    modelId: $model_id,
+                    name: $name,
+                ) {{
+                    {Schemas.MODEL}
+                }}
+            }}
+        """,
+        "variables": get_model_params,
+    }
+
+    GET_LIST = {
         "name": "models",
-        "query": f'''
-            query Models(
-                $datasetId: ID!,
+        "query": f"""
+            query Query(
+                $dataset_id: ID!,
                 $filter: ModelFilter,
+                $order_by: ModelOrderBy,
                 $cursor: String,
-                $length: Int
+                $length: Int,
             ) {{
                 models(
-                    datasetId: $datasetId,
+                    datasetId: $dataset_id,
                     filter: $filter,
+                    orderBy: $order_by,
                     cursor: $cursor,
-                    length: $length
+                    length: $length,
                 ) {{
                     models {{
                         {Schemas.MODEL}
@@ -93,146 +94,114 @@ class Queries():
                     totalCount
                 }}
             }}
-        ''',
-        "variables": models_params,
+        """,
+        "variables": get_models_params,
     }
-    
-    MODEL = {
-        "name": "model",
-        "query": f'''
-            query Model(
-                $datasetId: ID!,
-                $modelId: ID!
-            ) {{
-                model(
-                    datasetId: $datasetId,
-                    id: $modelId
-                ) {{
-                    {Schemas.MODEL}
-                }}
-            }}
-        ''',
-        "variables": model_params,
-    }
-    
-    CREATE_MODEL = {
+
+    CREATE = {
         "name": "createModel",
-        "query": f'''
-            mutation CreateModel(
-                $datasetId: ID!,
+        "query": f"""
+            mutation createModel(
+                $dataset_id: ID!,
                 $name: String!,
                 $description: String,
-                $baselineModel: String!,
-                $trainingClasses: [ModelTrainClassInput!],
-                $trainingSliceIds: [ID!]!,
-                $validationSliceIds: [ID!]!,
-                $modelContentId: String,
-                $isTrained: Boolean,
-                $trainedAt: DateTime,
-                $isPinned: Boolean,
-                $meta: JSONObject
+                $task_type: ModelTaskType!,
+                $custom_dag_id: String,
+                $total_data_count: Int,
+                $train_data_count: Int,
+                $validation_data_count: Int,
+                $training_parameters: JSONObject,
+                $train_slice_id: ID,
+                $validation_slice_id: ID,
+                $is_pinned: Boolean,
+                $score_key: String,
+                $score_value: Float,
+                $score_unit: String,
             ) {{
                 createModel(
-                    datasetId: $datasetId,
+                    datasetId: $dataset_id,
                     name: $name,
                     description: $description,
-                    baselineModel: $baselineModel,
-                    trainingClasses: $trainingClasses,
-                    trainingSliceIds: $trainingSliceIds,
-                    validationSliceIds: $validationSliceIds,
-                    modelContentId: $modelContentId,
-                    isTrained: $isTrained,
-                    trainedAt: $trainedAt,
-                    isPinned: $isPinned,
-                    meta: $meta
+                    taskType: $task_type,
+                    customDagId: $custom_dag_id,
+                    totalDataCount: $total_data_count,
+                    trainDataCount: $train_data_count,
+                    validationDataCount: $validation_data_count,
+                    trainingParameters: $training_parameters,
+                    trainSliceId: $train_slice_id,
+                    validationSliceId: $validation_slice_id,
+                    isPinned: $is_pinned,
+                    scoreKey: $score_key,
+                    scoreValue: $score_value,
+                    scoreUnit: $score_unit,
                 ) {{
                     {Schemas.MODEL}
                 }}
             }}
-        ''',
+        """,
         "variables": create_model_params,
     }
-    
-    UPDATE_MODEL = {
+
+    UPDATE = {
         "name": "updateModel",
-        "query": f'''
-            mutation UpdateModel(
-                $datasetId: ID!,
-                $id: ID!,
+        "query": f"""
+            mutation updateModel(
+                $dataset_id: ID!,
+                $model_id: ID!,
                 $name: String,
                 $description: String,
-                $trainingClasses: [ModelTrainClassInput!],
-                $modelContentId: String,
-                $isTrained: Boolean,
-                $trainedAt: DateTime,
-                $meta: JSONObject
+                $status: ModelStatus,
+                $task_type: ModelTaskType,
+                $custom_dag_id: String,
+                $total_data_count: Int,
+                $train_data_count: Int,
+                $validation_data_count: Int,
+                $training_parameters: JSONObject,
+                $train_slice_id: ID,
+                $validation_slice_id: ID,
+                $is_pinned: Boolean,
+                $score_key: String,
+                $score_value: Float,
+                $score_unit: String,
             ) {{
                 updateModel(
-                    datasetId: $datasetId,
-                    id: $id,
+                    datasetId: $dataset_id,
+                    modelId: $model_id,
                     name: $name,
                     description: $description,
-                    trainingClasses: $trainingClasses,
-                    modelContentId: $modelContentId,
-                    isTrained: $isTrained,
-                    trainedAt: $trainedAt,
-                    meta: $meta
+                    status: $status,
+                    taskType: $task_type,
+                    customDagId: $custom_dag_id,
+                    totalDataCount: $total_data_count,
+                    trainDataCount: $train_data_count,
+                    validationDataCount: $validation_data_count,
+                    trainingParameters: $training_parameters,
+                    trainSliceId: $train_slice_id,
+                    validationSliceId: $validation_slice_id,
+                    isPinned: $is_pinned,
+                    scoreKey: $score_key,
+                    scoreValue: $score_value,
+                    scoreUnit: $score_unit,
                 ) {{
                     {Schemas.MODEL}
                 }}
             }}
-        ''',
+        """,
         "variables": update_model_params,
     }
-    
-    PIN_MODEL = {
-        "name": "pinModel",
-        "query": f'''
-            mutation PinModel(
-                $datasetId: ID!,
-                $id: ID!
-            ) {{
-                pinModel(
-                    datasetId: $datasetId,
-                    id: $id
-                ) {{
-                    {Schemas.MODEL}
-                }}
-            }}
-        ''',
-        "variables": pin_model_params,
-    }
-    
-    UNPIN_MODEL = {
-        "name": "unpinModel",
-        "query": f'''
-            mutation UnpinModel(
-                $datasetId: ID!,
-                $id: ID!
-            ) {{
-                unpinModel(
-                    datasetId: $datasetId,
-                    id: $id
-                ) {{
-                    {Schemas.MODEL}
-                }}
-            }}
-        ''',
-        "variables": unpin_model_params,
-    }
-    
-    DELETE_MODEL = {
+
+    DELETE = {
         "name": "deleteModel",
-        "query": '''
-            mutation DeleteModel(
-                $datasetId: ID!,
-                $id: ID!
+        "query": """
+            mutation deleteModel(
+                $dataset_id: ID!,
+                $model_id: ID!,
             ) {
                 deleteModel(
-                    datasetId: $datasetId,
-                    id: $id
+                    datasetId: $dataset_id,
+                    modelId: $model_id,
                 )
             }
-        ''',
+        """,
         "variables": delete_model_params,
     }

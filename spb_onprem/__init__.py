@@ -8,9 +8,11 @@ from .datasets.service import DatasetService
 from .data.service import DataService
 from .slices.service import SliceService
 from .activities.service import ActivityService
+from .exports.service import ExportService
 from .contents.service import ContentService
 from .models.service import ModelService
 from .reports.service import ReportService
+from .trainingreports.service import TrainingReportService
 
 # Core Entities and Enums
 from .entities import (
@@ -27,6 +29,8 @@ from .entities import (
     ActivityHistory,
     Content,
     Frame,
+    Model,
+    TrainingReport,
     Comment,
     Reply,
     DataAnnotationStat,
@@ -43,14 +47,6 @@ from .entities import (
     CommentStatus,
 )
 
-# Models and Reports Entities
-from .models import (
-    Model,
-    ModelTrainClass,
-    ModelPageInfo,
-    ModelsFilter,
-    ModelsFilterOptions,
-)
 
 from .reports import (
     AnalyticsReport,
@@ -104,6 +100,7 @@ __all__ = (
     "ContentService",
     "ModelService",
     "ReportService",
+    "TrainingReportService",
 
     # Core Entities
     "Data",
@@ -118,17 +115,12 @@ __all__ = (
     "ActivityHistory",
     "Content",
     "Frame",
+    "Model",
+    "TrainingReport",
     "Comment",
     "Reply",
     "DataAnnotationStat",
-    
-    # Models Entities
-    "Model",
-    "ModelTrainClass",
-    "ModelPageInfo",
-    "ModelsFilter",
-    "ModelsFilterOptions",
-    
+
     # Reports Entities
     "AnalyticsReport",
     "AnalyticsReportItem",
@@ -136,7 +128,7 @@ __all__ = (
     "AnalyticsReportPageInfo",
     "AnalyticsReportsFilter",
     "AnalyticsReportsFilterOptions",
-    
+
     # Enums
     "DataType",
     "SceneType",

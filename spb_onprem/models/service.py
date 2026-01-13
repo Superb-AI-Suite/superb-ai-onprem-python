@@ -1,297 +1,178 @@
-from typing import Optional, Union, List, Any
+from typing import Optional, List, Tuple, Union
+
 from spb_onprem.base_service import BaseService
-from spb_onprem.exceptions import BadParameterError
 from spb_onprem.base_types import Undefined, UndefinedType
+from spb_onprem.exceptions import BadParameterError
+
 from .queries import Queries
-from .entities import Model, ModelPageInfo, ModelTrainClass
-from .params.models import ModelsFilter
+from .entities import Model
+from .enums import ModelTaskType, ModelStatus
+from .params import ModelFilter, ModelOrderBy
 
 
 class ModelService(BaseService):
-    """
-    Service class for handling model-related operations.
-    """
-    
-    def get_models(
-        self,
-        dataset_id: str,
-        models_filter: Optional[ModelsFilter] = None,
-        cursor: Optional[str] = None,
-        length: Optional[int] = 10
-    ):
-        """
-        Get a list of models based on the provided filter and pagination parameters.
-        
-        Args:
-            dataset_id (str): The dataset ID
-            models_filter (Optional[ModelsFilter]): Filter criteria for models
-            cursor (Optional[str]): Cursor for pagination
-            length (Optional[int]): Number of items per page (default: 10)
-        
-        Returns:
-            tuple: A tuple containing:
-                - List[Model]: A list of Model objects
-                - str: Next cursor for pagination
-                - int: Total count of models
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        
-        if length > 50:
-            raise BadParameterError("The maximum length is 50.")
-        
-        response = self.request_gql(
-            Queries.MODELS,
-            Queries.MODELS["variables"](
-                dataset_id=dataset_id,
-                models_filter=models_filter,
-                cursor=cursor,
-                length=length
-            )
-        )
-        
-        page_info = ModelPageInfo.model_validate(response)
-        return (
-            page_info.models or [],
-            page_info.next,
-            page_info.total_count or 0
-        )
-
     def get_model(
         self,
         dataset_id: str,
         model_id: str,
-    ):
-        """
-        Retrieve a model by its ID.
-
-        Args:
-            dataset_id (str): The dataset ID
-            model_id (str): The ID of the model to retrieve
-
-        Returns:
-            Model: The retrieved model object
-        """
+    ) -> Optional[Model]:
         if dataset_id is None:
             raise BadParameterError("dataset_id is required.")
-        
         if model_id is None:
             raise BadParameterError("model_id is required.")
-        
+
         response = self.request_gql(
-            Queries.MODEL,
-            Queries.MODEL["variables"](
+            Queries.GET,
+            Queries.GET["variables"](dataset_id=dataset_id, model_id=model_id),
+        )
+        return Model.model_validate(response) if response is not None else None
+
+    def get_model_by_name(
+        self,
+        dataset_id: str,
+        name: str,
+    ) -> Optional[Model]:
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if name is None:
+            raise BadParameterError("name is required.")
+
+        response = self.request_gql(
+            Queries.GET,
+            Queries.GET["variables"](dataset_id=dataset_id, name=name),
+        )
+        return Model.model_validate(response) if response is not None else None
+
+    def get_models(
+        self,
+        dataset_id: str,
+        filter: Optional[ModelFilter] = None,
+        order_by: Optional[ModelOrderBy] = None,
+        cursor: Optional[str] = None,
+        length: int = 10,
+    ) -> Tuple[List[Model], Optional[str], int]:
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+
+        response = self.request_gql(
+            Queries.GET_LIST,
+            Queries.GET_LIST["variables"](
                 dataset_id=dataset_id,
-                model_id=model_id
+                filter=filter,
+                order_by=order_by,
+                cursor=cursor,
+                length=length,
             ),
         )
-        return Model.model_validate(response)
-    
+
+        models_list = response.get("models", []) if isinstance(response, dict) else []
+        models = [Model.model_validate(model_dict) for model_dict in models_list]
+
+        next_cursor = response.get("next") if isinstance(response, dict) else None
+        total_count = response.get("totalCount", 0) if isinstance(response, dict) else 0
+
+        return (
+            models,
+            next_cursor,
+            total_count,
+        )
+
     def create_model(
         self,
         dataset_id: str,
         name: str,
-        baseline_model: str,
-        training_slice_ids: List[str],
-        validation_slice_ids: List[str],
-        description: Union[str, UndefinedType] = Undefined,
-        training_classes: Union[List[ModelTrainClass], UndefinedType] = Undefined,
-        model_content_id: Union[str, UndefinedType] = Undefined,
-        is_trained: Union[bool, UndefinedType] = Undefined,
-        trained_at: Union[str, UndefinedType] = Undefined,
-        is_pinned: Union[bool, UndefinedType] = Undefined,
-        meta: Union[Any, UndefinedType] = Undefined,
-    ):
-        """
-        Create a new model.
-
-        Args:
-            dataset_id (str): The dataset ID
-            name (str): The model name
-            baseline_model (str): The baseline model used
-            training_slice_ids (List[str]): The IDs of the training slices
-            validation_slice_ids (List[str]): The IDs of the validation slices
-            description (Optional[str]): The description of the model
-            training_classes (Optional[List[ModelTrainClass]]): The training classes
-            model_content_id (Optional[str]): The model content ID
-            is_trained (Optional[bool]): Whether the model is trained
-            trained_at (Optional[str]): When the model was trained
-            is_pinned (Optional[bool]): Whether the model is pinned
-            meta (Optional[Any]): The metadata of the model
-
-        Returns:
-            Model: The created model object
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        
-        if name is None:
-            raise BadParameterError("name is required.")
-        
-        if baseline_model is None:
-            raise BadParameterError("baseline_model is required.")
-        
-        if training_slice_ids is None:
-            raise BadParameterError("training_slice_ids is required.")
-        
-        if validation_slice_ids is None:
-            raise BadParameterError("validation_slice_ids is required.")
-        
+        task_type: ModelTaskType,
+        description: Optional[str] = None,
+        custom_dag_id: Optional[str] = None,
+        total_data_count: Optional[int] = None,
+        train_data_count: Optional[int] = None,
+        validation_data_count: Optional[int] = None,
+        training_parameters: Optional[dict] = None,
+        train_slice_id: Optional[str] = None,
+        validation_slice_id: Optional[str] = None,
+        is_pinned: Optional[bool] = None,
+        score_key: Optional[str] = None,
+        score_value: Optional[float] = None,
+        score_unit: Optional[str] = None,
+    ) -> Model:
         response = self.request_gql(
-            Queries.CREATE_MODEL,
-            Queries.CREATE_MODEL["variables"](
+            Queries.CREATE,
+            Queries.CREATE["variables"](
                 dataset_id=dataset_id,
                 name=name,
-                baseline_model=baseline_model,
-                training_slice_ids=training_slice_ids,
-                validation_slice_ids=validation_slice_ids,
+                task_type=task_type,
                 description=description,
-                training_classes=training_classes,
-                model_content_id=model_content_id,
-                is_trained=is_trained,
-                trained_at=trained_at,
+                custom_dag_id=custom_dag_id,
+                total_data_count=total_data_count,
+                train_data_count=train_data_count,
+                validation_data_count=validation_data_count,
+                training_parameters=training_parameters,
+                train_slice_id=train_slice_id,
+                validation_slice_id=validation_slice_id,
                 is_pinned=is_pinned,
-                meta=meta,
+                score_key=score_key,
+                score_value=score_value,
+                score_unit=score_unit,
             ),
         )
         return Model.model_validate(response)
-    
+
     def update_model(
         self,
         dataset_id: str,
         model_id: str,
-        name: Union[str, UndefinedType] = Undefined,
-        description: Union[str, UndefinedType] = Undefined,
-        training_classes: Union[List[ModelTrainClass], UndefinedType] = Undefined,
-        model_content_id: Union[str, UndefinedType] = Undefined,
-        is_trained: Union[bool, UndefinedType] = Undefined,
-        trained_at: Union[str, UndefinedType] = Undefined,
-        meta: Union[Any, UndefinedType] = Undefined,
-    ):
-        """
-        Update a model.
-
-        Args:
-            dataset_id (str): The dataset ID
-            model_id (str): The ID of the model to update
-            name (Optional[str]): The new name
-            description (Optional[str]): The new description
-            training_classes (Optional[List[ModelTrainClass]]): The new training classes
-            model_content_id (Optional[str]): The new model content ID
-            is_trained (Optional[bool]): The new trained status
-            trained_at (Optional[str]): The new trained timestamp
-            meta (Optional[Any]): The new metadata
-
-        Returns:
-            Model: The updated model object
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        
-        if model_id is None:
-            raise BadParameterError("model_id is required.")
-        
+        name: Union[Optional[str], UndefinedType] = Undefined,
+        description: Union[Optional[str], UndefinedType] = Undefined,
+        status: Union[Optional[ModelStatus], UndefinedType] = Undefined,
+        task_type: Union[Optional[ModelTaskType], UndefinedType] = Undefined,
+        custom_dag_id: Union[Optional[str], UndefinedType] = Undefined,
+        total_data_count: Union[Optional[int], UndefinedType] = Undefined,
+        train_data_count: Union[Optional[int], UndefinedType] = Undefined,
+        validation_data_count: Union[Optional[int], UndefinedType] = Undefined,
+        training_parameters: Union[Optional[dict], UndefinedType] = Undefined,
+        train_slice_id: Union[Optional[str], UndefinedType] = Undefined,
+        validation_slice_id: Union[Optional[str], UndefinedType] = Undefined,
+        is_pinned: Union[Optional[bool], UndefinedType] = Undefined,
+        score_key: Union[Optional[str], UndefinedType] = Undefined,
+        score_value: Union[Optional[float], UndefinedType] = Undefined,
+        score_unit: Union[Optional[str], UndefinedType] = Undefined,
+    ) -> Model:
         response = self.request_gql(
-            Queries.UPDATE_MODEL,
-            Queries.UPDATE_MODEL["variables"](
+            Queries.UPDATE,
+            Queries.UPDATE["variables"](
                 dataset_id=dataset_id,
                 model_id=model_id,
                 name=name,
                 description=description,
-                training_classes=training_classes,
-                model_content_id=model_content_id,
-                is_trained=is_trained,
-                trained_at=trained_at,
-                meta=meta,
+                status=status,
+                task_type=task_type,
+                custom_dag_id=custom_dag_id,
+                total_data_count=total_data_count,
+                train_data_count=train_data_count,
+                validation_data_count=validation_data_count,
+                training_parameters=training_parameters,
+                train_slice_id=train_slice_id,
+                validation_slice_id=validation_slice_id,
+                is_pinned=is_pinned,
+                score_key=score_key,
+                score_value=score_value,
+                score_unit=score_unit,
             ),
         )
         return Model.model_validate(response)
-    
-    def pin_model(
-        self,
-        dataset_id: str,
-        model_id: str,
-    ):
-        """
-        Pin a model.
 
-        Args:
-            dataset_id (str): The dataset ID
-            model_id (str): The ID of the model to pin
-
-        Returns:
-            Model: The pinned model object
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        
-        if model_id is None:
-            raise BadParameterError("model_id is required.")
-        
-        response = self.request_gql(
-            Queries.PIN_MODEL,
-            Queries.PIN_MODEL["variables"](
-                dataset_id=dataset_id,
-                model_id=model_id,
-            ),
-        )
-        return Model.model_validate(response)
-    
-    def unpin_model(
-        self,
-        dataset_id: str,
-        model_id: str,
-    ):
-        """
-        Unpin a model.
-
-        Args:
-            dataset_id (str): The dataset ID
-            model_id (str): The ID of the model to unpin
-
-        Returns:
-            Model: The unpinned model object
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        
-        if model_id is None:
-            raise BadParameterError("model_id is required.")
-        
-        response = self.request_gql(
-            Queries.UNPIN_MODEL,
-            Queries.UNPIN_MODEL["variables"](
-                dataset_id=dataset_id,
-                model_id=model_id,
-            ),
-        )
-        return Model.model_validate(response)
-    
     def delete_model(
         self,
         dataset_id: str,
         model_id: str,
     ) -> bool:
-        """Delete a model.
-        
-        Args:
-            dataset_id (str): The dataset ID
-            model_id (str): The ID of the model to delete
-        
-        Returns:
-            bool: True if deletion was successful
-        """
         if dataset_id is None:
             raise BadParameterError("dataset_id is required.")
-        
         if model_id is None:
             raise BadParameterError("model_id is required.")
 
         response = self.request_gql(
-            Queries.DELETE_MODEL,
-            Queries.DELETE_MODEL["variables"](
-                dataset_id=dataset_id,
-                model_id=model_id,
-            )
+            Queries.DELETE,
+            Queries.DELETE["variables"](dataset_id=dataset_id, model_id=model_id),
         )
-        return response
+        return bool(response)
