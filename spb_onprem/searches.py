@@ -37,10 +37,7 @@ from .activities.params.activities import (
     ActivitiesFilter,
     ActivitiesFilterOptions,
 )
-from .models.params.models import (
-    ModelsFilter,
-    ModelsFilterOptions,
-)
+
 from .reports.params.analytics_reports import (
     AnalyticsReportsFilter,
     AnalyticsReportsFilterOptions,
@@ -79,8 +76,6 @@ __all__ = [
     "ActivitiesFilter",
     "ActivitiesFilterOptions",
     "AnnotationCountsFilter",
-    "ModelsFilter",
-    "ModelsFilterOptions",
     "AnalyticsReportsFilter",
     "AnalyticsReportsFilterOptions",
     "AnalyticsReportsOrderBy",
