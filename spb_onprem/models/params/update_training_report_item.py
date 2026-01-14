@@ -2,6 +2,7 @@ from typing import Optional, Union
 
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
+from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 
 
 def update_training_report_item_params(
@@ -9,6 +10,7 @@ def update_training_report_item_params(
     model_id: str,
     training_report_id: str,
     name: Union[Optional[str], UndefinedType] = Undefined,
+    type: Optional[AnalyticsReportItemType] = None,
     content_id: Union[Optional[str], UndefinedType] = Undefined,
     description: Union[Optional[str], UndefinedType] = Undefined,
 ):
@@ -31,5 +33,7 @@ def update_training_report_item_params(
         variables["content_id"] = content_id
     if description is not Undefined:
         variables["description"] = description
+    if type is not Undefined and type is not None:
+        variables["type"] = type.value
 
     return variables

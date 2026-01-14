@@ -3,6 +3,7 @@ from spb_onprem.base_service import BaseService
 from spb_onprem.exceptions import BadParameterError
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.contents.service import ContentService
+from spb_onprem.charts import ChartDataResult
 from .queries import Queries
 from .entities import (
     AnalyticsReport,
@@ -328,16 +329,18 @@ class ReportService(BaseService):
         )
         return response
     
-    def upload_reports_json(
+    def _upload_json_file(
         self,
         content_id: str,
+        file_name: str,
         data: dict,
     ) -> bool:
-        """Upload reports.json to S3 for the given content ID.
+        """Upload a JSON file to S3 for the given content ID.
         
         Args:
-            content_id (str): The folder content ID where reports.json will be uploaded
-            data (dict): The reports data to be uploaded as JSON
+            content_id (str): The folder content ID
+            file_name (str): The name of the file to upload
+            data (dict): The data to be uploaded as JSON
         
         Returns:
             bool: True if upload was successful
@@ -348,11 +351,11 @@ class ReportService(BaseService):
         if data is None:
             raise BadParameterError("data is required.")
         
-        # Get upload URL using ContentService
+        # Get upload URL
         content_service = ContentService()
         upload_url = content_service.get_upload_url(
             content_id=content_id,
-            file_name="reports.json",
+            file_name=file_name,
             content_type="application/json"
         )
         
@@ -360,50 +363,46 @@ class ReportService(BaseService):
         self.request(
             method="PUT",
             url=upload_url,
-            headers={
-                'Content-Type': 'application/json'
-            },
+            headers={'Content-Type': 'application/json'},
             json_data=data,
         )
         
         return True
     
+    def upload_reports_json(
+        self,
+        content_id: str,
+        chart_data: ChartDataResult,
+    ) -> bool:
+        """Upload reports.json to S3 for the given content ID.
+        
+        Args:
+            content_id (str): The folder content ID where reports.json will be uploaded
+            chart_data (ChartDataResult): Chart data result from ChartDataFactory
+        
+        Returns:
+            bool: True if upload was successful
+        """
+        return self._upload_json_file(content_id, "reports.json", chart_data.reports_json)
+    
     def upload_data_ids_json(
         self,
         content_id: str,
-        data: dict,
+        chart_data: ChartDataResult,
     ) -> bool:
         """Upload data_ids.json to S3 for the given content ID.
         
         Args:
             content_id (str): The folder content ID where data_ids.json will be uploaded
-            data (dict): The data IDs to be uploaded as JSON
+            chart_data (ChartDataResult): Chart data result from ChartDataFactory
         
         Returns:
             bool: True if upload was successful
+        
+        Raises:
+            BadParameterError: If chart_data has no data_ids_json
         """
-        if content_id is None:
-            raise BadParameterError("content_id is required.")
+        if chart_data.data_ids_json is None:
+            raise BadParameterError("chart_data does not contain data_ids_json")
         
-        if data is None:
-            raise BadParameterError("data is required.")
-        
-        # Get upload URL using ContentService
-        content_service = ContentService()
-        upload_url = content_service.get_upload_url(
-            content_id=content_id,
-            file_name="data_ids.json",
-            content_type="application/json"
-        )
-        
-        # Upload the JSON data
-        self.request(
-            method="PUT",
-            url=upload_url,
-            headers={
-                'Content-Type': 'application/json'
-            },
-            json_data=data,
-        )
-        
-        return True
+        return self._upload_json_file(content_id, "data_ids.json", chart_data.data_ids_json)

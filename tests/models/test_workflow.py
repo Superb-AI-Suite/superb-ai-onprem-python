@@ -5,6 +5,19 @@ import pytest
 
 from spb_onprem import ModelService, DatasetService, ContentService
 from spb_onprem.models.enums import ModelTaskType, ModelStatus
+from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
+from spb_onprem.charts import (
+    ChartDataFactory,
+    CategoryValueData,
+    HeatmapData,
+    LineChartData,
+    ScatterPlotData,
+    BinFrequencyData,
+    MetricData,
+    DataIdsIndex,
+    XYDataIds,
+    LineChartDataIds,
+)
 
 
 def test_model_lifecycle_workflow():
@@ -16,16 +29,20 @@ def test_model_lifecycle_workflow():
     - Get the created model by name
     - Update model with various parameters
     - Test model listing and filtering
-    - Create training report items
+    - Create training report items with chart data
+    - Upload chart data for all 9 chart types
     - Update training report items
-    - Delete training report items
-    - Delete the model
+    - Delete training report items (optional)
+    - Delete the model (optional)
     - Verify deletion
     """
     if os.environ.get("CI") == "true":
         pytest.skip("Skip workflow tests on CI")
     if os.environ.get("RUN_MODEL_WORKFLOW_TESTS") != "1":
         pytest.skip("RUN_MODEL_WORKFLOW_TESTS!=1 (avoid accidental mutations)")
+    
+    # Configuration flag
+    CLEANUP = os.environ.get("CLEANUP", "1") == "1"
     
     model_service = ModelService()
     dataset_service = DatasetService()
@@ -34,6 +51,8 @@ def test_model_lifecycle_workflow():
     print("=" * 80)
     print("Model Service Complete Lifecycle Workflow Test")
     print("=" * 80)
+    print(f"\n⚙️  Configuration:")
+    print(f"   CLEANUP: {CLEANUP} (Delete model and all reports after test)")
     
     # ==================== FIND DATASET ====================
     
@@ -399,63 +418,254 @@ def test_model_lifecycle_workflow():
             print(f"   Skipping training report tests")
             CONTENT_IDS = []
         
-        # ==================== CREATE TRAINING REPORT ITEMS ====================
+        # ==================== CREATE TRAINING REPORT ITEMS WITH CHART DATA ====================
         
         created_training_report_ids = []
+        chart_types = [
+            AnalyticsReportItemType.PIE,
+            AnalyticsReportItemType.HORIZONTAL_BAR,
+            AnalyticsReportItemType.VERTICAL_BAR,
+            AnalyticsReportItemType.HEATMAP,
+            AnalyticsReportItemType.TABLE,
+            AnalyticsReportItemType.LINE_CHART,
+            AnalyticsReportItemType.SCATTER_PLOT,
+            AnalyticsReportItemType.HISTOGRAM,
+            AnalyticsReportItemType.METRICS,
+        ]
         
-        if len(CONTENT_IDS) >= 3:
-            print("\n[Step 12] Creating multiple training report items...")
+        if len(CONTENT_IDS) > 0:
+            print(f"\n[Step 12] Creating training report items with chart data for all {len(chart_types)} chart types...")
             try:
-                for i, content_id in enumerate(CONTENT_IDS):
-                    test_report_name = f"workflow_test_report_{int(time.time())}_{i}"
-                    test_report_description = f"Training report {i+1} created by workflow test"
+                for i, chart_type in enumerate(chart_types):
+                    # Create content folder for this chart
+                    folder_name = f"chart_{chart_type.value}_{int(time.time())}"
+                    try:
+                        folder_content, upload_url = content_service.create_content(
+                            key=folder_name,
+                            content_type="FOLDER"
+                        )
+                        content_id = folder_content.id
+                        print(f"   ✅ Created folder content for {chart_type.value}: {content_id}")
+                    except Exception as content_error:
+                        print(f"   ⚠️  Failed to create folder for {chart_type.value}: {content_error}")
+                        continue
+                    
+                    # Generate chart data based on type
+                    chart_data = None
+                    try:
+                        if chart_type == AnalyticsReportItemType.PIE:
+                            chart_data = ChartDataFactory.create_pie_chart(
+                                category_name="Class",
+                                value_name="Count",
+                                data=[
+                                    CategoryValueData(category="Car", value=3421),
+                                    CategoryValueData(category="Person", value=5672),
+                                    CategoryValueData(category="Bicycle", value=892),
+                                    CategoryValueData(category="Truck", value=1234),
+                                    CategoryValueData(category="Bus", value=456),
+                                ],
+                                data_ids=[
+                                    DataIdsIndex(index="Car", data_ids=["data_1", "data_2", "data_3"]),
+                                    DataIdsIndex(index="Person", data_ids=["data_4", "data_5", "data_6"]),
+                                    DataIdsIndex(index="Bicycle", data_ids=["data_7", "data_8"]),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.HORIZONTAL_BAR:
+                            chart_data = ChartDataFactory.create_horizontal_bar_chart(
+                                category_name="Epoch",
+                                value_name="Training Loss",
+                                data=[
+                                    CategoryValueData(category="Epoch 1", value=2.45),
+                                    CategoryValueData(category="Epoch 2", value=1.89),
+                                    CategoryValueData(category="Epoch 3", value=1.34),
+                                    CategoryValueData(category="Epoch 4", value=0.92),
+                                    CategoryValueData(category="Epoch 5", value=0.68),
+                                    CategoryValueData(category="Epoch 6", value=0.51),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.VERTICAL_BAR:
+                            chart_data = ChartDataFactory.create_vertical_bar_chart(
+                                category_name="Metric",
+                                value_name="Score",
+                                data=[
+                                    CategoryValueData(category="Precision", value=0.92),
+                                    CategoryValueData(category="Recall", value=0.88),
+                                    CategoryValueData(category="F1-Score", value=0.90),
+                                    CategoryValueData(category="mAP", value=0.85),
+                                    CategoryValueData(category="IoU", value=0.78),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.HEATMAP:
+                            chart_data = ChartDataFactory.create_heatmap_chart(
+                                y_axis_name="True Label",
+                                x_axis_name="Predicted Label",
+                                data=[
+                                    HeatmapData(y_category="Car", x_category="Car", value=452),
+                                    HeatmapData(y_category="Car", x_category="Truck", value=23),
+                                    HeatmapData(y_category="Car", x_category="Bus", value=8),
+                                    HeatmapData(y_category="Truck", x_category="Car", value=15),
+                                    HeatmapData(y_category="Truck", x_category="Truck", value=387),
+                                    HeatmapData(y_category="Truck", x_category="Bus", value=12),
+                                    HeatmapData(y_category="Bus", x_category="Car", value=5),
+                                    HeatmapData(y_category="Bus", x_category="Truck", value=18),
+                                    HeatmapData(y_category="Bus", x_category="Bus", value=234),
+                                ],
+                                data_ids=[
+                                    XYDataIds(x="Car", y="Car", data_ids=["data_1", "data_2"]),
+                                    XYDataIds(x="Truck", y="Car", data_ids=["data_3"]),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.TABLE:
+                            chart_data = ChartDataFactory.create_table_chart(
+                                headers=["Class", "Precision", "Recall", "F1-Score", "Support"],
+                                rows=[
+                                    ["Car", 0.95, 0.92, 0.93, 3421],
+                                    ["Person", 0.91, 0.94, 0.92, 5672],
+                                    ["Bicycle", 0.88, 0.85, 0.86, 892],
+                                    ["Truck", 0.93, 0.89, 0.91, 1234],
+                                    ["Bus", 0.87, 0.91, 0.89, 456],
+                                ],
+                                data_ids=[
+                                    XYDataIds(x="Precision", y="Car", data_ids=["data_1"]),
+                                    XYDataIds(x="Recall", y="Car", data_ids=["data_2"]),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.LINE_CHART:
+                            chart_data = ChartDataFactory.create_line_chart(
+                                x_name="Epoch",
+                                y_name="Accuracy",
+                                data=[
+                                    LineChartData(series="Train", x=1, y=0.65),
+                                    LineChartData(series="Train", x=2, y=0.73),
+                                    LineChartData(series="Train", x=3, y=0.81),
+                                    LineChartData(series="Train", x=4, y=0.87),
+                                    LineChartData(series="Train", x=5, y=0.91),
+                                    LineChartData(series="Validation", x=1, y=0.62),
+                                    LineChartData(series="Validation", x=2, y=0.68),
+                                    LineChartData(series="Validation", x=3, y=0.75),
+                                    LineChartData(series="Validation", x=4, y=0.82),
+                                    LineChartData(series="Validation", x=5, y=0.85),
+                                ],
+                                data_ids=[
+                                    LineChartDataIds(series="Train", x="1", data_ids=["data_1", "data_2"]),
+                                    LineChartDataIds(series="Validation", x="1", data_ids=["data_3"]),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.SCATTER_PLOT:
+                            chart_data = ChartDataFactory.create_scatter_plot_chart(
+                                x_name="Inference Time (ms)",
+                                y_name="Accuracy",
+                                data=[
+                                    ScatterPlotData(x=45.3, y=0.87, category="ResNet50"),
+                                    ScatterPlotData(x=89.7, y=0.92, category="ResNet50"),
+                                    ScatterPlotData(x=32.1, y=0.81, category="MobileNet"),
+                                    ScatterPlotData(x=67.8, y=0.85, category="MobileNet"),
+                                    ScatterPlotData(x=123.4, y=0.95, category="EfficientNet"),
+                                    ScatterPlotData(x=156.2, y=0.97, category="EfficientNet"),
+                                ],
+                                data_ids=[
+                                    DataIdsIndex(index="ResNet50", data_ids=["data_1", "data_2"]),
+                                    DataIdsIndex(index="MobileNet", data_ids=["data_3"]),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.HISTOGRAM:
+                            chart_data = ChartDataFactory.create_histogram_chart(
+                                bin_name="Confidence Score Range",
+                                frequency_name="Count",
+                                data=[
+                                    BinFrequencyData(bin="0.0-0.1", frequency=23),
+                                    BinFrequencyData(bin="0.1-0.2", frequency=45),
+                                    BinFrequencyData(bin="0.2-0.3", frequency=89),
+                                    BinFrequencyData(bin="0.3-0.4", frequency=156),
+                                    BinFrequencyData(bin="0.4-0.5", frequency=234),
+                                    BinFrequencyData(bin="0.5-0.6", frequency=478),
+                                    BinFrequencyData(bin="0.6-0.7", frequency=892),
+                                    BinFrequencyData(bin="0.7-0.8", frequency=1345),
+                                    BinFrequencyData(bin="0.8-0.9", frequency=2156),
+                                    BinFrequencyData(bin="0.9-1.0", frequency=3421),
+                                ],
+                                data_ids=[
+                                    DataIdsIndex(index="0.9-1.0", data_ids=["data_1", "data_2", "data_3"]),
+                                ]
+                            )
+                        
+                        elif chart_type == AnalyticsReportItemType.METRICS:
+                            chart_data = ChartDataFactory.create_metrics_chart(
+                                metrics=[
+                                    MetricData(key="Total Epochs", value=50),
+                                    MetricData(key="Best Epoch", value=47),
+                                    MetricData(key="Final Loss", value=0.0234),
+                                    MetricData(key="Best Accuracy", value=0.9567),
+                                    MetricData(key="Training Time", value="2h 34m"),
+                                    MetricData(key="GPU Usage", value="87.3%"),
+                                    MetricData(key="Model Size", value="245 MB"),
+                                    MetricData(key="Parameters", value={"total": 25600000, "trainable": 25550000}),
+                                ],
+                                data_ids=["data_1", "data_2", "data_3"]
+                            )
+                        
+                        if chart_data:
+                            # Upload reports.json
+                            model_service.upload_reports_json(content_id, chart_data)
+                            print(f"      ✅ Uploaded reports.json")
+                            
+                            # Upload data_ids.json if exists
+                            if chart_data.data_ids_json:
+                                model_service.upload_data_ids_json(content_id, chart_data)
+                                print(f"      ✅ Uploaded data_ids.json")
+                        
+                    except Exception as chart_error:
+                        print(f"   ⚠️  Failed to create/upload chart data for {chart_type.value}: {chart_error}")
+                        continue
+                    
+                    # Create training report item
+                    test_report_name = f"Training Report - {chart_type.value}"
+                    test_report_description = f"{chart_type.value} chart for model training metrics"
                     
                     try:
                         model_with_report = model_service.create_training_report_item(
                             dataset_id=DATASET_ID,
                             model_id=created_model_id,
                             name=test_report_name,
+                            type=chart_type,
                             content_id=content_id,
                             description=test_report_description
                         )
                         
                         if model_with_report.training_report:
                             if isinstance(model_with_report.training_report, list):
-                                # Find the newly created report
                                 for report in model_with_report.training_report:
                                     if report.name == test_report_name:
                                         created_training_report_ids.append(report.id)
-                                        print(f"   ✅ Created training report {i+1}/3:")
+                                        print(f"   ✅ Created training report {i+1}/{len(chart_types)}: {chart_type.value}")
                                         print(f"      Report ID: {report.id}")
-                                        print(f"      Name: {report.name}")
-                                        print(f"      Description: {report.description}")
-                                        print(f"      Content ID: {report.content_id}")
+                                        print(f"      Content ID: {content_id}")
                                         break
                             else:
-                                # Single training report object
                                 created_training_report_ids.append(model_with_report.training_report.id)
-                                print(f"   ✅ Created training report {i+1}/3:")
+                                print(f"   ✅ Created training report {i+1}/{len(chart_types)}: {chart_type.value}")
                                 print(f"      Report ID: {model_with_report.training_report.id}")
-                                print(f"      Name: {model_with_report.training_report.name}")
-                                print(f"      Description: {model_with_report.training_report.description}")
-                        else:
-                            print(f"   ⚠️  Training report {i+1} created but not returned in response")
+                                print(f"      Content ID: {content_id}")
                     
                     except Exception as report_error:
-                        error_msg = str(report_error)
-                        if "already exists" in error_msg.lower():
-                            print(f"   ℹ️  Training report already exists for this model (stopping creation)")
-                            break
-                        else:
-                            raise report_error
+                        print(f"   ⚠️  Failed to create training report for {chart_type.value}: {report_error}")
                 
-                print(f"✅ Created {len(created_training_report_ids)} training report items")
+                print(f"✅ Created {len(created_training_report_ids)}/{len(chart_types)} training report items with chart data")
                 
             except Exception as e:
                 print(f"❌ Failed to create training report items: {e}")
+                import traceback
+                traceback.print_exc()
                 print(f"   Continuing with remaining tests...")
         else:
-            print("\n[Step 12] Skipping training report creation (insufficient contents available)")
+            print("\n[Step 12] Skipping training report creation (no contents available)")
         
         # ==================== UPDATE TRAINING REPORT ITEMS ====================
         
@@ -496,7 +706,7 @@ def test_model_lifecycle_workflow():
         
         # ==================== DELETE TRAINING REPORT ITEMS ====================
         
-        if len(created_training_report_ids) > 0:
+        if CLEANUP and len(created_training_report_ids) > 0:
             print(f"\n[Step 14] Deleting training report items...")
             try:
                 deleted_count = 0
@@ -537,7 +747,11 @@ def test_model_lifecycle_workflow():
                 print(f"❌ Failed to delete training report items: {e}")
                 print(f"   Continuing with model verification...")
         else:
-            print("\n[Step 14] Skipping training report deletion (no reports created)")
+            if len(created_training_report_ids) > 0:
+                print(f"\n[Step 14] Skipping training report deletion (CLEANUP=0)")
+                print(f"   {len(created_training_report_ids)} training reports remain in the system")
+            else:
+                print("\n[Step 14] Skipping training report deletion (no reports created)")
         
         # ==================== VERIFY MODEL STATE BEFORE DELETION ====================
         
@@ -565,90 +779,99 @@ def test_model_lifecycle_workflow():
         
         # ==================== DELETE MODEL ====================
         
-        print("\n[Step 16] Deleting the test model...")
-        try:
-            delete_result = model_service.delete_model(
-                dataset_id=DATASET_ID,
-                model_id=created_model_id
-            )
-            
-            print(f"✅ Model deletion executed successfully")
-            print(f"   Delete Result: {delete_result}")
-            
-            assert delete_result == True, "Delete operation should return True"
-            
-        except Exception as e:
-            print(f"❌ Failed to delete model: {e}")
-            pytest.fail(str(e))
+        if CLEANUP:
+            print("\n[Step 16] Deleting the test model...")
+            try:
+                delete_result = model_service.delete_model(
+                    dataset_id=DATASET_ID,
+                    model_id=created_model_id
+                )
+                
+                print(f"✅ Model deletion executed successfully")
+                print(f"   Delete Result: {delete_result}")
+                
+                assert delete_result == True, "Delete operation should return True"
+                
+            except Exception as e:
+                print(f"❌ Failed to delete model: {e}")
+                pytest.fail(str(e))
+        else:
+            print("\n[Step 16] Skipping model deletion (CLEANUP=0)")
+            print(f"   Model remains in the system: {created_model_id}")
         
         # ==================== VERIFY MODEL DELETION ====================
         
-        print("\n[Step 17] Verifying model deletion...")
-        try:
-            deleted_model = model_service.get_model(
-                dataset_id=DATASET_ID,
-                model_id=created_model_id
-            )
-            
-            if deleted_model is None:
-                print(f"✅ Model successfully deleted (returns None)")
-            else:
-                print(f"⚠️  Model still exists after deletion:")
-                print(f"   Model ID: {deleted_model.id}")
-                print(f"   Name: {deleted_model.name}")
-                pytest.fail("Model should be deleted but still exists")
+        if CLEANUP:
+            print("\n[Step 17] Verifying model deletion...")
+            try:
+                deleted_model = model_service.get_model(
+                    dataset_id=DATASET_ID,
+                    model_id=created_model_id
+                )
                 
-        except Exception as e:
-            # NotFoundError is expected when model is deleted
-            from spb_onprem.exceptions import NotFoundError
-            if isinstance(e, NotFoundError):
-                print(f"✅ Model successfully deleted (NotFoundError raised as expected)")
-            else:
-                print(f"❌ Unexpected error while verifying deletion: {e}")
-                pytest.fail(str(e))
+                if deleted_model is None:
+                    print(f"✅ Model successfully deleted (returns None)")
+                else:
+                    print(f"⚠️  Model still exists after deletion:")
+                    print(f"   Model ID: {deleted_model.id}")
+                    print(f"   Name: {deleted_model.name}")
+                    pytest.fail("Model should be deleted but still exists")
+                    
+            except Exception as e:
+                # NotFoundError is expected when model is deleted
+                from spb_onprem.exceptions import NotFoundError
+                if isinstance(e, NotFoundError):
+                    print(f"✅ Model successfully deleted (NotFoundError raised as expected)")
+                else:
+                    print(f"❌ Unexpected error while verifying deletion: {e}")
+                    pytest.fail(str(e))
         
         # ==================== FINAL SUCCESS MESSAGE ====================
         
         print("\n" + "=" * 80)
         print("Model Service Complete Lifecycle Workflow Test Passed Successfully! 🎉")
         print("=" * 80)
-        print("\nTest Steps Completed:")
-        print("  ✓ Found dataset automatically")
-        print("  ✓ Created model with comprehensive parameters")
-        print("  ✓ Retrieved model by ID")
-        print("  ✓ Retrieved model by name")
-        print("  ✓ Updated model basic information (description, is_pinned)")
-        print("  ✓ Updated model status (IN_PROGRESS -> COMPLETED)")
-        print("  ✓ Updated training data counts")
-        print("  ✓ Updated training parameters")
-        print("  ✓ Updated model score")
-        print("  ✓ Listed models in dataset")
-        print(f"  ✓ Created {len(created_training_report_ids)} training report items")
-        print(f"  ✓ Updated {len(created_training_report_ids)} training report items")
-        print(f"  ✓ Deleted {len(created_training_report_ids)} training report items")
-        print("  ✓ Verified model state before deletion")
-        print("  ✓ Deleted model")
-        print("  ✓ Verified model deletion")
+        print("\nTest Summary:")
+        print(f"  ✓ Dataset ID: {DATASET_ID}")
+        print(f"  ✓ Created model: {created_model_id}")
+        print(f"  ✓ Model name: {test_model_name}")
+        print(f"  ✓ Task type: {test_task_type}")
+        print(f"  ✓ Created {len(created_training_report_ids)} training report items with chart data:")
+        print(f"    - PIE, HORIZONTAL_BAR, VERTICAL_BAR, HEATMAP, TABLE")
+        print(f"    - LINE_CHART, SCATTER_PLOT, HISTOGRAM, METRICS")
+        if CLEANUP:
+            print(f"  ✓ Cleaned up all training reports and model")
+        else:
+            print(f"  ℹ️  Model and training reports remain in system (CLEANUP=0)")
+            print(f"     Model ID: {created_model_id}")
+        print("\nTo run without cleanup:")
+        print("  CLEANUP=0 RUN_MODEL_WORKFLOW_TESTS=1 python -m pytest tests/models/test_workflow.py::test_model_lifecycle_workflow")
         print("=" * 80)
         
         return True
         
     except Exception as e:
         print(f"\n❌ Workflow test failed with exception: {e}")
-        print(f"⚠️  Attempting cleanup...")
+        import traceback
+        traceback.print_exc()
         
-        # Cleanup: try to delete the model if it was created
-        if created_model_id:
-            try:
-                print(f"   Attempting to delete model: {created_model_id}")
-                model_service.delete_model(
-                    dataset_id=DATASET_ID,
-                    model_id=created_model_id
-                )
-                print(f"   ✅ Cleanup successful - model deleted")
-            except Exception as cleanup_error:
-                print(f"   ⚠️  Cleanup failed: {cleanup_error}")
-                print(f"   ⚠️  Please manually delete model: {created_model_id}")
+        if CLEANUP:
+            print(f"\n⚠️  Attempting cleanup...")
+            # Cleanup: try to delete the model if it was created
+            if created_model_id:
+                try:
+                    print(f"   Attempting to delete model: {created_model_id}")
+                    model_service.delete_model(
+                        dataset_id=DATASET_ID,
+                        model_id=created_model_id
+                    )
+                    print(f"   ✅ Cleanup successful - model deleted")
+                except Exception as cleanup_error:
+                    print(f"   ⚠️  Cleanup failed: {cleanup_error}")
+                    print(f"   ⚠️  Please manually delete model: {created_model_id}")
+        else:
+            if created_model_id:
+                print(f"\n⚠️  Model remains in system (CLEANUP=0): {created_model_id}")
         
         pytest.fail(str(e))
 

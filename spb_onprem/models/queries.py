@@ -14,6 +14,7 @@ class Schemas:
     TRAINING_REPORT_ITEM = """
         id
         name
+        type
         modelId
         contentId
         description
@@ -216,13 +217,15 @@ class Queries:
                 $dataset_id: ID!,
                 $model_id: ID!,
                 $name: String!,
-                $content_id: ID!,
+                $type: AnalyticsReportItemType!,
+                $content_id: ID,
                 $description: String,
             ) {{
                 createTrainingReportItem(
                     datasetId: $dataset_id,
                     modelId: $model_id,
                     name: $name,
+                    type: $type,
                     contentId: $content_id,
                     description: $description,
                 ) {{
@@ -241,6 +244,7 @@ class Queries:
                 $model_id: ID!,
                 $training_report_id: ID!,
                 $name: String,
+                $type: AnalyticsReportItemType,
                 $content_id: ID,
                 $description: String,
             ) {{
@@ -249,6 +253,7 @@ class Queries:
                     modelId: $model_id,
                     trainingReportItemId: $training_report_id,
                     name: $name,
+                    type: $type,
                     contentId: $content_id,
                     description: $description,
                 ) {{

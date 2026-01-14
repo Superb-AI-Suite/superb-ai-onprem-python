@@ -10,6 +10,11 @@ class AnalyticsReportItemType(str, Enum):
     HORIZONTAL_BAR = "HORIZONTAL_BAR"
     VERTICAL_BAR = "VERTICAL_BAR"
     HEATMAP = "HEATMAP"
+    TABLE = 'TABLE'
+    LINE_CHART = 'LINE_CHART'
+    SCATTER_PLOT = 'SCATTER_PLOT'
+    HISTOGRAM = 'HISTOGRAM'
+    METRICS = 'METRICS'
 
 
 class AnalyticsReportItem(CustomBaseModel):

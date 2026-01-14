@@ -138,6 +138,7 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 | **⚡ Activities** | Workflow & task management | Process automation, progress tracking | [⚡ Activity Guide](spb_onprem/activities/README.md) |
 | **🤖 Models** | ML model management | Track models, training configs, performance metrics | [🤖 Model Guide](spb_onprem/models/README.md) |
 | **📈 Reports** | Analytics & visualization | Create reports, charts, dashboards | [📈 Report Guide](spb_onprem/reports/README.md) |
+| **📊 Charts** | Chart data factory | Generate training metrics visualizations (9 chart types) | [📊 Chart Guide](spb_onprem/charts/README.md) |
 
 ### 🎯 Getting Started Paths
 
@@ -152,7 +153,8 @@ Choose your learning path based on your use case:
 1. Begin with [📊 Data](spb_onprem/data/README.md) - Understand data structure and filtering
 2. Configure [⚡ Activities](spb_onprem/activities/README.md) - Automate labeling and review workflows
 3. Track with [🤖 Models](spb_onprem/models/README.md) - Register and monitor model performance
-4. Visualize with [📈 Reports](spb_onprem/reports/README.md) - Generate analytics dashboards
+4. Create visualizations with [📊 Charts](spb_onprem/charts/README.md) - Generate training metrics charts
+5. Build dashboards with [📈 Reports](spb_onprem/reports/README.md) - Compile analytics reports
 
 #### **👥 Team Collaboration**
 1. Setup [📁 Datasets](spb_onprem/datasets/README.md) - Organize team projects  
@@ -185,6 +187,7 @@ Each module includes:
 |--------|-------|--------|-------------|
 | **🤖 Models** | v2.0 | ✅ Stable | ML model lifecycle management and performance tracking |
 | **📈 Reports** | v2.0 | ✅ Stable | Analytics reports and visualization dashboards |
+| **📊 Charts** | v2.0 | ✅ Stable | Chart data factory with 9 chart types for training metrics visualization |
 
 ### ⚠️ Deprecated Modules
 
