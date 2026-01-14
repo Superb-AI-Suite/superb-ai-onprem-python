@@ -11,7 +11,6 @@ from .activities.service import ActivityService
 from .contents.service import ContentService
 from .models.service import ModelService
 from .reports.service import ReportService
-from .trainingreports.service import TrainingReportService
 
 # Core Entities and Enums
 from .entities import (

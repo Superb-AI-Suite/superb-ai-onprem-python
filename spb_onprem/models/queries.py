@@ -210,16 +210,16 @@ class Queries:
     }
 
     CREATE_TRAINING_REPORT = {
-        "name": "createTrainingReport",
+        "name": "createTrainingReportItem",
         "query": f"""
-            mutation createTrainingReport(
+            mutation createTrainingReportItem(
                 $dataset_id: ID!,
                 $model_id: ID!,
                 $name: String!,
                 $content_id: ID!,
                 $description: String,
             ) {{
-                createTrainingReport(
+                createTrainingReportItem(
                     datasetId: $dataset_id,
                     modelId: $model_id,
                     name: $name,
@@ -234,9 +234,9 @@ class Queries:
     }
 
     UPDATE_TRAINING_REPORT = {
-        "name": "updateTrainingReport",
+        "name": "updateTrainingReportItem",
         "query": f"""
-            mutation updateTrainingReport(
+            mutation updateTrainingReportItem(
                 $dataset_id: ID!,
                 $model_id: ID!,
                 $training_report_id: ID!,
@@ -244,10 +244,10 @@ class Queries:
                 $content_id: ID,
                 $description: String,
             ) {{
-                updateTrainingReport(
+                updateTrainingReportItem(
                     datasetId: $dataset_id,
                     modelId: $model_id,
-                    trainingReportId: $training_report_id,
+                    trainingReportItemId: $training_report_id,
                     name: $name,
                     contentId: $content_id,
                     description: $description,
@@ -260,17 +260,17 @@ class Queries:
     }
 
     DELETE_TRAINING_REPORT = {
-        "name": "deleteTrainingReport",
+        "name": "deleteTrainingReportItem",
         "query": f"""
-            mutation deleteTrainingReport(
+            mutation deleteTrainingReportItem(
                 $dataset_id: ID!,
                 $model_id: ID!,
                 $training_report_id: ID!,
             ) {{
-                deleteTrainingReport(
+                deleteTrainingReportItem(
                     datasetId: $dataset_id,
                     modelId: $model_id,
-                    trainingReportId: $training_report_id,
+                    trainingReportItemId: $training_report_id,
                 ) {{
                     {Schemas.MODEL}
                 }}

@@ -1,4 +1,4 @@
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional, List, TYPE_CHECKING, Union
 
 from spb_onprem.base_model import CustomBaseModel, Field
 
@@ -32,7 +32,7 @@ class Model(CustomBaseModel):
     validation_data_count: Optional[int] = Field(None, alias="validationDataCount")
 
     training_parameters: Optional[dict] = Field(None, alias="trainingParameters")
-    training_report: Optional[TrainingReportItem] = Field(None, alias="trainingReport")
+    training_report: Union[List[TrainingReportItem], None] = Field(None, alias="trainingReport")
 
     train_slice_id: Optional[str] = Field(None, alias="trainSliceId")
     validation_slice_id: Optional[str] = Field(None, alias="validationSliceId")
