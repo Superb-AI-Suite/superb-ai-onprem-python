@@ -4,11 +4,14 @@ from .params import (
     create_model_params,
     update_model_params,
     delete_model_params,
+    create_training_report_item_params,
+    update_training_report_item_params,
+    delete_training_report_item_params,
 )
 
 
 class Schemas:
-    TRAINING_REPORT = """
+    TRAINING_REPORT_ITEM = """
         id
         name
         modelId
@@ -33,7 +36,7 @@ class Schemas:
         validationDataCount
         trainingParameters
         trainingReport {{
-            {TRAINING_REPORT}
+            {TRAINING_REPORT_ITEM}
         }}
         trainSliceId
         validationSliceId
@@ -205,3 +208,74 @@ class Queries:
         """,
         "variables": delete_model_params,
     }
+
+    CREATE_TRAINING_REPORT = {
+        "name": "createTrainingReport",
+        "query": f"""
+            mutation createTrainingReport(
+                $dataset_id: ID!,
+                $model_id: ID!,
+                $name: String!,
+                $content_id: ID!,
+                $description: String,
+            ) {{
+                createTrainingReport(
+                    datasetId: $dataset_id,
+                    modelId: $model_id,
+                    name: $name,
+                    contentId: $content_id,
+                    description: $description,
+                ) {{
+                    {Schemas.MODEL}
+                }}
+            }}
+        """,
+        "variables": create_training_report_item_params,
+    }
+
+    UPDATE_TRAINING_REPORT = {
+        "name": "updateTrainingReport",
+        "query": f"""
+            mutation updateTrainingReport(
+                $dataset_id: ID!,
+                $model_id: ID!,
+                $training_report_id: ID!,
+                $name: String,
+                $content_id: ID,
+                $description: String,
+            ) {{
+                updateTrainingReport(
+                    datasetId: $dataset_id,
+                    modelId: $model_id,
+                    trainingReportId: $training_report_id,
+                    name: $name,
+                    contentId: $content_id,
+                    description: $description,
+                ) {{
+                    {Schemas.MODEL}
+                }}
+            }}
+        """,
+        "variables": update_training_report_item_params,
+    }
+
+    DELETE_TRAINING_REPORT = {
+        "name": "deleteTrainingReport",
+        "query": f"""
+            mutation deleteTrainingReport(
+                $dataset_id: ID!,
+                $model_id: ID!,
+                $training_report_id: ID!,
+            ) {{
+                deleteTrainingReport(
+                    datasetId: $dataset_id,
+                    modelId: $model_id,
+                    trainingReportId: $training_report_id,
+                ) {{
+                    {Schemas.MODEL}
+                }}
+            }}
+        """,
+        "variables": delete_training_report_item_params,
+    }
+

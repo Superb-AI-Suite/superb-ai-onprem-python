@@ -47,7 +47,6 @@ class ModelService(BaseService):
         self,
         dataset_id: str,
         filter: Optional[ModelFilter] = None,
-        order_by: Optional[ModelOrderBy] = None,
         cursor: Optional[str] = None,
         length: int = 10,
     ) -> Tuple[List[Model], Optional[str], int]:
@@ -59,7 +58,6 @@ class ModelService(BaseService):
             Queries.GET_LIST["variables"](
                 dataset_id=dataset_id,
                 filter=filter,
-                order_by=order_by,
                 cursor=cursor,
                 length=length,
             ),
@@ -176,3 +174,69 @@ class ModelService(BaseService):
             Queries.DELETE["variables"](dataset_id=dataset_id, model_id=model_id),
         )
         return bool(response)
+
+    def create_training_report_item(
+        self,
+        dataset_id: str,
+        model_id: str,
+        name: str,
+        content_id: str,
+        description: Optional[str] = None,
+    ) -> Model:
+        response = self.request_gql(
+            Queries.CREATE_TRAINING_REPORT,
+            Queries.CREATE_TRAINING_REPORT["variables"](
+                dataset_id=dataset_id,
+                model_id=model_id,
+                name=name,
+                content_id=content_id,
+                description=description,
+            ),
+        )
+        return Model.model_validate(response)
+
+    def update_training_report_item(
+        self,
+        dataset_id: str,
+        model_id: str,
+        training_report_id: str,
+        name: Union[Optional[str], UndefinedType] = Undefined,
+        content_id: Union[Optional[str], UndefinedType] = Undefined,
+        description: Union[Optional[str], UndefinedType] = Undefined,
+    ) -> Model:
+        response = self.request_gql(
+            Queries.UPDATE_TRAINING_REPORT,
+            Queries.UPDATE_TRAINING_REPORT["variables"](
+                dataset_id=dataset_id,
+                model_id=model_id,
+                training_report_id=training_report_id,
+                name=name,
+                content_id=content_id,
+                description=description,
+            ),
+        )
+        return Model.model_validate(response)
+
+    def delete_training_report_item(
+        self,
+        dataset_id: str,
+        model_id: str,
+        training_report_id: str,
+    ) -> Model:
+        if dataset_id is None:
+            raise BadParameterError("dataset_id is required.")
+        if model_id is None:
+            raise BadParameterError("model_id is required.")
+        if training_report_id is None:
+            raise BadParameterError("training_report_id is required.")
+
+        response = self.request_gql(
+            Queries.DELETE_TRAINING_REPORT,
+            Queries.DELETE_TRAINING_REPORT["variables"](
+                dataset_id=dataset_id,
+                model_id=model_id,
+                training_report_id=training_report_id,
+            ),
+        )
+        return Model.model_validate(response)
+

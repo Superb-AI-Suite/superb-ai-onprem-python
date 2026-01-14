@@ -1,7 +1,7 @@
 from spb_onprem.exceptions import BadParameterError
 
 
-def delete_training_report_params(
+def delete_training_report_item_params(
     dataset_id: str,
     model_id: str,
     training_report_id: str,

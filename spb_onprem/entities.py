@@ -34,8 +34,15 @@ from .reports.entities import (
     AnalyticsReportItemType,
     AnalyticsReportPageInfo,
 )
-from .models.entities import Model
-from .trainingreports.entities import TrainingReport
+from .models.entities import (
+    Model,
+    TrainingReportItem,
+)
+
+from .models.enums import (
+    ModelTaskType,
+    ModelStatus,
+)
 
 __all__ = [
     # Core Entities
@@ -56,6 +63,7 @@ __all__ = [
     "Comment",
     "Reply",
     "DataAnnotationStat",
+    "TrainingReportItem",
 
     # Reports Entities
     "AnalyticsReport",
@@ -73,4 +81,6 @@ __all__ = [
     "ActivitySchema",
     "SchemaType",
     "CommentStatus",
+    "ModelTaskType",
+    "ModelStatus",
 ] 

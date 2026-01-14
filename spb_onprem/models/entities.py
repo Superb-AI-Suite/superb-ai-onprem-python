@@ -4,8 +4,18 @@ from spb_onprem.base_model import CustomBaseModel, Field
 
 from .enums import ModelStatus, ModelTaskType
 
-if TYPE_CHECKING:
-    from spb_onprem.trainingreports.entities import TrainingReport
+
+class TrainingReportItem(CustomBaseModel):
+    id: Optional[str] = None
+    name: Optional[str] = None
+    model_id: Optional[str] = Field(None, alias="modelId")
+    content_id: Optional[str] = Field(None, alias="contentId")
+    description: Optional[str] = None
+
+    created_at: Optional[str] = Field(None, alias="createdAt")
+    updated_at: Optional[str] = Field(None, alias="updatedAt")
+    created_by: Optional[str] = Field(None, alias="createdBy")
+    updated_by: Optional[str] = Field(None, alias="updatedBy")
 
 
 class Model(CustomBaseModel):
@@ -22,7 +32,7 @@ class Model(CustomBaseModel):
     validation_data_count: Optional[int] = Field(None, alias="validationDataCount")
 
     training_parameters: Optional[dict] = Field(None, alias="trainingParameters")
-    training_report: Optional["TrainingReport"] = Field(None, alias="trainingReport")
+    training_report: Optional[TrainingReportItem] = Field(None, alias="trainingReport")
 
     train_slice_id: Optional[str] = Field(None, alias="trainSliceId")
     validation_slice_id: Optional[str] = Field(None, alias="validationSliceId")
@@ -44,8 +54,3 @@ class ModelPageInfo(CustomBaseModel):
     models: Optional[List[Model]] = None
     next: Optional[str] = None
     total_count: Optional[int] = Field(None, alias="totalCount")
-
-
-from spb_onprem.trainingreports.entities import TrainingReport
-
-Model.model_rebuild()

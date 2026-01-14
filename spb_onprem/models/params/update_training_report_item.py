@@ -4,7 +4,7 @@ from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
 
 
-def update_training_report_params(
+def update_training_report_item_params(
     dataset_id: str,
     model_id: str,
     training_report_id: str,

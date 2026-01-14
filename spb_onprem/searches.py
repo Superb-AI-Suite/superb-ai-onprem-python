@@ -45,6 +45,11 @@ from .reports.params.analytics_reports import (
     AnalyticsReportListOrderFields,
 )
 
+from .models.params import (
+    ModelFilterOptions,
+    ModelFilter,
+)
+
 __all__ = [
     "DateTimeRangeFilterOption",
     "UserFilterOption",
@@ -80,4 +85,6 @@ __all__ = [
     "AnalyticsReportsFilterOptions",
     "AnalyticsReportsOrderBy",
     "AnalyticsReportListOrderFields",
+    "ModelFilterOptions",
+    "ModelFilter",
 ]

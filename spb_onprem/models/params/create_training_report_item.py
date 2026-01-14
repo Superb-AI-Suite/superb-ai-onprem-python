@@ -3,7 +3,7 @@ from typing import Optional
 from spb_onprem.exceptions import BadParameterError
 
 
-def create_training_report_params(
+def create_training_report_item_params(
     dataset_id: str,
     model_id: str,
     name: str,

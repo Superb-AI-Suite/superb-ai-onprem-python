@@ -29,7 +29,7 @@ from .entities import (
     Content,
     Frame,
     Model,
-    TrainingReport,
+    TrainingReportItem,
     Comment,
     Reply,
     DataAnnotationStat,
@@ -44,6 +44,8 @@ from .entities import (
     ActivitySchema,
     SchemaType,
     CommentStatus,
+    ModelTaskType,
+    ModelStatus,
 )
 
 
@@ -58,6 +60,10 @@ from .reports import (
 
 # Filters
 from .searches import (
+    AnalyticsReportsOrderBy,
+    AnalyticsReportListOrderFields,
+    ModelFilterOptions,
+    ModelFilter,
     DateTimeRangeFilterOption,
     UserFilterOption,
     NumericRangeFilter,
@@ -115,7 +121,7 @@ __all__ = (
     "Content",
     "Frame",
     "Model",
-    "TrainingReport",
+    "TrainingReportItem",
     "Comment",
     "Reply",
     "DataAnnotationStat",
@@ -138,6 +144,8 @@ __all__ = (
     "ActivitySchema",
     "SchemaType",
     "CommentStatus",
+    "ModelTaskType",
+    "ModelStatus",
     
     # Filters
     "DateTimeRangeFilterOption",
@@ -170,4 +178,8 @@ __all__ = (
     "ActivitiesFilter",
     "ActivitiesFilterOptions",
     "AnnotationCountsFilter",
+    "AnalyticsReportsOrderBy",
+    "AnalyticsReportListOrderFields",
+    "ModelFilterOptions",
+    "ModelFilter",
 )

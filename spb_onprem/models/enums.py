@@ -11,7 +11,7 @@ class ModelStatus(str, Enum):
 
 class ModelTaskType(str, Enum):
     OBJECT_DETECTION = "OBJECT_DETECTION"
-    SEGMENTATION = "SEGMENTATION"
+    INSTANCE_SEGMENTATION = "INSTANCE_SEGMENTATION"
     OCR = "OCR"
 
 
