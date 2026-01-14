@@ -27,6 +27,8 @@ from .entities import (
     ActivityHistory,
     Content,
     Frame,
+    Model,
+    TrainingReportItem,
     Comment,
     Reply,
     DataAnnotationStat,
@@ -41,16 +43,10 @@ from .entities import (
     ActivitySchema,
     SchemaType,
     CommentStatus,
+    ModelTaskType,
+    ModelStatus,
 )
 
-# Models and Reports Entities
-from .models import (
-    Model,
-    ModelTrainClass,
-    ModelPageInfo,
-    ModelsFilter,
-    ModelsFilterOptions,
-)
 
 from .reports import (
     AnalyticsReport,
@@ -63,6 +59,10 @@ from .reports import (
 
 # Filters
 from .searches import (
+    AnalyticsReportsOrderBy,
+    AnalyticsReportListOrderFields,
+    ModelFilterOptions,
+    ModelFilter,
     DateTimeRangeFilterOption,
     UserFilterOption,
     NumericRangeFilter,
@@ -104,6 +104,7 @@ __all__ = (
     "ContentService",
     "ModelService",
     "ReportService",
+    "TrainingReportService",
 
     # Core Entities
     "Data",
@@ -118,17 +119,12 @@ __all__ = (
     "ActivityHistory",
     "Content",
     "Frame",
+    "Model",
+    "TrainingReportItem",
     "Comment",
     "Reply",
     "DataAnnotationStat",
-    
-    # Models Entities
-    "Model",
-    "ModelTrainClass",
-    "ModelPageInfo",
-    "ModelsFilter",
-    "ModelsFilterOptions",
-    
+
     # Reports Entities
     "AnalyticsReport",
     "AnalyticsReportItem",
@@ -136,7 +132,7 @@ __all__ = (
     "AnalyticsReportPageInfo",
     "AnalyticsReportsFilter",
     "AnalyticsReportsFilterOptions",
-    
+
     # Enums
     "DataType",
     "SceneType",
@@ -147,6 +143,8 @@ __all__ = (
     "ActivitySchema",
     "SchemaType",
     "CommentStatus",
+    "ModelTaskType",
+    "ModelStatus",
     
     # Filters
     "DateTimeRangeFilterOption",
@@ -179,4 +177,8 @@ __all__ = (
     "ActivitiesFilter",
     "ActivitiesFilterOptions",
     "AnnotationCountsFilter",
+    "AnalyticsReportsOrderBy",
+    "AnalyticsReportListOrderFields",
+    "ModelFilterOptions",
+    "ModelFilter",
 )

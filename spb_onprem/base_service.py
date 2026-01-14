@@ -1,4 +1,6 @@
 from typing import Optional, Dict, Any, ClassVar
+import json
+import os
 import random
 
 import requests
@@ -86,6 +88,30 @@ class BaseService():
 
     def request_gql(self, query: Any, variables: Dict[str, Any]):
         """Request Graphql query to the server."""
+        debug_gql = os.environ.get("SDK_DEBUG_GQL") == "1"
+        debug_max_chars_raw = os.environ.get("SDK_DEBUG_GQL_MAX_CHARS", "10000")
+        try:
+            debug_max_chars = int(debug_max_chars_raw)
+        except ValueError:
+            debug_max_chars = 10000
+
+        def _safe_dump(obj: Any) -> str:
+            try:
+                return json.dumps(obj, ensure_ascii=False, default=str)
+            except Exception:
+                return str(obj)
+
+        def _print_debug(title: str, obj: Any = None):
+            if not debug_gql:
+                return
+            print(f"\n=== SDK_DEBUG_GQL: {title} ===")
+            if obj is None:
+                return
+            text = _safe_dump(obj)
+            if debug_max_chars > 0 and len(text) > debug_max_chars:
+                text = text[:debug_max_chars] + "...<truncated>"
+            print(text)
+
         payload = {
             "query": query["query"],
             "variables": variables
@@ -95,19 +121,36 @@ class BaseService():
         session = self.requests_retry_session()
         
         try:
+            _print_debug(
+                "request",
+                {
+                    "endpoint": self.endpoint,
+                    "operation": query.get("name"),
+                    "variables": variables,
+                },
+            )
             response = session.post(
                 self.endpoint,
                 json=payload,
                 headers=self._auth_user.auth_headers
             )
+            _print_debug(
+                "response_http",
+                {
+                    "status_code": response.status_code,
+                    "elapsed_ms": int(response.elapsed.total_seconds() * 1000) if getattr(response, "elapsed", None) else None,
+                },
+            )
             response.raise_for_status()
             
             result = response.json()
+            _print_debug("response_json", result)
             if not isinstance(result, dict):
                 raise BadRequestError(f"Invalid response format: {type(result).__name__}, expected dict")
 
             # Check for GraphQL errors
             if 'errors' in result and result['errors']:
+                _print_debug("response_graphql_errors", result.get("errors"))
                 for error in result['errors']:
                     if error['code'] == 'NOT_FOUND':
                         raise NotFoundError(error['message'])

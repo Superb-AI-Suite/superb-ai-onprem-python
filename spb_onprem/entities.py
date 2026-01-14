@@ -28,16 +28,20 @@ from .activities.entities import (
     SchemaType,
 )
 from .contents.entities import Content
-from .models.entities import (
-    Model,
-    ModelTrainClass,
-    ModelPageInfo,
-)
 from .reports.entities import (
     AnalyticsReport,
     AnalyticsReportItem,
     AnalyticsReportItemType,
     AnalyticsReportPageInfo,
+)
+from .models.entities import (
+    Model,
+    TrainingReportItem,
+)
+
+from .models.enums import (
+    ModelTaskType,
+    ModelStatus,
 )
 
 __all__ = [
@@ -54,15 +58,13 @@ __all__ = [
     "ActivityHistory",
     "Content",
     "Frame",
+    "Model",
+    "TrainingReport",
     "Comment",
     "Reply",
     "DataAnnotationStat",
-    
-    # Models Entities
-    "Model",
-    "ModelTrainClass",
-    "ModelPageInfo",
-    
+    "TrainingReportItem",
+
     # Reports Entities
     "AnalyticsReport",
     "AnalyticsReportItem",
@@ -79,4 +81,6 @@ __all__ = [
     "ActivitySchema",
     "SchemaType",
     "CommentStatus",
+    "ModelTaskType",
+    "ModelStatus",
 ] 

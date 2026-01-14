@@ -1,7 +1,15 @@
+import os
+import pytest
+
 from spb_onprem import ReportService, DatasetService, AnalyticsReportItemType, ContentService
 
 
 def test_analytics_report_workflow():
+    if os.environ.get("CI") == "true":
+        pytest.skip("Skip workflow tests on CI")
+    if os.environ.get("RUN_REPORT_WORKFLOW_TESTS") != "1":
+        pytest.skip("RUN_REPORT_WORKFLOW_TESTS!=1 (avoid accidental mutations)")
+
     """Test complete workflow for analytics report and items:
     - Report: create -> list -> get -> update -> get
     - Items: create all types -> update all -> delete all
