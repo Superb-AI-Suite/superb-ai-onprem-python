@@ -23,6 +23,7 @@ def update_model_params(
     score_key: Union[Optional[str], UndefinedType] = Undefined,
     score_value: Union[Optional[float], UndefinedType] = Undefined,
     score_unit: Union[Optional[str], UndefinedType] = Undefined,
+    contents: Union[Optional[dict], UndefinedType] = Undefined,
 ):
     variables = {
         "dataset_id": dataset_id,
@@ -59,5 +60,7 @@ def update_model_params(
         variables["score_value"] = score_value
     if score_unit is not Undefined:
         variables["score_unit"] = score_unit
+    if contents is not Undefined:
+        variables["contents"] = contents
 
     return variables
