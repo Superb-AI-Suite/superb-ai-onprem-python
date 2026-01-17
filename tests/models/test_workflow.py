@@ -584,8 +584,8 @@ def test_model_lifecycle_workflow():
                         
                         elif chart_type == AnalyticsReportItemType.HORIZONTAL_BAR:
                             chart_data = ChartDataFactory.create_horizontal_bar_chart(
-                                category_name="Epoch",
-                                value_name="Training Loss",
+                                y_axis_name="Epoch",
+                                x_axis_name="Training Loss",
                                 data=[
                                     CategoryValueData(category="Epoch 1", value=2.45),
                                     CategoryValueData(category="Epoch 2", value=1.89),
@@ -598,8 +598,8 @@ def test_model_lifecycle_workflow():
                         
                         elif chart_type == AnalyticsReportItemType.VERTICAL_BAR:
                             chart_data = ChartDataFactory.create_vertical_bar_chart(
-                                category_name="Metric",
-                                value_name="Score",
+                                x_axis_name="Metric",
+                                y_axis_name="Score",
                                 data=[
                                     CategoryValueData(category="Precision", value=0.92),
                                     CategoryValueData(category="Recall", value=0.88),
