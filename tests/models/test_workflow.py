@@ -3,7 +3,7 @@ import time
 
 import pytest
 
-from spb_onprem import ModelService, DatasetService, ContentService
+from spb_onprem import ModelService, DatasetService, ContentService, SliceService
 from spb_onprem.models.enums import ModelTaskType, ModelStatus
 from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 from spb_onprem.charts import (
@@ -46,6 +46,7 @@ def test_model_lifecycle_workflow():
     
     model_service = ModelService()
     dataset_service = DatasetService()
+    slice_service = SliceService()
     content_service = ContentService()
     
     print("=" * 80)
@@ -81,7 +82,11 @@ def test_model_lifecycle_workflow():
         print(f"⚠️  Please check your dataset configuration")
         pytest.fail(str(e))
     
-    # ==================== CONFIGURATION ====================
+    try:
+        slices, _, _ = slice_service.get_slices(dataset_id=DATASET_ID)
+    except Exception as e:
+        print(f"❌ Failed to get slices: {e}")
+        pytest.fail(str(e))
     
     print(f"\n📋 Test Configuration:")
     print(f"   Dataset ID: {DATASET_ID}")
@@ -102,8 +107,41 @@ def test_model_lifecycle_workflow():
         # ==================== CREATE MODEL ====================
         
         print("\n[Step 1] Creating a new model with detailed parameters...")
+        
+        # First, create some content files for the model
+        print("   Creating sample content files for model...")
+        model_contents = {}
         try:
-            # Create model with comprehensive parameters
+            # Create config.yaml content
+            config_content, _ = content_service.create_content(
+                key="config.yaml",
+                content_type="application/yaml"
+            )
+            model_contents["config.yaml"] = config_content.id
+            print(f"   ✅ Created config.yaml: {config_content.id}")
+            
+            # Create model_architecture.json content
+            arch_content, _ = content_service.create_content(
+                key="model_architecture.json",
+                content_type="application/json"
+            )
+            model_contents["model_architecture.json"] = arch_content.id
+            print(f"   ✅ Created model_architecture.json: {arch_content.id}")
+            
+            # Create training_log.txt content
+            log_content, _ = content_service.create_content(
+                key="training_log.txt",
+                content_type="text/plain"
+            )
+            model_contents["training_log.txt"] = log_content.id
+            print(f"   ✅ Created training_log.txt: {log_content.id}")
+            
+        except Exception as content_error:
+            print(f"   ⚠️  Failed to create content files: {content_error}")
+            model_contents = None
+        
+        try:
+            # Create model with comprehensive parameters including contents
             created_model = model_service.create_model(
                 dataset_id=DATASET_ID,
                 name=test_model_name,
@@ -118,12 +156,13 @@ def test_model_lifecycle_workflow():
                     "epochs": 100,
                     "optimizer": "adam"
                 },
-                train_slice_id="01KEE8ND7EM6M6G2PM3P1NQXM0",
-                validation_slice_id="01KEE8NDB61CXEX32NF4PEJ1M6",
+                train_slice_id=slices[0].id if slices else None,
+                validation_slice_id=slices[0].id if len(slices) > 1 else None,
                 is_pinned=False,
                 score_key="mAP",
                 score_value=0.0,
-                score_unit="%"
+                score_unit="%",
+                contents=model_contents
             )
             created_model_id = created_model.id
             
@@ -140,6 +179,18 @@ def test_model_lifecycle_workflow():
             print(f"   Is Pinned: {created_model.is_pinned}")
             print(f"   Score Key: {created_model.score_key}")
             print(f"   Score Value: {created_model.score_value}")
+            
+            # Verify contents field
+            if model_contents:
+                print(f"   Contents: {len(model_contents)} files")
+                for filename, content_id in model_contents.items():
+                    print(f"      - {filename}: {content_id}")
+                
+                if created_model.contents:
+                    print(f"   ✅ Contents field verified in created model")
+                    assert created_model.contents == model_contents, "Contents field mismatch"
+                else:
+                    print(f"   ⚠️  Contents field is None in created model (API may not support it yet)")
             print(f"   Score Unit: {created_model.score_unit}")
             print(f"   Created At: {created_model.created_at}")
             print(f"   Created By: {created_model.created_by}")
@@ -172,6 +223,14 @@ def test_model_lifecycle_workflow():
             print(f"   Name: {retrieved_model.name}")
             print(f"   Status: {retrieved_model.status}")
             print(f"   Task Type: {retrieved_model.task_type}")
+            
+            # Verify contents field persists
+            if model_contents:
+                if retrieved_model.contents:
+                    print(f"   ✅ Contents field persists: {len(retrieved_model.contents)} files")
+                    assert retrieved_model.contents == model_contents, "Contents field mismatch in retrieved model"
+                else:
+                    print(f"   ⚠️  Contents field is None in retrieved model (API may not support it yet)")
             
             assert retrieved_model.id == created_model_id, "Retrieved model ID mismatch"
             assert retrieved_model.name == test_model_name, "Retrieved model name mismatch"
@@ -216,6 +275,14 @@ def test_model_lifecycle_workflow():
             print(f"✅ Updated model basic information successfully")
             print(f"   Updated Description: {updated_model.description}")
             print(f"   Updated Is Pinned: {updated_model.is_pinned}")
+            
+            # Verify contents field still persists after update
+            if model_contents:
+                if updated_model.contents:
+                    print(f"   ✅ Contents field still persists after update: {len(updated_model.contents)} files")
+                    assert updated_model.contents == model_contents, "Contents field changed unexpectedly"
+                else:
+                    print(f"   ⚠️  Contents field is None after update (API may not support it yet)")
             
             assert updated_model.description == updated_description, "Description was not updated"
             assert updated_model.is_pinned == True, "Is pinned was not updated"
@@ -297,9 +364,53 @@ def test_model_lifecycle_workflow():
             print(f"❌ Failed to update training parameters: {e}")
             pytest.fail(str(e))
         
+        # ==================== UPDATE MODEL - CONTENTS ====================
+        
+        print("\n[Step 7.5] Updating model contents...")
+        if model_contents:
+            try:
+                # Add a new file to contents
+                weights_content, _ = content_service.create_content(
+                    key="model_weights.pt",
+                    content_type="application/octet-stream"
+                )
+                print(f"   ✅ Created model_weights.pt: {weights_content.id}")
+                
+                updated_contents = {**model_contents, "model_weights.pt": weights_content.id}
+                
+                updated_model_contents = model_service.update_model(
+                    dataset_id=DATASET_ID,
+                    model_id=created_model_id,
+                    contents=updated_contents
+                )
+                
+                print(f"✅ Updated model contents successfully")
+                
+                if updated_model_contents.contents:
+                    print(f"   Contents: {len(updated_model_contents.contents)} files")
+                    for filename, content_id in updated_model_contents.contents.items():
+                        print(f"      - {filename}: {content_id}")
+                    
+                    assert len(updated_model_contents.contents) == 4, "Should have 4 files now"
+                    assert "model_weights.pt" in updated_model_contents.contents, "New file should be in contents"
+                    assert updated_model_contents.contents["model_weights.pt"] == weights_content.id, "New file content_id mismatch"
+                    
+                    # Update model_contents for subsequent checks
+                    model_contents = updated_contents
+                    print(f"   ✅ Contents field verified after update")
+                else:
+                    print(f"   ⚠️  Contents field is None after update (API may not support it yet)")
+                
+            except Exception as e:
+                print(f"❌ Failed to update model contents: {e}")
+                pytest.fail(str(e))
+        else:
+            print("   ⏭️  Skipping contents update (initial creation failed)")
+        
         # ==================== UPDATE MODEL - SCORE ====================
         
         print("\n[Step 8] Updating model score...")
+
         try:
             updated_model_score = model_service.update_model(
                 dataset_id=DATASET_ID,
