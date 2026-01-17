@@ -104,16 +104,16 @@ class ChartDataFactory:
     
     @staticmethod
     def create_horizontal_bar_chart(
-        category_name: str,
-        value_name: str,
+        y_axis_name: str,
+        x_axis_name: str,
         data: List[CategoryValueData],
         data_ids: Optional[List[DataIdsIndex]] = None
     ) -> ChartDataResult:
         """Create validated HORIZONTAL_BAR chart data.
         
         Args:
-            category_name (str): Name of the category field
-            value_name (str): Name of the value field
+            y_axis_name (str): Name of the Y-axis (category)
+            x_axis_name (str): Name of the X-axis (value)
             data (List[CategoryValueData]): List of category-value data points
             data_ids (Optional[List[DataIdsIndex]]): List of data IDs indexed by category
         
@@ -121,8 +121,8 @@ class ChartDataFactory:
             ChartDataResult: Chart data result object
         """
         reports_json = {
-            "category_name": category_name,
-            "value_name": value_name,
+            "y_axis_name": y_axis_name,
+            "x_axis_name": x_axis_name,
             "data": [item.model_dump() for item in data]
         }
         
@@ -134,16 +134,16 @@ class ChartDataFactory:
     
     @staticmethod
     def create_vertical_bar_chart(
-        category_name: str,
-        value_name: str,
+        x_axis_name: str,
+        y_axis_name: str,
         data: List[CategoryValueData],
         data_ids: Optional[List[DataIdsIndex]] = None
     ) -> ChartDataResult:
         """Create validated VERTICAL_BAR chart data.
         
         Args:
-            category_name (str): Name of the category field
-            value_name (str): Name of the value field
+            x_axis_name (str): Name of the X-axis (category)
+            y_axis_name (str): Name of the Y-axis (value)
             data (List[CategoryValueData]): List of category-value data points
             data_ids (Optional[List[DataIdsIndex]]): List of data IDs indexed by category
         
@@ -151,8 +151,8 @@ class ChartDataFactory:
             ChartDataResult: Chart data result object
         """
         reports_json = {
-            "category_name": category_name,
-            "value_name": value_name,
+            "x_axis_name": x_axis_name,
+            "y_axis_name": y_axis_name,
             "data": [item.model_dump() for item in data]
         }
         
