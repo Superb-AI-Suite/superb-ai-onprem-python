@@ -95,6 +95,7 @@ class ModelService(BaseService):
         score_key: Optional[str] = None,
         score_value: Optional[float] = None,
         score_unit: Optional[str] = None,
+        contents: Optional[dict] = None,
     ) -> Model:
         response = self.request_gql(
             Queries.CREATE,
@@ -114,6 +115,7 @@ class ModelService(BaseService):
                 score_key=score_key,
                 score_value=score_value,
                 score_unit=score_unit,
+                contents=contents,
             ),
         )
         return Model.model_validate(response)
@@ -137,6 +139,7 @@ class ModelService(BaseService):
         score_key: Union[Optional[str], UndefinedType] = Undefined,
         score_value: Union[Optional[float], UndefinedType] = Undefined,
         score_unit: Union[Optional[str], UndefinedType] = Undefined,
+        contents: Union[Optional[dict], UndefinedType] = Undefined,
     ) -> Model:
         response = self.request_gql(
             Queries.UPDATE,
@@ -158,6 +161,7 @@ class ModelService(BaseService):
                 score_key=score_key,
                 score_value=score_value,
                 score_unit=score_unit,
+                contents=contents,
             ),
         )
         return Model.model_validate(response)

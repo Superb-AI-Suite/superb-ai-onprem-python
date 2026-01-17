@@ -39,6 +39,7 @@ class Schemas:
         trainingReport {{
             {TRAINING_REPORT_ITEM}
         }}
+        contents
         trainSliceId
         validationSliceId
         completedAt
