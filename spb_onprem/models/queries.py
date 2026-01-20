@@ -132,6 +132,8 @@ class Queries:
                 $score_key: String,
                 $score_value: Float,
                 $score_unit: String,
+                $contents: JSONObject,
+                $training_annotations: [TrainingAnnotationsInput!],
             ) {{
                 createModel(
                     datasetId: $dataset_id,
@@ -149,6 +151,8 @@ class Queries:
                     scoreKey: $score_key,
                     scoreValue: $score_value,
                     scoreUnit: $score_unit,
+                    contents: $contents,
+                    trainingAnnotations: $training_annotations,
                 ) {{
                     {Schemas.MODEL}
                 }}
@@ -178,6 +182,8 @@ class Queries:
                 $score_key: String,
                 $score_value: Float,
                 $score_unit: String,
+                $contents: JSONObject,
+                $training_annotations: [TrainingAnnotationsInput!],
             ) {{
                 updateModel(
                     datasetId: $dataset_id,
@@ -197,6 +203,8 @@ class Queries:
                     scoreKey: $score_key,
                     scoreValue: $score_value,
                     scoreUnit: $score_unit,
+                    contents: $contents,
+                    trainingAnnotations: $training_annotations,
                 ) {{
                     {Schemas.MODEL}
                 }}
