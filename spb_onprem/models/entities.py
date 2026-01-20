@@ -18,6 +18,13 @@ class TrainingReportItem(CustomBaseModel):
     updated_by: Optional[str] = Field(None, alias="updatedBy")
 
 
+class TrainingAnnotations(CustomBaseModel):
+    train_count: Optional[int] = Field(None, alias="trainCount")
+    validation_count: Optional[int] = Field(None, alias="validationCount")
+    class_name: Optional[str] = Field(None, alias="className")
+    annotation_type: Optional[str] = Field(None, alias="annotationType")
+
+
 class Model(CustomBaseModel):
     dataset_id: Optional[str] = Field(None, alias="datasetId")
     id: Optional[str] = None
@@ -34,6 +41,7 @@ class Model(CustomBaseModel):
     training_parameters: Optional[dict] = Field(None, alias="trainingParameters")
     training_report: Union[List[TrainingReportItem], None] = Field(None, alias="trainingReport")
     contents: Optional[dict] = Field(None, alias="contents")
+    trainingAnnotations: Union[List[TrainingAnnotations], None] = Field(None, alias="trainingAnnotations")
 
     train_slice_id: Optional[str] = Field(None, alias="trainSliceId")
     validation_slice_id: Optional[str] = Field(None, alias="validationSliceId")

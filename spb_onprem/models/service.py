@@ -8,7 +8,7 @@ from spb_onprem.contents.service import ContentService
 from spb_onprem.charts import ChartDataResult
 
 from .queries import Queries
-from .entities import Model
+from .entities import Model, TrainingAnnotations
 from .enums import ModelTaskType, ModelStatus
 from .params import ModelFilter, ModelOrderBy
 
@@ -88,6 +88,7 @@ class ModelService(BaseService):
         total_data_count: Optional[int] = None,
         train_data_count: Optional[int] = None,
         validation_data_count: Optional[int] = None,
+        training_annotations: Optional[list[TrainingAnnotations]] = None,
         training_parameters: Optional[dict] = None,
         train_slice_id: Optional[str] = None,
         validation_slice_id: Optional[str] = None,
@@ -108,6 +109,7 @@ class ModelService(BaseService):
                 total_data_count=total_data_count,
                 train_data_count=train_data_count,
                 validation_data_count=validation_data_count,
+                training_annotations=training_annotations,
                 training_parameters=training_parameters,
                 train_slice_id=train_slice_id,
                 validation_slice_id=validation_slice_id,
@@ -132,6 +134,7 @@ class ModelService(BaseService):
         total_data_count: Union[Optional[int], UndefinedType] = Undefined,
         train_data_count: Union[Optional[int], UndefinedType] = Undefined,
         validation_data_count: Union[Optional[int], UndefinedType] = Undefined,
+        training_annotations: Union[Optional[list[TrainingAnnotations]], UndefinedType] = Undefined,
         training_parameters: Union[Optional[dict], UndefinedType] = Undefined,
         train_slice_id: Union[Optional[str], UndefinedType] = Undefined,
         validation_slice_id: Union[Optional[str], UndefinedType] = Undefined,
@@ -154,6 +157,7 @@ class ModelService(BaseService):
                 total_data_count=total_data_count,
                 train_data_count=train_data_count,
                 validation_data_count=validation_data_count,
+                training_annotations=training_annotations,
                 training_parameters=training_parameters,
                 train_slice_id=train_slice_id,
                 validation_slice_id=validation_slice_id,

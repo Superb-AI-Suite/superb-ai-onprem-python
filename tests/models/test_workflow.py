@@ -5,6 +5,7 @@ import pytest
 
 from spb_onprem import ModelService, DatasetService, ContentService, SliceService
 from spb_onprem.models.enums import ModelTaskType, ModelStatus
+from spb_onprem.models.entities import TrainingAnnotations
 from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 from spb_onprem.charts import (
     ChartDataFactory,
@@ -140,8 +141,31 @@ def test_model_lifecycle_workflow():
             print(f"   ⚠️  Failed to create content files: {content_error}")
             model_contents = None
         
+        # Prepare training annotations data
+        training_annotations = [
+            TrainingAnnotations(
+                train_count=8567,
+                validation_count=2134,
+                class_name="Car",
+                annotation_type="bbox"
+            ),
+            TrainingAnnotations(
+                train_count=12345,
+                validation_count=3086,
+                class_name="Person",
+                annotation_type="bbox"
+            ),
+            TrainingAnnotations(
+                train_count=2341,
+                validation_count=585,
+                class_name="Bicycle",
+                annotation_type="bbox"
+            ),
+        ]
+        print(f"   Prepared {len(training_annotations)} training annotations entries")
+        
         try:
-            # Create model with comprehensive parameters including contents
+            # Create model with comprehensive parameters including contents and training_annotations
             created_model = model_service.create_model(
                 dataset_id=DATASET_ID,
                 name=test_model_name,
@@ -150,6 +174,7 @@ def test_model_lifecycle_workflow():
                 total_data_count=15243,
                 train_data_count=12194,
                 validation_data_count=3049,
+                training_annotations=training_annotations,
                 training_parameters={
                     "learning_rate": 0.001,
                     "batch_size": 32,
@@ -176,6 +201,10 @@ def test_model_lifecycle_workflow():
             print(f"   Train Data Count: {created_model.train_data_count}")
             print(f"   Validation Data Count: {created_model.validation_data_count}")
             print(f"   Training Parameters: {created_model.training_parameters}")
+            print(f"   Training Annotations: {len(created_model.trainingAnnotations) if created_model.trainingAnnotations else 0} classes")
+            if created_model.trainingAnnotations:
+                for ann in created_model.trainingAnnotations:
+                    print(f"      - {ann.class_name}: train={ann.train_count}, val={ann.validation_count}, type={ann.annotation_type}")
             print(f"   Is Pinned: {created_model.is_pinned}")
             print(f"   Score Key: {created_model.score_key}")
             print(f"   Score Value: {created_model.score_value}")
@@ -364,9 +393,61 @@ def test_model_lifecycle_workflow():
             print(f"❌ Failed to update training parameters: {e}")
             pytest.fail(str(e))
         
+        # ==================== UPDATE MODEL - TRAINING ANNOTATIONS ====================
+        
+        print("\n[Step 7.5] Updating training annotations...")
+        try:
+            updated_training_annotations = [
+                TrainingAnnotations(
+                    train_count=9876,
+                    validation_count=2469,
+                    class_name="Car",
+                    annotation_type="bbox"
+                ),
+                TrainingAnnotations(
+                    train_count=15432,
+                    validation_count=3858,
+                    class_name="Person",
+                    annotation_type="bbox"
+                ),
+                TrainingAnnotations(
+                    train_count=3210,
+                    validation_count=802,
+                    class_name="Bicycle",
+                    annotation_type="bbox"
+                ),
+                TrainingAnnotations(
+                    train_count=5678,
+                    validation_count=1419,
+                    class_name="Truck",
+                    annotation_type="bbox"
+                ),
+            ]
+            
+            updated_model_annotations = model_service.update_model(
+                dataset_id=DATASET_ID,
+                model_id=created_model_id,
+                training_annotations=updated_training_annotations
+            )
+            
+            print(f"✅ Updated training annotations successfully")
+            if updated_model_annotations.trainingAnnotations:
+                print(f"   Training Annotations: {len(updated_model_annotations.trainingAnnotations)} classes")
+                for ann in updated_model_annotations.trainingAnnotations:
+                    print(f"      - {ann.class_name}: train={ann.train_count}, val={ann.validation_count}")
+                
+                assert len(updated_model_annotations.trainingAnnotations) == 4, "Should have 4 annotation classes after update"
+                print(f"   ✅ Training annotations count verified")
+            else:
+                print(f"   ⚠️  Training annotations field is None after update")
+            
+        except Exception as e:
+            print(f"❌ Failed to update training annotations: {e}")
+            pytest.fail(str(e))
+        
         # ==================== UPDATE MODEL - CONTENTS ====================
         
-        print("\n[Step 7.5] Updating model contents...")
+        print("\n[Step 7.6] Updating model contents...")
         if model_contents:
             try:
                 # Add a new file to contents
@@ -409,7 +490,7 @@ def test_model_lifecycle_workflow():
         
         # ==================== UPDATE MODEL - SCORE ====================
         
-        print("\n[Step 8] Updating model score...")
+        print("\n[Step 8.5] Updating model score...")
 
         try:
             updated_model_score = model_service.update_model(
