@@ -24,6 +24,13 @@ class Schemas:
         updatedBy
     """
 
+    TRAINING_ANNOTATIONS = """
+        trainCount
+        validationCount
+        className
+        annotationType
+    """
+
     MODEL = f"""
         datasetId
         id
@@ -38,6 +45,9 @@ class Schemas:
         trainingParameters
         trainingReport {{
             {TRAINING_REPORT_ITEM}
+        }}
+        trainingAnnotations {{
+            {TRAINING_ANNOTATIONS}
         }}
         contents
         trainSliceId
