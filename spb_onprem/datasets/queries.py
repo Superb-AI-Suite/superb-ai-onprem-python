@@ -27,9 +27,9 @@ class Queries():
                 $name: String,
                 $datasetId: ID
             ) {{
-                datasets(
+                dataset(
                     name: $name,
-                    id: $datasetId
+                    datasetId: $datasetId
                 ) {{
                     {Schemas.DATASET}
                 }}
