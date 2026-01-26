@@ -35,7 +35,7 @@ class Queries():
                 }}
             }}
         ''',
-        "variables": datasets_params,
+        "variables": dataset_params,
     }
 
     DATASETS = {
