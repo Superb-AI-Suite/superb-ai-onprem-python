@@ -15,8 +15,9 @@ class Schemas:
         createdBy
         updatedAt
         updatedBy
+        sliceCount
+        dataCount
     '''
-
 
 class Queries():
     DATASET = {
@@ -36,19 +37,25 @@ class Queries():
         ''',
         "variables": dataset_params,
     }
-    
+
     DATASETS = {
         "name": "datasets",
         "query": f'''
             query Datasets(
-                $name: String,
-                $datasetId: ID
+                $filter: DatasetFilter,
+                $cursor: String,
+                $length: Int
             ) {{
                 datasets(
-                    name: $name,
-                    id: $datasetId
+                    filter: $filter,
+                    cursor: $cursor,
+                    length: $length
                 ) {{
-                    {Schemas.DATASET}
+                    datasets {{
+                        {Schemas.DATASET}
+                    }}
+                    next
+                    totalCount
                 }}
             }}
         ''',

@@ -1,17 +1,5 @@
-def delete_model_params(
-    dataset_id: str,
-    model_id: str,
-):
-    """Get parameters for deleting a model.
-    
-    Args:
-        dataset_id: The dataset ID
-        model_id: The model ID
-        
-    Returns:
-        dict: Parameters for deleting a model
-    """
+def delete_model_params(dataset_id: str, model_id: str):
     return {
-        "datasetId": dataset_id,
-        "id": model_id,
+        "dataset_id": dataset_id,
+        "model_id": model_id,
     }

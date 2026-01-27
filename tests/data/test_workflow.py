@@ -1,9 +1,18 @@
+import os
+
+import pytest
+
 from spb_onprem import DataService, DatasetService
 from spb_onprem.data.entities import DataMeta, DataAnnotationStat
 from spb_onprem.data.enums import DataMetaTypes
 
 
 def test_data_update_workflow():
+    if os.environ.get("CI") == "true":
+        pytest.skip("Skip workflow tests on CI")
+    if os.environ.get("RUN_DATA_WORKFLOW_TESTS") != "1":
+        pytest.skip("RUN_DATA_WORKFLOW_TESTS!=1 (avoid accidental mutations)")
+
     """Test workflow for updating existing data:
     - Find a dataset with data automatically
     - Get existing data by ID
@@ -52,7 +61,7 @@ def test_data_update_workflow():
                 print("❌ Could not find any dataset with the given names")
                 print(f"⚠️  Tried: {', '.join(DATASET_NAMES_TO_TRY)}")
                 print("⚠️  Please update DATASET_NAMES_TO_TRY or set SPECIFIC_DATASET_ID")
-                return False
+                pytest.fail("Could not find any dataset with the given names")
         
         # Try to get data from the dataset
         data_list, _, data_count = data_service.get_data_id_list(
@@ -69,12 +78,12 @@ def test_data_update_workflow():
         else:
             print("❌ No data found in dataset")
             print("⚠️  Please create at least one data item in the dataset first")
-            return False
+            pytest.fail("No data found in dataset")
             
     except Exception as e:
         print(f"❌ Failed to find dataset with data: {e}")
         print(f"⚠️  Please check your dataset configuration")
-        return False
+        pytest.fail(str(e))
     
     # ==================== CONFIGURATION ====================
     
@@ -103,7 +112,7 @@ def test_data_update_workflow():
     except Exception as e:
         print(f"❌ Failed to get data: {e}")
         print("\n⚠️  Please update DATASET_ID and DATA_ID with actual values")
-        return False
+        pytest.fail(str(e))
     
     # ==================== UPDATE DATA WITH META ====================
     
@@ -139,7 +148,7 @@ def test_data_update_workflow():
                 print(f"   - {meta_item.key}: {meta_item.value} (type: {meta_item.type})")
     except Exception as e:
         print(f"❌ Failed to update data with meta: {e}")
-        return False
+        pytest.fail(str(e))
     
     # ==================== UPDATE DATA WITH DIFFERENT META ====================
     
@@ -172,7 +181,7 @@ def test_data_update_workflow():
         assert fully_updated_data.meta is not None, "Meta was not updated"
     except Exception as e:
         print(f"❌ Failed to update data with different meta: {e}")
-        return False
+        pytest.fail(str(e))
     
     # ==================== UPDATE DATA WITH ANNOTATION STATS ====================
     
@@ -230,7 +239,7 @@ def test_data_update_workflow():
             print(f"   ⚠️  Annotation stats were sent but not returned in response")
     except Exception as e:
         print(f"❌ Failed to update annotation_stats: {e}")
-        return False
+        pytest.fail(str(e))
     
     # ==================== RESTORE ORIGINAL DATA ====================
     

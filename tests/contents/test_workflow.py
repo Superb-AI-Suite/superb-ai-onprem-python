@@ -1,7 +1,16 @@
+import os
+
+import pytest
+
 from spb_onprem import ContentService
 
 
 def test_content_workflow():
+    if os.environ.get("CI") == "true":
+        pytest.skip("Skip workflow tests on CI")
+    if os.environ.get("RUN_CONTENT_WORKFLOW_TESTS") != "1":
+        pytest.skip("RUN_CONTENT_WORKFLOW_TESTS!=1 (avoid accidental mutations)")
+
     """Test complete workflow for content operations:
     - Create folder content
     - Get upload URL with file_name
@@ -24,7 +33,7 @@ def test_content_workflow():
         print(f"✅ Created folder content ID: {folder_content_id}")
     except Exception as e:
         print(f"❌ Failed to create folder content: {e}")
-        return False
+        pytest.fail(str(e))
     
     # ==================== GET UPLOAD URL ====================
     
@@ -42,7 +51,7 @@ def test_content_workflow():
         print(f"   Response: {upload_url_response}")
     except Exception as e:
         print(f"❌ Failed to get upload URL: {e}")
-        return False
+        pytest.fail(str(e))
     
     # Step 3: Get upload URL with different content type
     print("\n[Step 3] Getting upload URL for image file...")
@@ -58,7 +67,7 @@ def test_content_workflow():
         print(f"   Response: {upload_url_image}")
     except Exception as e:
         print(f"❌ Failed to get upload URL for image: {e}")
-        return False
+        pytest.fail(str(e))
     
     # ==================== GET DOWNLOAD URL ====================
     
@@ -75,7 +84,7 @@ def test_content_workflow():
         print(f"   Response: {download_url_with_filename}")
     except Exception as e:
         print(f"❌ Failed to get download URL with file_name: {e}")
-        return False
+        pytest.fail(str(e))
     
     # Step 5: Get download URL without file_name (legacy mutation)
     print("\n[Step 5] Getting download URL without file_name (legacy)...")
@@ -88,7 +97,7 @@ def test_content_workflow():
         print(f"   Response: {download_url_legacy}")
     except Exception as e:
         print(f"❌ Failed to get download URL (legacy): {e}")
-        return False
+        pytest.fail(str(e))
     
     # ==================== ADDITIONAL TESTS ====================
     
@@ -129,8 +138,7 @@ def test_content_workflow():
     print("  ✓ Generated download URLs with file_name (new mutation)")
     print("  ✓ Generated download URLs without file_name (legacy mutation)")
     print("=" * 70)
-    
-    return True
+    assert True
 
 
 if __name__ == "__main__":
