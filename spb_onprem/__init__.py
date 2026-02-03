@@ -11,6 +11,7 @@ from .activities.service import ActivityService
 from .contents.service import ContentService
 from .models.service import ModelService
 from .reports.service import ReportService
+from .diagnoses.service import DiagnosisService
 
 # Core Entities and Enums
 from .entities import (
@@ -55,6 +56,16 @@ from .reports import (
     AnalyticsReportPageInfo,
     AnalyticsReportsFilter,
     AnalyticsReportsFilterOptions,
+)
+
+from .diagnoses import (
+    Diagnosis,
+    DiagnosisPageInfo,
+    DiagnosisStatus,
+    DiagnosisReportItem,
+    DiagnosisReportItemType,
+    DiagnosesFilter,
+    DiagnosesFilterOptions,
 )
 
 # Filters
@@ -104,7 +115,7 @@ __all__ = (
     "ContentService",
     "ModelService",
     "ReportService",
-    "TrainingReportService",
+    "DiagnosisService",
 
     # Core Entities
     "Data",
@@ -132,6 +143,15 @@ __all__ = (
     "AnalyticsReportPageInfo",
     "AnalyticsReportsFilter",
     "AnalyticsReportsFilterOptions",
+
+    # Diagnoses Entities
+    "Diagnosis",
+    "DiagnosisPageInfo",
+    "DiagnosisStatus",
+    "DiagnosisReportItem",
+    "DiagnosisReportItemType",
+    "DiagnosesFilter",
+    "DiagnosesFilterOptions",
 
     # Enums
     "DataType",
