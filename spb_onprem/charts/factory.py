@@ -17,6 +17,13 @@ class HeatmapData(BaseModel):
     value: Union[int, float]
 
 
+class ConfusionMatrixData(BaseModel):
+    """Data model for confusion matrix charts."""
+    true_class: str
+    predicted_class: str
+    count: Union[int, float]
+
+
 class LineChartData(BaseModel):
     """Data model for line charts."""
     series: str
@@ -183,6 +190,57 @@ class ChartDataFactory:
         reports_json = {
             "y_axis_name": y_axis_name,
             "x_axis_name": x_axis_name,
+            "data": [item.model_dump() for item in data]
+        }
+        
+        data_ids_json = None
+        if data_ids:
+            data_ids_json = {"data_ids": [item.model_dump() for item in data_ids]}
+        
+        return ChartDataResult(reports_json=reports_json, data_ids_json=data_ids_json)
+    
+    @staticmethod
+    def create_confusion_matrix_chart(
+        true_axis_name: str,
+        predicted_axis_name: str,
+        data: List[ConfusionMatrixData],
+        data_ids: Optional[List[XYDataIds]] = None
+    ) -> ChartDataResult:
+        """Create validated CONFUSION_MATRIX chart data.
+        
+        Confusion matrix shows model prediction accuracy by comparing true labels against predicted labels.
+        
+        Args:
+            true_axis_name (str): Name for the true label axis
+            predicted_axis_name (str): Name for the predicted label axis
+            data (List[ConfusionMatrixData]): List of confusion matrix data points
+                - true_class: True label class
+                - predicted_class: Predicted label class
+                - count: Number of predictions
+            data_ids (Optional[List[XYDataIds]]): List of data IDs indexed by true and predicted labels
+                (x = predicted_class, y = true_class)
+        
+        Returns:
+            ChartDataResult: Chart data result object
+        
+        Example:
+            ```python
+            data = [
+                ConfusionMatrixData(true_class="Cat", predicted_class="Cat", count=450),
+                ConfusionMatrixData(true_class="Cat", predicted_class="Dog", count=25),
+                ConfusionMatrixData(true_class="Dog", predicted_class="Cat", count=18),
+                ConfusionMatrixData(true_class="Dog", predicted_class="Dog", count=387),
+            ]
+            chart_data = ChartDataFactory.create_confusion_matrix_chart(
+                true_axis_name="True Label",
+                predicted_axis_name="Predicted Label",
+                data=data
+            )
+            ```
+        """
+        reports_json = {
+            "true_axis_name": true_axis_name,
+            "predicted_axis_name": predicted_axis_name,
             "data": [item.model_dump() for item in data]
         }
         

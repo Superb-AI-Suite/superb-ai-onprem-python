@@ -1,15 +1,14 @@
 from typing import Optional
 
 from spb_onprem.exceptions import BadParameterError
-
-from ..entities.diagnosis_report_item import DiagnosisReportItemType
+from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 
 
 def create_diagnosis_report_item_params(
     dataset_id: str,
     diagnosis_id: str,
     name: str,
-    type: DiagnosisReportItemType,
+    type: AnalyticsReportItemType,
     content_id: Optional[str] = None,
     description: Optional[str] = None,
 ):

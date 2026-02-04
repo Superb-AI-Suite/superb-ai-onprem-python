@@ -63,7 +63,7 @@ from .diagnoses import (
     DiagnosisPageInfo,
     DiagnosisStatus,
     DiagnosisReportItem,
-    DiagnosisReportItemType,
+    AnalyticsReportItemType,
     DiagnosesFilter,
     DiagnosesFilterOptions,
 )

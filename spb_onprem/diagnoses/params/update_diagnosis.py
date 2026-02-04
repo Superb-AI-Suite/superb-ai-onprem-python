@@ -16,6 +16,12 @@ def update_diagnosis_params(
     score_value: Union[Optional[float], UndefinedType] = Undefined,
     score_unit: Union[Optional[str], UndefinedType] = Undefined,
     diagnosis_parameters: Union[Optional[dict], UndefinedType] = Undefined,
+    contents: Union[Optional[dict], UndefinedType] = Undefined,
+    source_slice_id: Union[Optional[str], UndefinedType] = Undefined,
+    target_slice_id: Union[Optional[str], UndefinedType] = Undefined,
+    source_data_count: Union[Optional[int], UndefinedType] = Undefined,
+    target_data_count: Union[Optional[int], UndefinedType] = Undefined,
+    diagnosis_data_count: Union[Optional[int], UndefinedType] = Undefined,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -40,4 +46,16 @@ def update_diagnosis_params(
         variables["score_unit"] = score_unit
     if diagnosis_parameters is not Undefined:
         variables["diagnosis_parameters"] = diagnosis_parameters
+    if contents is not Undefined:
+        variables["contents"] = contents
+    if source_slice_id is not Undefined:
+        variables["source_slice_id"] = source_slice_id
+    if target_slice_id is not Undefined:
+        variables["target_slice_id"] = target_slice_id
+    if source_data_count is not Undefined:
+        variables["source_data_count"] = source_data_count
+    if target_data_count is not Undefined:
+        variables["target_data_count"] = target_data_count
+    if diagnosis_data_count is not Undefined:
+        variables["diagnosis_data_count"] = diagnosis_data_count
     return variables

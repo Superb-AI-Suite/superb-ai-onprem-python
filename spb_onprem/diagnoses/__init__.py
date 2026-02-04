@@ -2,7 +2,7 @@ from .service import DiagnosisService
 from .entities import (
     Diagnosis,
     DiagnosisReportItem,
-    DiagnosisReportItemType,
+    AnalyticsReportItemType,
     DiagnosisPageInfo,
     DiagnosisStatus,
     DiagnosisOrderField,

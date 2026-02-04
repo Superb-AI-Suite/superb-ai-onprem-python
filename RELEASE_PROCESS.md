@@ -94,19 +94,28 @@ Your feature description
 - Test description"
 ```
 
-### 6. PR 리뷰 및 머지
+⏸️ **여기서 잠시 멈춤! PR 생성 완료**
 
+### 6. PR 리뷰 및 머지 (수동)
+
+**사용자가 직접 수행:**
 1. GitHub에서 PR 확인
-2. 리뷰어에게 리뷰 요청
-3. 리뷰 승인 후 머지
-4. 또는 직접 머지
+2. 코드 리뷰
+3. 필요시 추가 수정
+4. PR 머지 실행
 
 ```bash
-# GitHub CLI로 PR 머지
+# GitHub에서 Merge 버튼 클릭
+# 또는 CLI 사용
 gh pr merge <PR번호> --squash
 ```
 
-### 7. Main Branch 업데이트
+**머지 후 AI에게 알림:**
+```
+"머지했어" 또는 "다음 단계 진행해"
+```
+
+### 7. Main Branch 업데이트 (자동)
 
 ```bash
 # Main branch로 이동
@@ -299,15 +308,21 @@ gh release edit v1.6.1 --notes "Updated release notes"
 1. Feature branch 생성: `features/add-annotation-statistics-field-to-the-model`
 2. 코드 작성 및 테스트
 3. Git add & commit
-4. PR #69 생성 및 머지
-5. Main branch checkout & pull
-6. 버전 태그 생성: `v1.6.0` (Minor version up - 새 기능 추가)
-7. 태그 push
-8. GitHub Release 생성 (새 기능 설명 포함)
+4. **AI가 PR 생성 (PR #69)**
+5. **사용자가 GitHub에서 PR 리뷰 및 머지**
+6. **사용자가 "머지했어"라고 알림**
+7. **AI가 Main branch checkout & pull**
+8. **AI가 버전 태그 생성: `v1.6.0` (Minor version up - 새 기능 추가)**
+9. **AI가 태그 push**
+10. **AI가 GitHub Release 생성 (새 기능 설명 포함)**
 
 **배포 요청 예시:**
 ```
-"training_annotations 기능 추가했어. git add부터 release까지 배포해줘"
+"training_annotations 기능 추가했어. PR 생성까지 해줘"
+```
+**PR 머지 후:**
+```
+"머지했어. v1.6.0으로 릴리즈 해줘"
 ```
 
 ### Case 2: 버그 수정 (v1.6.1)
@@ -318,15 +333,21 @@ gh release edit v1.6.1 --notes "Updated release notes"
 1. Main branch 보호로 인해 직접 push 불가
 2. Fix branch 생성: `fix/add-missing-graphql-parameters`
 3. 수정 및 커밋
-4. PR #70 생성 및 머지
-5. Main branch checkout & pull
-6. 버전 태그 생성: `v1.6.1` (Patch version up - 버그 수정)
-7. 태그 push
-8. GitHub Release 생성 (버그 수정 내용 명시)
+4. **AI가 PR 생성 (PR #70)**
+5. **사용자가 GitHub에서 PR 리뷰 및 머지**
+6. **사용자가 "다음 단계 진행해"라고 알림**
+7. **AI가 Main branch checkout & pull**
+8. **AI가 버전 태그 생성: `v1.6.1` (Patch version up - 버그 수정)**
+9. **AI가 태그 push**
+10. **AI가 GitHub Release 생성 (버그 수정 내용 명시)**
 
 **배포 요청 예시:**
 ```
-"GraphQL 파라미터 누락 수정했어. RELEASE_PROCESS.md 따라서 배포해줘"
+"GraphQL 파라미터 누락 수정했어. PR까지 만들어줘"
+```
+**PR 머지 후:**
+```
+"다음 단계 진행해"
 ```
 
 ### Case 3: Main Branch가 Protected인 경우
@@ -348,50 +369,74 @@ git push -u origin fix/your-fix-name
 # 4. PR 생성
 gh pr create --title "fix: Title" --body "Description"
 
-# 5. PR 머지 후
-git checkout main
-git pull origin main
+# ⏸️ 여기서 멈춤! 사용자가 PR 머지
 
-# 6. 버전 태그 및 릴리즈 생성 (이후 동일)
+# 5. 사용자가 PR 머지 후 "다음 단계 진행해"라고 알림
+
+# 6. 버전 태그 및 릴리즈 생성 (이후 자동)
 ```
 
 **배포 요청 예시:**
 ```
-"수정 완료. main이 protected니까 PR 만들고 배포 진행해줘"
+"수정 완료. PR 생성해줘"
+```
+**PR 머지 후:**
+```
+"머지했어. 릴리즈 해줘"
 ```
 
 ## 🤖 자동화된 배포 요청 방법
 
 AI에게 배포를 요청할 때는 다음 형식을 사용하세요:
 
-### 기본 요청
+### 기본 요청 (PR 생성까지)
 ```
 "배포해줘. RELEASE_PROCESS.md 따라서"
 ```
 
+이렇게 요청하면:
+1. AI가 PR 생성까지 자동 진행
+2. PR 링크를 알려줌
+3. **사용자가 GitHub에서 PR 리뷰 및 머지**
+4. 머지 후 "머지했어" 또는 "다음 단계 진행해"라고 알림
+5. AI가 버전 태그 및 릴리즈 생성
+
 ### 상세 요청
 ```
-"[변경 내용 설명]. git add부터 release note 작성까지 배포 프로세스 진행해줘"
+"[변경 내용 설명]. git add부터 PR 생성까지 진행해줘"
+```
+
+### PR 머지 후 릴리즈 요청
+```
+"PR 머지했어. 릴리즈 진행해줘"
+```
+또는
+```
+"다음 단계 진행해"
 ```
 
 ### 버전 지정 요청
 ```
-"버그 수정했어. v1.6.2로 패치 릴리즈 해줘"
-```
-
-### PR 생성부터 요청
-```
-"main이 protected야. PR 만들고 머지한 다음 v1.7.0으로 릴리즈 해줘"
+"버그 수정했어. v1.6.3로 패치 릴리즈 해줘"
 ```
 
 ## 📝 AI가 자동으로 처리하는 것들
 
+### Phase 1: PR 생성까지 (자동)
 1. ✅ Git status 확인 및 변경사항 확인
 2. ✅ 적절한 branch 생성 (필요시)
 3. ✅ Git add 및 commit (적절한 메시지와 함께)
 4. ✅ Branch push
-5. ✅ PR 생성 (protected branch인 경우)
-6. ✅ PR 머지 확인
+5. ✅ PR 생성
+
+### Phase 2: PR 머지 (수동 - 사용자가 직접)
+6. ⏸️ **사용자가 GitHub에서 PR 리뷰 및 머지** (AI는 대기)
+   - PR 확인 및 리뷰
+   - 필요시 추가 수정
+   - PR 머지 실행
+   - AI에게 "머지했어" 또는 "다음 단계 진행해" 알림
+
+### Phase 3: 릴리즈 생성 (자동)
 7. ✅ Main branch 최신화
 8. ✅ Semantic Versioning에 맞는 버전 태그 생성
 9. ✅ 태그 push

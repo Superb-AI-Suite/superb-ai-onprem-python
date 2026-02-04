@@ -17,9 +17,15 @@ class Diagnosis(CustomBaseModel):
     score_value: Optional[float] = Field(None, alias="scoreValue", description="Score 값")
     score_unit: Optional[str] = Field(None, alias="scoreUnit", description="Score 단위")
     diagnosis_parameters: Optional[Any] = Field(None, alias="diagnosisParameters", description="파라미터 (JSON)")
+    contents: Optional[Any] = Field(None, description="컨텐츠 (JSON)")
     diagnosis_report_items: Optional[List[DiagnosisReportItem]] = Field(
         None, alias="diagnosisReportItems", description="리포트 아이템 목록"
     )
+    source_slice_id: Optional[str] = Field(None, alias="sourceSliceId", description="소스 슬라이스 ID")
+    target_slice_id: Optional[str] = Field(None, alias="targetSliceId", description="타겟 슬라이스 ID")
+    source_data_count: Optional[int] = Field(None, alias="sourceDataCount", description="소스 데이터 개수")
+    target_data_count: Optional[int] = Field(None, alias="targetDataCount", description="타겟 데이터 개수")
+    diagnosis_data_count: Optional[int] = Field(None, alias="diagnosisDataCount", description="진단 데이터 개수")
     completed_at: Optional[str] = Field(None, alias="completedAt", description="완료일시")
     created_at: Optional[str] = Field(None, alias="createdAt", description="생성일시")
     updated_at: Optional[str] = Field(None, alias="updatedAt", description="수정일시")

@@ -34,9 +34,15 @@ class Schemas:
         scoreValue
         scoreUnit
         diagnosisParameters
+        contents
         diagnosisReportItems {{
             {DIAGNOSIS_REPORT_ITEM}
         }}
+        sourceSliceId
+        targetSliceId
+        sourceDataCount
+        targetDataCount
+        diagnosisDataCount
         completedAt
         createdAt
         updatedAt
@@ -105,6 +111,12 @@ class Queries:
                 $score_value: Float,
                 $score_unit: String,
                 $diagnosis_parameters: JSONObject,
+                $contents: JSONObject,
+                $source_slice_id: String,
+                $target_slice_id: String,
+                $source_data_count: Int,
+                $target_data_count: Int,
+                $diagnosis_data_count: Int,
             ) {{
                 createDiagnosis(
                     datasetId: $dataset_id,
@@ -114,6 +126,12 @@ class Queries:
                     scoreValue: $score_value,
                     scoreUnit: $score_unit,
                     diagnosisParameters: $diagnosis_parameters,
+                    contents: $contents,
+                    sourceSliceId: $source_slice_id,
+                    targetSliceId: $target_slice_id,
+                    sourceDataCount: $source_data_count,
+                    targetDataCount: $target_data_count,
+                    diagnosisDataCount: $diagnosis_data_count,
                 ) {{
                     {Schemas.DIAGNOSIS}
                 }}
@@ -135,6 +153,12 @@ class Queries:
                 $score_value: Float,
                 $score_unit: String,
                 $diagnosis_parameters: JSONObject,
+                $contents: JSONObject,
+                $source_slice_id: String,
+                $target_slice_id: String,
+                $source_data_count: Int,
+                $target_data_count: Int,
+                $diagnosis_data_count: Int,
             ) {{
                 updateDiagnosis(
                     datasetId: $dataset_id,
@@ -146,6 +170,12 @@ class Queries:
                     scoreValue: $score_value,
                     scoreUnit: $score_unit,
                     diagnosisParameters: $diagnosis_parameters,
+                    contents: $contents,
+                    sourceSliceId: $source_slice_id,
+                    targetSliceId: $target_slice_id,
+                    sourceDataCount: $source_data_count,
+                    targetDataCount: $target_data_count,
+                    diagnosisDataCount: $diagnosis_data_count,
                 ) {{
                     {Schemas.DIAGNOSIS}
                 }}
@@ -177,7 +207,7 @@ class Queries:
                 $dataset_id: ID!,
                 $diagnosis_id: ID!,
                 $name: String!,
-                $type: DiagnosisReportItemType!,
+                $type: AnalyticsReportItemType!,
                 $content_id: ID,
                 $description: String,
             ) {{
@@ -204,7 +234,7 @@ class Queries:
                 $diagnosis_id: ID!,
                 $diagnosis_report_item_id: ID!,
                 $name: String,
-                $type: DiagnosisReportItemType,
+                $type: AnalyticsReportItemType,
                 $content_id: ID,
                 $description: String,
             ) {{
