@@ -1,6 +1,7 @@
 from .service import ReportService
 from .entities import (
     AnalyticsReport,
+    AnalyticsReportStatus,
     AnalyticsReportItem,
     AnalyticsReportItemType,
     AnalyticsReportPageInfo,
@@ -15,6 +16,7 @@ from .params import (
 __all__ = (
     "ReportService",
     "AnalyticsReport",
+    "AnalyticsReportStatus",
     "AnalyticsReportItem",
     "AnalyticsReportItemType",
     "AnalyticsReportPageInfo",

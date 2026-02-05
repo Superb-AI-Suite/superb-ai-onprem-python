@@ -136,6 +136,7 @@ class ReportService(BaseService):
         report_id: str,
         title: Union[str, UndefinedType] = Undefined,
         description: Union[str, UndefinedType] = Undefined,
+        status: Union[str, UndefinedType] = Undefined,
         meta: Union[Any, UndefinedType] = Undefined,
     ):
         """
@@ -146,6 +147,7 @@ class ReportService(BaseService):
             report_id (str): The ID of the report to update
             title (Optional[str]): The new title of the report
             description (Optional[str]): The new description of the report
+            status (Optional[str]): The new status of the report (PENDING/IN_PROGRESS/COMPLETED/FAILED)
             meta (Optional[Any]): The new metadata of the report
 
         Returns:
@@ -164,6 +166,7 @@ class ReportService(BaseService):
                 report_id=report_id,
                 title=title,
                 description=description,
+                status=status,
                 meta=meta,
             ),
         )

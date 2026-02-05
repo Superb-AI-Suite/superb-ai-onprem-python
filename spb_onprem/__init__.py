@@ -51,6 +51,7 @@ from .entities import (
 
 from .reports import (
     AnalyticsReport,
+    AnalyticsReportStatus,
     AnalyticsReportItem,
     AnalyticsReportItemType,
     AnalyticsReportPageInfo,
@@ -138,6 +139,7 @@ __all__ = (
 
     # Reports Entities
     "AnalyticsReport",
+    "AnalyticsReportStatus",
     "AnalyticsReportItem",
     "AnalyticsReportItemType",
     "AnalyticsReportPageInfo",

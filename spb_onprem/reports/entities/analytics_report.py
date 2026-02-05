@@ -1,6 +1,15 @@
 from typing import Optional, List, Any
+from enum import Enum
 from spb_onprem.base_model import CustomBaseModel, Field
 from .analytics_report_item import AnalyticsReportItem
+
+
+class AnalyticsReportStatus(str, Enum):
+    """분석 리포트 상태"""
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 
 
 class AnalyticsReport(CustomBaseModel):
@@ -14,6 +23,8 @@ class AnalyticsReport(CustomBaseModel):
     dataset_id: Optional[str] = Field(None, alias="datasetId", description="이 리포트가 속한 데이터셋 ID")
     title: Optional[str] = Field(None, description="리포트 제목")
     description: Optional[str] = Field(None, description="리포트 설명")
+    status: Optional[AnalyticsReportStatus] = Field(None, description="리포트 상태 (PENDING/IN_PROGRESS/COMPLETED/FAILED)")
+    completed_at: Optional[str] = Field(None, alias="completedAt", description="완료일시 (ISO 8601)")
     meta: Optional[dict] = Field(None, description="추가 메타데이터 (JSONObject)")
     created_at: Optional[str] = Field(None, alias="createdAt", description="생성일시 (ISO 8601)")
     created_by: Optional[str] = Field(None, alias="createdBy", description="생성자")

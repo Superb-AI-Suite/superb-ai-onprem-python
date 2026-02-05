@@ -30,6 +30,7 @@ from .activities.entities import (
 from .contents.entities import Content
 from .reports.entities import (
     AnalyticsReport,
+    AnalyticsReportStatus,
     AnalyticsReportItem,
     AnalyticsReportItemType,
     AnalyticsReportPageInfo,
@@ -67,6 +68,7 @@ __all__ = [
 
     # Reports Entities
     "AnalyticsReport",
+    "AnalyticsReportStatus",
     "AnalyticsReportItem",
     "AnalyticsReportItemType",
     "AnalyticsReportPageInfo",

@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, List
 from enum import Enum
 
 from spb_onprem.base_model import CustomBaseModel, Field
@@ -17,8 +17,10 @@ class AnalyticsReportsFilterOptions(CustomBaseModel):
     
     Attributes:
         title_contains: Filter reports by title containing this string
+        status_in: Filter reports by status (list of status values)
     """
     title_contains: Optional[str] = Field(None, alias="titleContains")
+    status_in: Optional[List[str]] = Field(None, alias="statusIn")
 
 
 class AnalyticsReportsFilter(CustomBaseModel):
