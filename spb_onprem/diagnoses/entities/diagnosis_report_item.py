@@ -12,6 +12,7 @@ class DiagnosisReportItem(CustomBaseModel):
     type: Optional[AnalyticsReportItemType] = Field(None, description="타입")
     content_id: Optional[str] = Field(None, alias="contentId", description="컨텐츠 ID")
     description: Optional[str] = Field(None, description="설명")
+    discriminator_value: Optional[str] = Field(None, alias="discriminatorValue", description="Discriminator 값 (e.g., '0.5')")
     created_at: Optional[str] = Field(None, alias="createdAt", description="생성일시")
     updated_at: Optional[str] = Field(None, alias="updatedAt", description="수정일시")
     created_by: Optional[str] = Field(None, alias="createdBy", description="생성자")

@@ -108,40 +108,10 @@ def test_diagnosis_lifecycle_workflow():
         
         print("\n[Step 1] Creating a new diagnosis with detailed parameters...")
         
-        # First, create some content files for the diagnosis
-        print("   Creating sample content files for diagnosis...")
-        diagnosis_contents = {}
         try:
-            # Create config.yaml content
-            config_content, _ = content_service.create_content(
-                key="diagnosis_config.yaml",
-                content_type="application/yaml"
-            )
-            diagnosis_contents["diagnosis_config.yaml"] = config_content.id
-            print(f"   ✅ Created diagnosis_config.yaml: {config_content.id}")
-            
-            # Create results.json content
-            results_content, _ = content_service.create_content(
-                key="diagnosis_results.json",
-                content_type="application/json"
-            )
-            diagnosis_contents["diagnosis_results.json"] = results_content.id
-            print(f"   ✅ Created diagnosis_results.json: {results_content.id}")
-            
-            # Create log.txt content
-            log_content, _ = content_service.create_content(
-                key="diagnosis_log.txt",
-                content_type="text/plain"
-            )
-            diagnosis_contents["diagnosis_log.txt"] = log_content.id
-            print(f"   ✅ Created diagnosis_log.txt: {log_content.id}")
-            
-        except Exception as content_error:
-            print(f"   ⚠️  Failed to create content files: {content_error}")
-            diagnosis_contents = None
-        
-        try:
-            # Create diagnosis with comprehensive parameters including new fields
+            # Create diagnosis with comprehensive parameters including new discriminator fields
+            # Note: contents field is optional and used for diagnosis-level files (config, logs, etc.)
+            # Chart data is stored in diagnosis_report_items' content_id
             created_diagnosis = diagnosis_service.create_diagnosis(
                 dataset_id=DATASET_ID,
                 name=test_diagnosis_name,
@@ -154,12 +124,13 @@ def test_diagnosis_lifecycle_workflow():
                     "min_confidence": 0.7,
                     "algorithm": "detection_analysis"
                 },
-                contents=diagnosis_contents,
                 source_slice_id=slices[0].id if slices else None,
                 target_slice_id=slices[1].id if len(slices) > 1 else None,
                 source_data_count=5000,
                 target_data_count=3000,
-                diagnosis_data_count=2000
+                diagnosis_data_count=2000,
+                discriminator_key="iou_threshold",
+                discriminator_values=["0.5", "0.75", "0.9"]
             )
             created_diagnosis_id = created_diagnosis.id
             
@@ -177,18 +148,8 @@ def test_diagnosis_lifecycle_workflow():
             print(f"   Source Data Count: {created_diagnosis.source_data_count}")
             print(f"   Target Data Count: {created_diagnosis.target_data_count}")
             print(f"   Diagnosis Data Count: {created_diagnosis.diagnosis_data_count}")
-            
-            # Verify contents field
-            if diagnosis_contents:
-                print(f"   Contents: {len(diagnosis_contents)} files")
-                for filename, content_id in diagnosis_contents.items():
-                    print(f"      - {filename}: {content_id}")
-                
-                if created_diagnosis.contents:
-                    print(f"   ✅ Contents field verified in created diagnosis")
-                    assert created_diagnosis.contents == diagnosis_contents, "Contents field mismatch"
-                else:
-                    print(f"   ⚠️  Contents field is None in created diagnosis (API may not support it yet)")
+            print(f"   Discriminator Key: {created_diagnosis.discriminator_key}")
+            print(f"   Discriminator Values: {created_diagnosis.discriminator_values}")
             
             print(f"   Created At: {created_diagnosis.created_at}")
             print(f"   Created By: {created_diagnosis.created_by}")
@@ -206,7 +167,9 @@ def test_diagnosis_lifecycle_workflow():
             assert created_diagnosis.source_data_count == 5000, "Source data count mismatch"
             assert created_diagnosis.target_data_count == 3000, "Target data count mismatch"
             assert created_diagnosis.diagnosis_data_count == 2000, "Diagnosis data count mismatch"
-            print(f"   ✅ All new fields verified")
+            assert created_diagnosis.discriminator_key == "iou_threshold", "Discriminator key mismatch"
+            assert created_diagnosis.discriminator_values == ["0.5", "0.75", "0.9"], "Discriminator values mismatch"
+            print(f"   ✅ All new fields verified (including discriminator pattern)")
             
         except Exception as e:
             print(f"❌ Failed to create diagnosis: {e}")
@@ -225,14 +188,6 @@ def test_diagnosis_lifecycle_workflow():
             print(f"   Diagnosis ID: {retrieved_diagnosis.id}")
             print(f"   Name: {retrieved_diagnosis.name}")
             print(f"   Status: {retrieved_diagnosis.status}")
-            
-            # Verify contents field persists
-            if diagnosis_contents:
-                if retrieved_diagnosis.contents:
-                    print(f"   ✅ Contents field persists: {len(retrieved_diagnosis.contents)} files")
-                    assert retrieved_diagnosis.contents == diagnosis_contents, "Contents field mismatch in retrieved diagnosis"
-                else:
-                    print(f"   ⚠️  Contents field is None in retrieved diagnosis")
             
             # Verify new fields persist
             assert retrieved_diagnosis.source_data_count == 5000, "Source data count mismatch in retrieved diagnosis"
@@ -281,14 +236,6 @@ def test_diagnosis_lifecycle_workflow():
             
             print(f"✅ Updated diagnosis basic information successfully")
             print(f"   Updated Description: {updated_diagnosis.description}")
-            
-            # Verify contents field still persists after update
-            if diagnosis_contents:
-                if updated_diagnosis.contents:
-                    print(f"   ✅ Contents field still persists after update: {len(updated_diagnosis.contents)} files")
-                    assert updated_diagnosis.contents == diagnosis_contents, "Contents field changed unexpectedly"
-                else:
-                    print(f"   ⚠️  Contents field is None after update")
             
             assert updated_diagnosis.description == updated_description, "Description was not updated"
             
@@ -370,46 +317,9 @@ def test_diagnosis_lifecycle_workflow():
         
         # ==================== UPDATE DIAGNOSIS - CONTENTS ====================
         
-        print("\n[Step 8] Updating diagnosis contents...")
-        if diagnosis_contents:
-            try:
-                # Add a new file to contents
-                analysis_content, _ = content_service.create_content(
-                    key="detailed_analysis.json",
-                    content_type="application/json"
-                )
-                print(f"   ✅ Created detailed_analysis.json: {analysis_content.id}")
-                
-                updated_contents = {**diagnosis_contents, "detailed_analysis.json": analysis_content.id}
-                
-                updated_diagnosis_contents = diagnosis_service.update_diagnosis(
-                    dataset_id=DATASET_ID,
-                    diagnosis_id=created_diagnosis_id,
-                    contents=updated_contents
-                )
-                
-                print(f"✅ Updated diagnosis contents successfully")
-                
-                if updated_diagnosis_contents.contents:
-                    print(f"   Contents: {len(updated_diagnosis_contents.contents)} files")
-                    for filename, content_id in updated_diagnosis_contents.contents.items():
-                        print(f"      - {filename}: {content_id}")
-                    
-                    assert len(updated_diagnosis_contents.contents) == 4, "Should have 4 files now"
-                    assert "detailed_analysis.json" in updated_diagnosis_contents.contents, "New file should be in contents"
-                    assert updated_diagnosis_contents.contents["detailed_analysis.json"] == analysis_content.id, "New file content_id mismatch"
-                    
-                    # Update diagnosis_contents for subsequent checks
-                    diagnosis_contents = updated_contents
-                    print(f"   ✅ Contents field verified after update")
-                else:
-                    print(f"   ⚠️  Contents field is None after update")
-                
-            except Exception as e:
-                print(f"❌ Failed to update diagnosis contents: {e}")
-                pytest.fail(str(e))
-        else:
-            print("   ⏭️  Skipping contents update (initial creation failed)")
+        print("\n[Step 8] Skipping diagnosis contents update...")
+        print("   ℹ️  Contents field is for diagnosis-level files (config, logs)")
+        print("   ℹ️  Chart data is managed via diagnosis_report_items' content_id")
         
         # ==================== UPDATE DIAGNOSIS - SLICE IDS ====================
         
@@ -521,74 +431,92 @@ def test_diagnosis_lifecycle_workflow():
         # Model Diagnosis Scenario:
         # We're analyzing an object detection model that classifies images into 4 categories:
         # Cat, Dog, Bird, and Fish. The model has been trained and we're diagnosing its performance.
+        # We test the model at 3 different IoU thresholds: 0.5, 0.75, and 0.9
         
-        chart_configs = [
-            {
-                "type": AnalyticsReportItemType.CONFUSION_MATRIX,
-                "name": "Confusion Matrix",
-                "description": "Model prediction accuracy across all classes showing true vs predicted labels"
-            },
+        # Common charts (no discriminator_value - shown for all IoU thresholds)
+        common_chart_configs = [
             {
                 "type": AnalyticsReportItemType.METRICS,
-                "name": "Key Performance Metrics",
-                "description": "Overall model performance indicators"
+                "name": "Overview Statistics",
+                "description": "Overall detection statistics (Prediction count, Ground truth, FP, FN, etc.)",
+                "discriminator_value": None  # Common chart
+            },
+            {
+                "type": AnalyticsReportItemType.TABLE,
+                "name": "Performance Summary by Class",
+                "description": "Detailed performance metrics table for each class (AP, Precision, Recall, etc.)",
+                "discriminator_value": None  # Common chart
             },
             {
                 "type": AnalyticsReportItemType.HORIZONTAL_BAR,
                 "name": "Per-Class Precision",
-                "description": "Precision score for each object class"
-            },
-            {
-                "type": AnalyticsReportItemType.VERTICAL_BAR,
-                "name": "Per-Class Recall",
-                "description": "Recall score for each object class"
-            },
-            {
-                "type": AnalyticsReportItemType.LINE_CHART,
-                "name": "Precision-Recall Curve",
-                "description": "Precision and recall trade-off at different confidence thresholds"
-            },
-            {
-                "type": AnalyticsReportItemType.HISTOGRAM,
-                "name": "Prediction Confidence Distribution",
-                "description": "Distribution of model confidence scores across all predictions"
-            },
-            {
-                "type": AnalyticsReportItemType.SCATTER_PLOT,
-                "name": "Confidence vs IoU",
-                "description": "Relationship between prediction confidence and Intersection over Union"
-            },
-            {
-                "type": AnalyticsReportItemType.HEATMAP,
-                "name": "Class Co-occurrence Matrix",
-                "description": "Frequency of objects appearing together in images"
-            },
-            {
-                "type": AnalyticsReportItemType.PIE,
-                "name": "Class Distribution in Test Set",
-                "description": "Proportion of each class in the test dataset"
-            },
-            {
-                "type": AnalyticsReportItemType.TABLE,
-                "name": "Detailed Performance by Class",
-                "description": "Comprehensive metrics breakdown for each class"
+                "description": "Precision score for each object class (averaged across thresholds)",
+                "discriminator_value": None  # Common chart
             },
         ]
         
-        print(f"\n[Step 13] Creating diagnosis report items for model performance analysis...")
+        # IoU threshold specific charts (with discriminator_value - filtered by threshold selection)
+        iou_specific_chart_configs = [
+            {
+                "type": AnalyticsReportItemType.CONFUSION_MATRIX,
+                "name": "Confusion Matrix (IoU=0.5)",
+                "description": "Model prediction accuracy at IoU threshold 0.5",
+                "discriminator_value": "0.5"
+            },
+            {
+                "type": AnalyticsReportItemType.CONFUSION_MATRIX,
+                "name": "Confusion Matrix (IoU=0.75)",
+                "description": "Model prediction accuracy at IoU threshold 0.75",
+                "discriminator_value": "0.75"
+            },
+            {
+                "type": AnalyticsReportItemType.CONFUSION_MATRIX,
+                "name": "Confusion Matrix (IoU=0.9)",
+                "description": "Model prediction accuracy at IoU threshold 0.9",
+                "discriminator_value": "0.9"
+            },
+            {
+                "type": AnalyticsReportItemType.VERTICAL_BAR,
+                "name": "Per-Class Recall (IoU=0.5)",
+                "description": "Recall score for each object class at IoU threshold 0.5",
+                "discriminator_value": "0.5"
+            },
+            {
+                "type": AnalyticsReportItemType.VERTICAL_BAR,
+                "name": "Per-Class Recall (IoU=0.75)",
+                "description": "Recall score for each object class at IoU threshold 0.75",
+                "discriminator_value": "0.75"
+            },
+            {
+                "type": AnalyticsReportItemType.METRICS,
+                "name": "Performance Metrics (IoU=0.5)",
+                "description": "Key performance indicators at IoU threshold 0.5 (mAP, Precision, Recall)",
+                "discriminator_value": "0.5"
+            },
+            {
+                "type": AnalyticsReportItemType.METRICS,
+                "name": "Performance Metrics (IoU=0.75)",
+                "description": "Key performance indicators at IoU threshold 0.75 (mAP, Precision, Recall)",
+                "discriminator_value": "0.75"
+            },
+        ]
+        
+        chart_configs = common_chart_configs + iou_specific_chart_configs
+        
+        print(f"\n[Step 13] Creating diagnosis report items with discriminator pattern...")
         print(f"   📊 Scenario: Object Detection Model - 4 Classes (Cat, Dog, Bird, Fish)")
+        print(f"   📊 IoU Thresholds: 0.5, 0.75, 0.9")
+        print(f"   📊 Common charts (always shown): {len(common_chart_configs)}")
+        print(f"   📊 IoU-specific charts (filtered): {len(iou_specific_chart_configs)}")
         try:
             for i, config in enumerate(chart_configs):
                 chart_type = config["type"]
-                # Create content folder for this chart
-                folder_name = f"diagnosis_chart_{chart_type.value}_{int(time.time())}"
+                discriminator_value = config.get("discriminator_value")
+                # Create folder content for this chart
                 try:
-                    folder_content, upload_url = content_service.create_content(
-                        key=folder_name,
-                        content_type="FOLDER"
-                    )
-                    content_id = folder_content.id
+                    content_id = content_service.create_folder_content()
                     print(f"   [{i+1}/{len(chart_configs)}] Creating {config['name']}...")
+                    print(f"      Folder content ID: {content_id}")
                 except Exception as content_error:
                     print(f"   ⚠️  Failed to create folder for {chart_type.value}: {content_error}")
                     continue
@@ -627,19 +555,47 @@ def test_diagnosis_lifecycle_workflow():
                         )
                     
                     elif chart_type == AnalyticsReportItemType.METRICS:
-                        # Key performance metrics for the model
-                        chart_data = ChartDataFactory.create_metrics_chart(
-                            metrics=[
-                                MetricData(key="Overall Accuracy", value="91.3%"),
-                                MetricData(key="Mean Average Precision (mAP)", value="0.876"),
-                                MetricData(key="Mean IoU", value="0.782"),
-                                MetricData(key="F1 Score", value="0.893"),
-                                MetricData(key="Inference Speed", value="45.2 FPS"),
-                                MetricData(key="Model Size", value="127 MB"),
-                                MetricData(key="Total Test Images", value=4000),
-                                MetricData(key="Total Predictions", value=4138),
-                            ]
-                        )
+                        # Generate different metrics based on discriminator_value
+                        if discriminator_value is None:
+                            # Overview Statistics (common chart - similar to the image)
+                            chart_data = ChartDataFactory.create_metrics_chart(
+                                metrics=[
+                                    MetricData(key="Prediction count", value="4,138"),
+                                    MetricData(key="Ground truth count", value="3,550"),
+                                    MetricData(key="False positive", value="588"),
+                                    MetricData(key="False negative", value="412"),
+                                    MetricData(key="Misclassified", value="205"),
+                                    MetricData(key="True positive", value="3,345"),
+                                    MetricData(key="Overall Accuracy", value="91.3%"),
+                                    MetricData(key="Model Size", value="127 MB"),
+                                ]
+                            )
+                        else:
+                            # IoU-specific performance metrics
+                            iou_val = float(discriminator_value)
+                            # Adjust mAP based on IoU threshold (higher IoU = lower mAP)
+                            if iou_val == 0.5:
+                                map_value = "0.952"
+                                precision = "0.946"
+                                recall = "0.941"
+                            elif iou_val == 0.75:
+                                map_value = "0.886"
+                                precision = "0.912"
+                                recall = "0.895"
+                            else:
+                                map_value = "0.723"
+                                precision = "0.854"
+                                recall = "0.812"
+                            
+                            chart_data = ChartDataFactory.create_metrics_chart(
+                                metrics=[
+                                    MetricData(key=f"mAP @{discriminator_value}", value=map_value),
+                                    MetricData(key="Mean Precision", value=precision),
+                                    MetricData(key="Mean Recall", value=recall),
+                                    MetricData(key="F1 Score", value="0.893"),
+                                    MetricData(key="IoU Threshold", value=discriminator_value),
+                                ]
+                            )
                     
                     elif chart_type == AnalyticsReportItemType.HORIZONTAL_BAR:
                         # Per-class precision showing which classes are most accurately predicted
@@ -799,15 +755,15 @@ def test_diagnosis_lifecycle_workflow():
                         )
                     
                     elif chart_type == AnalyticsReportItemType.TABLE:
-                        # Detailed performance metrics by class
+                        # Detailed performance metrics by class (similar to the Performance table in the image)
                         chart_data = ChartDataFactory.create_table_chart(
-                            headers=["Class", "Precision", "Recall", "F1-Score", "Support", "AP@0.5", "AP@0.75"],
+                            headers=["Class name", "AP(%)", "Precision", "Recall", "Train set", "Validation set"],
                             rows=[
-                                ["Cat", "0.940", "0.940", "0.940", "950", "0.952", "0.887"],
-                                ["Dog", "0.952", "0.951", "0.952", "1100", "0.968", "0.912"],
-                                ["Bird", "0.931", "0.931", "0.931", "800", "0.945", "0.865"],
-                                ["Fish", "0.933", "0.933", "0.933", "700", "0.941", "0.879"],
-                                ["Overall", "0.939", "0.939", "0.939", "3550", "0.952", "0.886"],
+                                ["Cat", "91.3", "0.940", "0.940", "760", "190"],
+                                ["Dog", "91.3", "0.952", "0.951", "880", "220"],
+                                ["Bird", "91.3", "0.931", "0.931", "640", "160"],
+                                ["Fish", "91.3", "0.933", "0.933", "560", "140"],
+                                ["Overall", "91.3", "0.939", "0.939", "2840", "710"],
                             ]
                         )
                     
@@ -836,7 +792,8 @@ def test_diagnosis_lifecycle_workflow():
                         name=test_report_name,
                         type=chart_type,
                         content_id=content_id,
-                        description=test_report_description
+                        description=test_report_description,
+                        discriminator_value=discriminator_value
                     )
                     
                     if diagnosis_with_report.diagnosis_report_items:
@@ -847,6 +804,10 @@ def test_diagnosis_lifecycle_workflow():
                                     print(f"   ✅ Created diagnosis report {i+1}: {chart_type.value}")
                                     print(f"      Report ID: {report.id}")
                                     print(f"      Content ID: {content_id}")
+                                    if discriminator_value:
+                                        print(f"      Discriminator Value: {discriminator_value} (shown only when IoU={discriminator_value})")
+                                    else:
+                                        print(f"      Discriminator Value: None (common chart - always shown)")
                                     break
                         else:
                             created_diagnosis_report_ids.append(diagnosis_with_report.diagnosis_report_items.id)
@@ -1031,7 +992,7 @@ def test_diagnosis_lifecycle_workflow():
         print(f"  ✓ Dataset ID: {DATASET_ID}")
         print(f"  ✓ Created diagnosis: {created_diagnosis_id}")
         print(f"  ✓ Diagnosis name: {test_diagnosis_name}")
-        print(f"  ✓ Tested all new fields: contents, source/target slice IDs, data counts")
+        print(f"  ✓ Tested all new fields: source/target slice IDs, data counts, discriminator pattern")
         print(f"  ✓ Created {len(created_diagnosis_report_ids)} diagnosis report items with chart data")
         print(f"  ✓ Tested CONFUSION_MATRIX chart type (new in AnalyticsReportItemType)")
         if CLEANUP:

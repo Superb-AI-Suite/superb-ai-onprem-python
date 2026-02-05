@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, List
 
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
@@ -22,6 +22,9 @@ def update_diagnosis_params(
     source_data_count: Union[Optional[int], UndefinedType] = Undefined,
     target_data_count: Union[Optional[int], UndefinedType] = Undefined,
     diagnosis_data_count: Union[Optional[int], UndefinedType] = Undefined,
+    model_id: Union[Optional[str], UndefinedType] = Undefined,
+    discriminator_key: Union[Optional[str], UndefinedType] = Undefined,
+    discriminator_values: Union[Optional[List[str]], UndefinedType] = Undefined,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -58,4 +61,10 @@ def update_diagnosis_params(
         variables["target_data_count"] = target_data_count
     if diagnosis_data_count is not Undefined:
         variables["diagnosis_data_count"] = diagnosis_data_count
+    if model_id is not Undefined:
+        variables["model_id"] = model_id
+    if discriminator_key is not Undefined:
+        variables["discriminator_key"] = discriminator_key
+    if discriminator_values is not Undefined:
+        variables["discriminator_values"] = discriminator_values
     return variables

@@ -13,6 +13,7 @@ def update_diagnosis_report_item_params(
     type: Union[Optional[AnalyticsReportItemType], UndefinedType] = Undefined,
     content_id: Union[Optional[str], UndefinedType] = Undefined,
     description: Union[Optional[str], UndefinedType] = Undefined,
+    discriminator_value: Union[Optional[str], UndefinedType] = Undefined,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -34,4 +35,6 @@ def update_diagnosis_report_item_params(
         variables["content_id"] = content_id
     if description is not Undefined:
         variables["description"] = description
+    if discriminator_value is not Undefined:
+        variables["discriminator_value"] = discriminator_value
     return variables

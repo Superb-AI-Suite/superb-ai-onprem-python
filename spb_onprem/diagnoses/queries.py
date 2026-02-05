@@ -18,6 +18,7 @@ class Schemas:
         type
         contentId
         description
+        discriminatorValue
         createdAt
         updatedAt
         createdBy
@@ -43,6 +44,9 @@ class Schemas:
         sourceDataCount
         targetDataCount
         diagnosisDataCount
+        modelId
+        discriminatorKey
+        discriminatorValues
         completedAt
         createdAt
         updatedAt
@@ -117,6 +121,9 @@ class Queries:
                 $source_data_count: Int,
                 $target_data_count: Int,
                 $diagnosis_data_count: Int,
+                $model_id: ID,
+                $discriminator_key: String,
+                $discriminator_values: [String!],
             ) {{
                 createDiagnosis(
                     datasetId: $dataset_id,
@@ -132,6 +139,9 @@ class Queries:
                     sourceDataCount: $source_data_count,
                     targetDataCount: $target_data_count,
                     diagnosisDataCount: $diagnosis_data_count,
+                    modelId: $model_id,
+                    discriminatorKey: $discriminator_key,
+                    discriminatorValues: $discriminator_values,
                 ) {{
                     {Schemas.DIAGNOSIS}
                 }}
@@ -159,6 +169,9 @@ class Queries:
                 $source_data_count: Int,
                 $target_data_count: Int,
                 $diagnosis_data_count: Int,
+                $model_id: ID,
+                $discriminator_key: String,
+                $discriminator_values: [String!],
             ) {{
                 updateDiagnosis(
                     datasetId: $dataset_id,
@@ -176,6 +189,9 @@ class Queries:
                     sourceDataCount: $source_data_count,
                     targetDataCount: $target_data_count,
                     diagnosisDataCount: $diagnosis_data_count,
+                    modelId: $model_id,
+                    discriminatorKey: $discriminator_key,
+                    discriminatorValues: $discriminator_values,
                 ) {{
                     {Schemas.DIAGNOSIS}
                 }}
@@ -210,6 +226,7 @@ class Queries:
                 $type: AnalyticsReportItemType!,
                 $content_id: ID,
                 $description: String,
+                $discriminator_value: String,
             ) {{
                 createDiagnosisReportItem(
                     datasetId: $dataset_id,
@@ -218,6 +235,7 @@ class Queries:
                     type: $type,
                     contentId: $content_id,
                     description: $description,
+                    discriminatorValue: $discriminator_value,
                 ) {{
                     {Schemas.DIAGNOSIS}
                 }}
@@ -237,6 +255,7 @@ class Queries:
                 $type: AnalyticsReportItemType,
                 $content_id: ID,
                 $description: String,
+                $discriminator_value: String,
             ) {{
                 updateDiagnosisReportItem(
                     datasetId: $dataset_id,
@@ -246,6 +265,7 @@ class Queries:
                     type: $type,
                     contentId: $content_id,
                     description: $description,
+                    discriminatorValue: $discriminator_value,
                 ) {{
                     {Schemas.DIAGNOSIS}
                 }}

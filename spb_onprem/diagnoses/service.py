@@ -133,6 +133,9 @@ class DiagnosisService(BaseService):
         source_data_count: Optional[int] = None,
         target_data_count: Optional[int] = None,
         diagnosis_data_count: Optional[int] = None,
+        model_id: Optional[str] = None,
+        discriminator_key: Optional[str] = None,
+        discriminator_values: Optional[List[str]] = None,
     ) -> Diagnosis:
         """diagnosis 생성.
 
@@ -150,6 +153,9 @@ class DiagnosisService(BaseService):
             source_data_count (Optional[int], optional): 소스 데이터 개수. Defaults to None.
             target_data_count (Optional[int], optional): 타겟 데이터 개수. Defaults to None.
             diagnosis_data_count (Optional[int], optional): 진단 데이터 개수. Defaults to None.
+            model_id (Optional[str], optional): 모델 ID. Defaults to None.
+            discriminator_key (Optional[str], optional): 구분자 키 (예: "iou_threshold"). Defaults to None.
+            discriminator_values (Optional[List[str]], optional): 구분자 값 목록 (예: ["0.5", "0.75", "0.9"]). Defaults to None.
 
         Returns:
             Diagnosis: 생성된 diagnosis.
@@ -170,6 +176,9 @@ class DiagnosisService(BaseService):
                 source_data_count=source_data_count,
                 target_data_count=target_data_count,
                 diagnosis_data_count=diagnosis_data_count,
+                model_id=model_id,
+                discriminator_key=discriminator_key,
+                discriminator_values=discriminator_values,
             ),
         )
         return Diagnosis.model_validate(response)
@@ -191,6 +200,9 @@ class DiagnosisService(BaseService):
         source_data_count: Union[Optional[int], UndefinedType] = Undefined,
         target_data_count: Union[Optional[int], UndefinedType] = Undefined,
         diagnosis_data_count: Union[Optional[int], UndefinedType] = Undefined,
+        model_id: Union[Optional[str], UndefinedType] = Undefined,
+        discriminator_key: Union[Optional[str], UndefinedType] = Undefined,
+        discriminator_values: Union[Optional[List[str]], UndefinedType] = Undefined,
     ) -> Diagnosis:
         """diagnosis 수정. 전달한 필드만 갱신되며, 미전달 필드는 기존 값 유지.
 
@@ -210,6 +222,9 @@ class DiagnosisService(BaseService):
             source_data_count (Union[Optional[int], UndefinedType], optional): 소스 데이터 개수. Defaults to Undefined.
             target_data_count (Union[Optional[int], UndefinedType], optional): 타겟 데이터 개수. Defaults to Undefined.
             diagnosis_data_count (Union[Optional[int], UndefinedType], optional): 진단 데이터 개수. Defaults to Undefined.
+            model_id (Union[Optional[str], UndefinedType], optional): 모델 ID. Defaults to Undefined.
+            discriminator_key (Union[Optional[str], UndefinedType], optional): 구분자 키. Defaults to Undefined.
+            discriminator_values (Union[Optional[List[str]], UndefinedType], optional): 구분자 값 목록. Defaults to Undefined.
 
         Returns:
             Diagnosis: 수정된 diagnosis.
@@ -232,6 +247,9 @@ class DiagnosisService(BaseService):
                 source_data_count=source_data_count,
                 target_data_count=target_data_count,
                 diagnosis_data_count=diagnosis_data_count,
+                model_id=model_id,
+                discriminator_key=discriminator_key,
+                discriminator_values=discriminator_values,
             ),
         )
         return Diagnosis.model_validate(response)
@@ -275,6 +293,7 @@ class DiagnosisService(BaseService):
         type: AnalyticsReportItemType,
         content_id: Optional[str] = None,
         description: Optional[str] = None,
+        discriminator_value: Optional[str] = None,
     ) -> Diagnosis:
         """diagnosis 리포트 아이템 생성.
 
@@ -285,6 +304,7 @@ class DiagnosisService(BaseService):
             type (AnalyticsReportItemType): 리포트 아이템 타입.
             content_id (Optional[str], optional): Content ID. Defaults to None.
             description (Optional[str], optional): 설명. Defaults to None.
+            discriminator_value (Optional[str], optional): 구분자 값 (예: "0.5"). Defaults to None.
 
         Returns:
             Diagnosis: 업데이트된 diagnosis (리포트 아이템 포함).
@@ -298,6 +318,7 @@ class DiagnosisService(BaseService):
                 type=type,
                 content_id=content_id,
                 description=description,
+                discriminator_value=discriminator_value,
             ),
         )
         return Diagnosis.model_validate(response)
@@ -311,6 +332,7 @@ class DiagnosisService(BaseService):
         type: Union[Optional[AnalyticsReportItemType], UndefinedType] = Undefined,
         content_id: Union[Optional[str], UndefinedType] = Undefined,
         description: Union[Optional[str], UndefinedType] = Undefined,
+        discriminator_value: Union[Optional[str], UndefinedType] = Undefined,
     ) -> Diagnosis:
         """diagnosis 리포트 아이템 수정. 전달한 필드만 갱신.
 
@@ -322,6 +344,7 @@ class DiagnosisService(BaseService):
             type (Union[Optional[AnalyticsReportItemType], UndefinedType], optional): 타입. Defaults to Undefined.
             content_id (Union[Optional[str], UndefinedType], optional): Content ID. Defaults to Undefined.
             description (Union[Optional[str], UndefinedType], optional): 설명. Defaults to Undefined.
+            discriminator_value (Union[Optional[str], UndefinedType], optional): 구분자 값. Defaults to Undefined.
 
         Returns:
             Diagnosis: 수정된 diagnosis.
@@ -336,6 +359,7 @@ class DiagnosisService(BaseService):
                 type=type,
                 content_id=content_id,
                 description=description,
+                discriminator_value=discriminator_value,
             ),
         )
         return Diagnosis.model_validate(response)
@@ -429,27 +453,26 @@ class DiagnosisService(BaseService):
         Returns:
             bool: True if upload was successful
         """
-        import json
+        if content_id is None:
+            raise BadParameterError("content_id is required.")
         
+        if json_data is None:
+            raise BadParameterError("json_data is required.")
+        
+        # Get upload URL
         content_service = ContentService()
-        
-        # Create a content entry for the JSON file
-        file_content, upload_url = content_service.create_content(
-            key=f"{content_id}/{filename}",
+        upload_url = content_service.get_upload_url(
+            content_id=content_id,
+            file_name=filename,
             content_type="application/json"
         )
         
-        # Upload JSON data to S3
-        json_str = json.dumps(json_data, indent=2, ensure_ascii=False)
-        
-        import requests
-        response = requests.put(
-            upload_url,
-            data=json_str.encode('utf-8'),
-            headers={'Content-Type': 'application/json'}
+        # Upload the JSON data
+        self.request(
+            method="PUT",
+            url=upload_url,
+            headers={'Content-Type': 'application/json'},
+            json_data=json_data,
         )
-        
-        if response.status_code not in [200, 201]:
-            raise Exception(f"Failed to upload {filename}: {response.status_code} {response.text}")
         
         return True

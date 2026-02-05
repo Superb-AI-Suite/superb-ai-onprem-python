@@ -11,6 +11,7 @@ def create_diagnosis_report_item_params(
     type: AnalyticsReportItemType,
     content_id: Optional[str] = None,
     description: Optional[str] = None,
+    discriminator_value: Optional[str] = None,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -28,4 +29,5 @@ def create_diagnosis_report_item_params(
         "type": type.value,
         "content_id": content_id,
         "description": description,
+        "discriminator_value": discriminator_value,
     }
