@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Union, Any, Optional
 from spb_onprem.base_types import Undefined, UndefinedType
 
 
@@ -7,6 +7,7 @@ def update_analytics_report_params(
     report_id: str,
     title: Union[str, UndefinedType] = Undefined,
     description: Union[str, UndefinedType] = Undefined,
+    status: Union[str, UndefinedType] = Undefined,
     meta: Union[Any, UndefinedType] = Undefined,
 ):
     """Get parameters for updating an analytics report.
@@ -16,6 +17,7 @@ def update_analytics_report_params(
         report_id: The report ID
         title: Optional new title
         description: Optional new description
+        status: Optional new status (PENDING/IN_PROGRESS/COMPLETED/FAILED)
         meta: Optional new metadata
         
     Returns:
@@ -31,6 +33,9 @@ def update_analytics_report_params(
     
     if not isinstance(description, UndefinedType):
         params["description"] = description
+    
+    if not isinstance(status, UndefinedType):
+        params["status"] = status
     
     if not isinstance(meta, UndefinedType):
         params["meta"] = meta

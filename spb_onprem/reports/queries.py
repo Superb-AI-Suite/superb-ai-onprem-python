@@ -31,6 +31,8 @@ class Schemas:
         id
         title
         description
+        status
+        completedAt
         meta
         createdAt
         updatedAt
@@ -130,6 +132,7 @@ class Queries():
                 $reportId: ID!,
                 $title: String,
                 $description: String,
+                $status: AnalyticsReportStatus,
                 $meta: JSONObject
             ) {{
                 updateAnalyticsReport(
@@ -137,6 +140,7 @@ class Queries():
                     reportId: $reportId,
                     title: $title,
                     description: $description,
+                    status: $status,
                     meta: $meta
                 ) {{
                     {Schemas.ANALYTICS_REPORT}

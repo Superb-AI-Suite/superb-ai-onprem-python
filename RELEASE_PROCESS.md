@@ -81,18 +81,17 @@ pipenv run pytest tests/models/test_workflow.py::test_model_lifecycle_workflow -
 # Branch push
 git push -u origin features/your-feature-name
 
+# PR 본문을 파일로 작성 (긴 내용도 안전하게 처리)
+python3 -c 'with open("/tmp/pr_body.md", "w") as f: f.write("## Summary\nYour feature description\n\n## Changes\n- Change 1\n- Change 2\n\n## Testing\n- Test description")'
+
 # PR 생성 (GitHub CLI 사용)
-gh pr create --title "feat: Your feature title" \
-  --body "## Summary
-Your feature description
-
-## Changes
-- Change 1
-- Change 2
-
-## Testing
-- Test description"
+gh pr create --title "feat: Your feature title" --body-file /tmp/pr_body.md
 ```
+
+**참고:** 
+- `--body-file` 옵션을 사용하면 긴 내용도 터미널 깨짐 없이 안전하게 처리됩니다
+- PR 본문이 짧으면 `--body "..."` 직접 사용도 가능합니다
+- heredoc 방식은 터미널 출력 문제가 있어 피하는 것을 권장합니다
 
 ⏸️ **여기서 잠시 멈춤! PR 생성 완료**
 
@@ -155,37 +154,16 @@ git push origin v1.6.1
 ### 10. GitHub Release 생성
 
 ```bash
-gh release create v1.6.1 \
-  --title "v1.6.1 - Release Title" \
-  --notes "## 🎉 What's New in v1.6.1
+# 릴리즈 노트를 파일로 작성 (긴 내용도 안전하게 처리)
+python3 -c 'with open("/tmp/release_notes.md", "w") as f: f.write("## 🎉 What'\''s New in v1.6.1\n\n### ✨ New Features\n- Feature 1\n- Feature 2\n\n### 🐛 Bug Fixes\n- Fix 1\n- Fix 2\n\n### 📝 Changes\n- Change 1\n- Change 2\n\n### 🔧 Technical Details\n**Modified Files:**\n- `path/to/file1.py`\n- `path/to/file2.py`\n\n### ✅ Testing\n- ✅ All tests passing\n- ✅ Manual testing completed\n\n### 🔄 Backward Compatibility\nThis release is **100% backward compatible**.\n\n---\n**Full Changelog**: https://github.com/Superb-AI-Suite/superb-ai-onprem-python/compare/v1.6.0...v1.6.1")'
 
-### ✨ New Features
-- Feature 1
-- Feature 2
-
-### 🐛 Bug Fixes
-- Fix 1
-- Fix 2
-
-### 📝 Changes
-- Change 1
-- Change 2
-
-### 🔧 Technical Details
-**Modified Files:**
-- \`path/to/file1.py\`
-- \`path/to/file2.py\`
-
-### ✅ Testing
-- ✅ All tests passing
-- ✅ Manual testing completed
-
-### 🔄 Backward Compatibility
-This release is **100% backward compatible**.
-
----
-**Full Changelog**: https://github.com/Superb-AI-Suite/superb-ai-onprem-python/compare/v1.6.0...v1.6.1"
+# 릴리즈 생성 (파일 사용)
+gh release create v1.6.1 --title "v1.6.1 - Release Title" --notes-file /tmp/release_notes.md
 ```
+
+**참고:**
+- `--notes-file` 옵션을 사용하면 긴 릴리즈 노트도 터미널 깨짐 없이 안전하게 처리됩니다
+- 릴리즈 노트가 짧으면 `--notes "..."` 직접 사용도 가능합니다
 
 ### 11. Release 확인
 
