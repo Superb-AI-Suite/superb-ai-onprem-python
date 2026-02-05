@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, List
 
 from spb_onprem.exceptions import BadParameterError
 
@@ -11,6 +11,15 @@ def create_diagnosis_params(
     score_value: Optional[float] = None,
     score_unit: Optional[str] = None,
     diagnosis_parameters: Optional[dict] = None,
+    contents: Optional[dict] = None,
+    source_slice_id: Optional[str] = None,
+    target_slice_id: Optional[str] = None,
+    source_data_count: Optional[int] = None,
+    target_data_count: Optional[int] = None,
+    diagnosis_data_count: Optional[int] = None,
+    model_id: Optional[str] = None,
+    discriminator_key: Optional[str] = None,
+    discriminator_values: Optional[List[str]] = None,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -25,4 +34,13 @@ def create_diagnosis_params(
         "score_value": score_value,
         "score_unit": score_unit,
         "diagnosis_parameters": diagnosis_parameters,
+        "contents": contents,
+        "source_slice_id": source_slice_id,
+        "target_slice_id": target_slice_id,
+        "source_data_count": source_data_count,
+        "target_data_count": target_data_count,
+        "diagnosis_data_count": diagnosis_data_count,
+        "model_id": model_id,
+        "discriminator_key": discriminator_key,
+        "discriminator_values": discriminator_values,
     }

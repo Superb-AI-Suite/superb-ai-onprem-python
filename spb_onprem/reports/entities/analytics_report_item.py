@@ -15,6 +15,7 @@ class AnalyticsReportItemType(str, Enum):
     SCATTER_PLOT = 'SCATTER_PLOT'
     HISTOGRAM = 'HISTOGRAM'
     METRICS = 'METRICS'
+    CONFUSION_MATRIX = 'CONFUSION_MATRIX'
 
 
 class AnalyticsReportItem(CustomBaseModel):

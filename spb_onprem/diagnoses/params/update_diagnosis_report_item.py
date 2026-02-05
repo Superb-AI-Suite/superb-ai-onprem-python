@@ -2,8 +2,7 @@ from typing import Optional, Union
 
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
-
-from ..entities.diagnosis_report_item import DiagnosisReportItemType
+from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 
 
 def update_diagnosis_report_item_params(
@@ -11,9 +10,10 @@ def update_diagnosis_report_item_params(
     diagnosis_id: str,
     diagnosis_report_item_id: str,
     name: Union[Optional[str], UndefinedType] = Undefined,
-    type: Union[Optional[DiagnosisReportItemType], UndefinedType] = Undefined,
+    type: Union[Optional[AnalyticsReportItemType], UndefinedType] = Undefined,
     content_id: Union[Optional[str], UndefinedType] = Undefined,
     description: Union[Optional[str], UndefinedType] = Undefined,
+    discriminator_value: Union[Optional[str], UndefinedType] = Undefined,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -35,4 +35,6 @@ def update_diagnosis_report_item_params(
         variables["content_id"] = content_id
     if description is not Undefined:
         variables["description"] = description
+    if discriminator_value is not Undefined:
+        variables["discriminator_value"] = discriminator_value
     return variables
