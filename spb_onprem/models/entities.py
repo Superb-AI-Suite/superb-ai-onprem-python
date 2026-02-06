@@ -41,7 +41,7 @@ class Model(CustomBaseModel):
     training_parameters: Optional[dict] = Field(None, alias="trainingParameters")
     training_report: Union[List[TrainingReportItem], None] = Field(None, alias="trainingReport")
     contents: Optional[dict] = Field(None, alias="contents")
-    trainingAnnotations: Union[List[TrainingAnnotations], None] = Field(None, alias="trainingAnnotations")
+    training_annotations: Union[List[TrainingAnnotations], None] = Field(None, alias="trainingAnnotations")
 
     train_slice_id: Optional[str] = Field(None, alias="trainSliceId")
     validation_slice_id: Optional[str] = Field(None, alias="validationSliceId")
