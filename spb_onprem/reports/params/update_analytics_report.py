@@ -1,5 +1,6 @@
 from typing import Union, Any, Optional
 from spb_onprem.base_types import Undefined, UndefinedType
+from spb_onprem.reports.entities.analytics_report import AnalyticsReportStatus
 
 
 def update_analytics_report_params(
@@ -7,7 +8,7 @@ def update_analytics_report_params(
     report_id: str,
     title: Union[str, UndefinedType] = Undefined,
     description: Union[str, UndefinedType] = Undefined,
-    status: Union[str, UndefinedType] = Undefined,
+    status: Union[Optional[AnalyticsReportStatus], UndefinedType] = Undefined,
     meta: Union[Any, UndefinedType] = Undefined,
 ):
     """Get parameters for updating an analytics report.

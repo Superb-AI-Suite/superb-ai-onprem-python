@@ -10,6 +10,7 @@ from .entities import (
     AnalyticsReportItem,
     AnalyticsReportItemType,
     AnalyticsReportPageInfo,
+    AnalyticsReportStatus,
 )
 from .params.analytics_reports import AnalyticsReportsFilter, AnalyticsReportsOrderBy
 
@@ -136,7 +137,7 @@ class ReportService(BaseService):
         report_id: str,
         title: Union[str, UndefinedType] = Undefined,
         description: Union[str, UndefinedType] = Undefined,
-        status: Union[str, UndefinedType] = Undefined,
+        status: Union[Optional[AnalyticsReportStatus], UndefinedType] = Undefined,
         meta: Union[Any, UndefinedType] = Undefined,
     ):
         """

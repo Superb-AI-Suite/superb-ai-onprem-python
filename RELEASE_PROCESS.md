@@ -81,17 +81,26 @@ pipenv run pytest tests/models/test_workflow.py::test_model_lifecycle_workflow -
 # Branch push
 git push -u origin features/your-feature-name
 
-# PR 본문을 파일로 작성 (긴 내용도 안전하게 처리)
-python3 -c 'with open("/tmp/pr_body.md", "w") as f: f.write("## Summary\nYour feature description\n\n## Changes\n- Change 1\n- Change 2\n\n## Testing\n- Test description")'
+# PR 본문을 echo로 작성 (권장 방법)
+echo "## Summary" > /tmp/pr_body.md
+echo "Your feature description" >> /tmp/pr_body.md
+echo "" >> /tmp/pr_body.md
+echo "## Changes" >> /tmp/pr_body.md
+echo "- Change 1" >> /tmp/pr_body.md
+echo "- Change 2" >> /tmp/pr_body.md
+echo "" >> /tmp/pr_body.md
+echo "## Testing" >> /tmp/pr_body.md
+echo "- Test description" >> /tmp/pr_body.md
 
 # PR 생성 (GitHub CLI 사용)
 gh pr create --title "feat: Your feature title" --body-file /tmp/pr_body.md
 ```
 
 **참고:** 
-- `--body-file` 옵션을 사용하면 긴 내용도 터미널 깨짐 없이 안전하게 처리됩니다
+- **권장: echo 방식** - 긴 내용도 안정적으로 처리되며 터미널이 멈추지 않음
 - PR 본문이 짧으면 `--body "..."` 직접 사용도 가능합니다
-- heredoc 방식은 터미널 출력 문제가 있어 피하는 것을 권장합니다
+- ❌ `python3 -c` 방식은 긴 내용에서 터미널이 멈추거나 깨질 수 있어 권장하지 않음
+- ❌ heredoc 방식도 터미널 출력 문제가 있어 피하는 것을 권장
 
 ⏸️ **여기서 잠시 멈춤! PR 생성 완료**
 
@@ -154,16 +163,44 @@ git push origin v1.6.1
 ### 10. GitHub Release 생성
 
 ```bash
-# 릴리즈 노트를 파일로 작성 (긴 내용도 안전하게 처리)
-python3 -c 'with open("/tmp/release_notes.md", "w") as f: f.write("## 🎉 What'\''s New in v1.6.1\n\n### ✨ New Features\n- Feature 1\n- Feature 2\n\n### 🐛 Bug Fixes\n- Fix 1\n- Fix 2\n\n### 📝 Changes\n- Change 1\n- Change 2\n\n### 🔧 Technical Details\n**Modified Files:**\n- `path/to/file1.py`\n- `path/to/file2.py`\n\n### ✅ Testing\n- ✅ All tests passing\n- ✅ Manual testing completed\n\n### 🔄 Backward Compatibility\nThis release is **100% backward compatible**.\n\n---\n**Full Changelog**: https://github.com/Superb-AI-Suite/superb-ai-onprem-python/compare/v1.6.0...v1.6.1")'
+# 릴리즈 노트를 echo로 작성 (권장 방법)
+echo "## 🎉 What's New in v1.6.1" > /tmp/release_notes.md
+echo "" >> /tmp/release_notes.md
+echo "### ✨ New Features" >> /tmp/release_notes.md
+echo "- Feature 1" >> /tmp/release_notes.md
+echo "- Feature 2" >> /tmp/release_notes.md
+echo "" >> /tmp/release_notes.md
+echo "### 🐛 Bug Fixes" >> /tmp/release_notes.md
+echo "- Fix 1" >> /tmp/release_notes.md
+echo "- Fix 2" >> /tmp/release_notes.md
+echo "" >> /tmp/release_notes.md
+echo "### 📝 Changes" >> /tmp/release_notes.md
+echo "- Change 1" >> /tmp/release_notes.md
+echo "- Change 2" >> /tmp/release_notes.md
+echo "" >> /tmp/release_notes.md
+echo "### 🔧 Technical Details" >> /tmp/release_notes.md
+echo "**Modified Files:**" >> /tmp/release_notes.md
+echo "- path/to/file1.py" >> /tmp/release_notes.md
+echo "- path/to/file2.py" >> /tmp/release_notes.md
+echo "" >> /tmp/release_notes.md
+echo "### ✅ Testing" >> /tmp/release_notes.md
+echo "- ✅ All tests passing" >> /tmp/release_notes.md
+echo "- ✅ Manual testing completed" >> /tmp/release_notes.md
+echo "" >> /tmp/release_notes.md
+echo "### 🔄 Backward Compatibility" >> /tmp/release_notes.md
+echo "This release is **100% backward compatible**." >> /tmp/release_notes.md
+echo "" >> /tmp/release_notes.md
+echo "---" >> /tmp/release_notes.md
+echo "**Full Changelog**: https://github.com/Superb-AI-Suite/superb-ai-onprem-python/compare/v1.6.0...v1.6.1" >> /tmp/release_notes.md
 
 # 릴리즈 생성 (파일 사용)
 gh release create v1.6.1 --title "v1.6.1 - Release Title" --notes-file /tmp/release_notes.md
 ```
 
 **참고:**
-- `--notes-file` 옵션을 사용하면 긴 릴리즈 노트도 터미널 깨짐 없이 안전하게 처리됩니다
+- **권장: echo 방식** - 긴 내용도 안정적으로 처리되며 터미널이 멈추지 않음
 - 릴리즈 노트가 짧으면 `--notes "..."` 직접 사용도 가능합니다
+- ❌ `python3 -c` 방식은 긴 내용에서 터미널이 멈추거나 깨질 수 있어 권장하지 않음
 
 ### 11. Release 확인
 
