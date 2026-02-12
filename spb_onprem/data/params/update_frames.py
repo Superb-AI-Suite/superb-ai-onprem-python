@@ -1,4 +1,3 @@
-import json
 from typing import Union, List
 from spb_onprem.data.entities import Frame
 from spb_onprem.base_types import UndefinedType, Undefined
@@ -28,7 +27,7 @@ def update_frames_params(
             frame_data = {
                 "index": frame.index,
                 "capturedAt": frame.captured_at,
-                "meta": json.dumps(frame.meta) if frame.meta else None,
+                "meta": frame.meta if frame.meta else None,
             }
             if frame.geo_location is not None:
                 frame_data["geoLocation"] = {
