@@ -5,6 +5,7 @@ import pytest
 from spb_onprem import DataService, DatasetService
 from spb_onprem.data.entities import DataMeta, DataAnnotationStat
 from spb_onprem.data.enums import DataMetaTypes
+from spb_onprem.data.params import DataListFilter, DataFilterOptions
 
 
 def test_data_update_workflow():
@@ -112,6 +113,38 @@ def test_data_update_workflow():
     except Exception as e:
         print(f"❌ Failed to get data: {e}")
         print("\n⚠️  Please update DATASET_ID and DATA_ID with actual values")
+        pytest.fail(str(e))
+
+    # ==================== VERIFY slice_id_all FILTER ====================
+
+    print("\n[Step 1.5] Verifying slice_id_all filter...")
+    try:
+        slice_ids = [slice_item.id for slice_item in (original_data.slices or []) if slice_item and slice_item.id]
+
+        if not slice_ids:
+            print("⚠️  Skipped slice_id_all verification: data has no slices")
+        else:
+            data_filter = DataListFilter(
+                must_filter=DataFilterOptions(
+                    id_in=[DATA_ID],
+                    slice_id_all=slice_ids,
+                )
+            )
+            filtered_data, _, filtered_count = data_service.get_data_id_list(
+                dataset_id=DATASET_ID,
+                data_filter=data_filter,
+                length=10,
+            )
+            target_found = any(item.id == DATA_ID for item in filtered_data)
+
+            print(f"   Slice IDs used: {slice_ids}")
+            print(f"   Filtered total count: {filtered_count}")
+            print(f"   Target data found: {target_found}")
+
+            assert target_found, "slice_id_all filter did not return the target data"
+            print("✅ slice_id_all filter verification passed")
+    except Exception as e:
+        print(f"❌ Failed to verify slice_id_all filter: {e}")
         pytest.fail(str(e))
     
     # ==================== UPDATE DATA WITH META ====================
@@ -283,6 +316,7 @@ def test_data_update_workflow():
     print("\nSummary:")
     print("  ✓ Found dataset with data automatically")
     print("  ✓ Retrieved existing data")
+    print("  ✓ Verified slice_id_all filter (if slices exist)")
     print("  ✓ Updated data meta (Type 1)")
     print("  ✓ Updated data meta (Type 2)")
     print("  ✓ Updated annotation_stats with sample data")
