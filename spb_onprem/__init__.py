@@ -12,6 +12,7 @@ from .contents.service import ContentService
 from .models.service import ModelService
 from .reports.service import ReportService
 from .diagnoses.service import DiagnosisService
+from .workflows.service import WorkflowService
 
 # Core Entities and Enums
 from .entities import (
@@ -69,6 +70,21 @@ from .diagnoses import (
     DiagnosesFilterOptions,
 )
 
+from .workflows import (
+    WorkflowBindingConfig,
+    WorkflowBindingSourceType,
+    WorkflowDefinition,
+    WorkflowDefinitionPageInfo,
+    WorkflowDefinitionStatus,
+    WorkflowNodeDefinition,
+    WorkflowNodeExecution,
+    WorkflowNodeExecutionStatus,
+    WorkflowNodeType,
+    WorkflowRun,
+    WorkflowRunPageInfo,
+    WorkflowRunStatus,
+)
+
 # Filters
 from .searches import (
     AnalyticsReportsOrderBy,
@@ -117,6 +133,7 @@ __all__ = (
     "ModelService",
     "ReportService",
     "DiagnosisService",
+    "WorkflowService",
 
     # Core Entities
     "Data",
@@ -154,6 +171,20 @@ __all__ = (
     "DiagnosisReportItemType",
     "DiagnosesFilter",
     "DiagnosesFilterOptions",
+
+    # Workflow Entities
+    "WorkflowBindingConfig",
+    "WorkflowBindingSourceType",
+    "WorkflowDefinition",
+    "WorkflowDefinitionPageInfo",
+    "WorkflowDefinitionStatus",
+    "WorkflowNodeDefinition",
+    "WorkflowNodeExecution",
+    "WorkflowNodeExecutionStatus",
+    "WorkflowNodeType",
+    "WorkflowRun",
+    "WorkflowRunPageInfo",
+    "WorkflowRunStatus",
 
     # Enums
     "DataType",
