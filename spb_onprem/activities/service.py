@@ -11,6 +11,12 @@ from .entities import (
     ActivitySchema,
     ActivityHistory,
     ActivityStatus,
+    TaskDetail,
+    TaskLogChunk,
+    TaskLogDownload,
+    TaskMonitoring,
+    TaskMonitoringRunType,
+    TaskRenderedTemplates,
 )
 from .params import (
     ActivitiesFilter,
@@ -148,6 +154,113 @@ class ActivityService(BaseService):
             )
         )
         return ActivityHistory.model_validate(response)
+
+    def get_activity_history_task_monitoring(
+        self,
+        activity_history_id: str,
+        run_type: Optional[Union[TaskMonitoringRunType, str]] = None,
+    ) -> TaskMonitoring:
+        """Get task monitoring graph and task summaries for an activity history.
+
+        Args:
+            activity_history_id (str): The ID of the activity history.
+            run_type (Optional[Union[TaskMonitoringRunType, str]]): BASE or SUB.
+
+        Returns:
+            TaskMonitoring: The task monitoring graph and task summaries.
+        """
+        response = self.request_gql(
+            Queries.GET_ACTIVITY_HISTORY_TASK_MONITORING,
+            Queries.GET_ACTIVITY_HISTORY_TASK_MONITORING["variables"](
+                activity_history_id=activity_history_id,
+                run_type=run_type,
+            )
+        )
+        return TaskMonitoring.model_validate(response)
+
+    def get_activity_history_task_detail(
+        self,
+        activity_history_id: str,
+        task_id: str,
+        run_type: Optional[Union[TaskMonitoringRunType, str]] = None,
+        task_run_index: Optional[int] = None,
+    ) -> TaskDetail:
+        """Get detail for a task in an activity history."""
+        response = self.request_gql(
+            Queries.GET_ACTIVITY_HISTORY_TASK_DETAIL,
+            Queries.GET_ACTIVITY_HISTORY_TASK_DETAIL["variables"](
+                activity_history_id=activity_history_id,
+                task_id=task_id,
+                run_type=run_type,
+                task_run_index=task_run_index,
+            )
+        )
+        return TaskDetail.model_validate(response)
+
+    def get_activity_history_task_rendered_templates(
+        self,
+        activity_history_id: str,
+        task_id: str,
+        run_type: Optional[Union[TaskMonitoringRunType, str]] = None,
+        task_run_index: Optional[int] = None,
+    ) -> TaskRenderedTemplates:
+        """Get rendered template fields for a task in an activity history."""
+        response = self.request_gql(
+            Queries.GET_ACTIVITY_HISTORY_TASK_RENDERED_TEMPLATES,
+            Queries.GET_ACTIVITY_HISTORY_TASK_RENDERED_TEMPLATES["variables"](
+                activity_history_id=activity_history_id,
+                task_id=task_id,
+                run_type=run_type,
+                task_run_index=task_run_index,
+            )
+        )
+        return TaskRenderedTemplates.model_validate(response)
+
+    def get_activity_history_task_log(
+        self,
+        activity_history_id: str,
+        task_id: str,
+        run_type: Optional[Union[TaskMonitoringRunType, str]] = None,
+        task_run_index: Optional[int] = None,
+        attempt: Optional[int] = None,
+        cursor: Optional[str] = None,
+        limit_bytes: Optional[int] = None,
+    ) -> TaskLogChunk:
+        """Get a cursor-based log chunk for a task in an activity history."""
+        response = self.request_gql(
+            Queries.GET_ACTIVITY_HISTORY_TASK_LOG,
+            Queries.GET_ACTIVITY_HISTORY_TASK_LOG["variables"](
+                activity_history_id=activity_history_id,
+                task_id=task_id,
+                run_type=run_type,
+                task_run_index=task_run_index,
+                attempt=attempt,
+                cursor=cursor,
+                limit_bytes=limit_bytes,
+            )
+        )
+        return TaskLogChunk.model_validate(response)
+
+    def get_activity_history_task_log_download(
+        self,
+        activity_history_id: str,
+        task_id: str,
+        run_type: Optional[Union[TaskMonitoringRunType, str]] = None,
+        task_run_index: Optional[int] = None,
+        attempt: Optional[int] = None,
+    ) -> TaskLogDownload:
+        """Get the last 1,000 log lines for a task in an activity history."""
+        response = self.request_gql(
+            Queries.GET_ACTIVITY_HISTORY_TASK_LOG_DOWNLOAD,
+            Queries.GET_ACTIVITY_HISTORY_TASK_LOG_DOWNLOAD["variables"](
+                activity_history_id=activity_history_id,
+                task_id=task_id,
+                run_type=run_type,
+                task_run_index=task_run_index,
+                attempt=attempt,
+            )
+        )
+        return TaskLogDownload.model_validate(response)
 
     def update_activity(
         self,
