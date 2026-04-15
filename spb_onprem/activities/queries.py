@@ -9,6 +9,11 @@ from spb_onprem.activities.params import (
     start_activity_params,
     update_activity_history_params,
     get_activity_history_params,
+    get_activity_history_task_detail_params,
+    get_activity_history_task_log_download_params,
+    get_activity_history_task_log_params,
+    get_activity_history_task_monitoring_params,
+    get_activity_history_task_rendered_templates_params,
 )
 
 class Schemas:
@@ -51,6 +56,115 @@ class Schemas:
         updatedAt
         updatedBy
         meta
+    '''
+
+    TASK_MONITORING = '''
+        runType
+        runId
+        runState
+        dataAvailability {
+            run
+            graph
+            tasks
+        }
+        linkedRun {
+            runType
+            runId
+        }
+        nodes {
+            id
+            taskId
+            label
+            kind
+            state
+            rawState
+            durationSeconds
+            startedAt
+            endedAt
+            attempt
+            taskRunIndex
+        }
+        edges {
+            id
+            source
+            target
+        }
+    '''
+
+    TASK_DETAIL = '''
+        availability
+        taskId
+        taskRunIndex
+        label
+        state
+        rawState
+        operator
+        triggerRule
+        startedAt
+        endedAt
+        durationSeconds
+        attempt
+        maxAttempts
+        runtime {
+            executor
+            queue
+            pool
+            poolSlots
+            hostname
+            unixname
+            pid
+            priorityWeight
+            queuedAt
+            scheduledAt
+            externalExecutorId
+            kubernetes {
+                podName
+                namespace
+                image
+                containerName
+                nodeName
+                podPhase
+            }
+        }
+    '''
+
+    TASK_RENDERED_TEMPLATES = '''
+        availability
+        taskId
+        taskRunIndex
+        sections {
+            key
+            value
+            valueType
+        }
+    '''
+
+    TASK_LOG_CHUNK = '''
+        availability
+        taskId
+        taskRunIndex
+        attempt
+        content
+        nextCursor
+        hasMore
+        isComplete
+        metadata {
+            lineCount
+            sizeBytes
+            startedAt
+            endedAt
+        }
+    '''
+
+    TASK_LOG_DOWNLOAD = '''
+        availability
+        taskId
+        taskRunIndex
+        attempt
+        content
+        downloadFilename
+        lineCount
+        isTail
     '''
 
     ACTIVITY_PAGE = f'''
@@ -117,6 +231,76 @@ class Queries:
             }}
         ''',
         "variables": get_activity_history_params,
+    }
+
+    GET_ACTIVITY_HISTORY_TASK_MONITORING = {
+        "name": "jobHistoryTaskMonitoring",
+        "query": f'''
+            query jobHistoryTaskMonitoring(
+                $input: JobHistoryTaskMonitoringInput!
+            ) {{
+                jobHistoryTaskMonitoring(input: $input) {{
+                    {Schemas.TASK_MONITORING}
+                }}
+            }}
+        ''',
+        "variables": get_activity_history_task_monitoring_params,
+    }
+
+    GET_ACTIVITY_HISTORY_TASK_DETAIL = {
+        "name": "jobHistoryTaskDetail",
+        "query": f'''
+            query jobHistoryTaskDetail(
+                $input: JobHistoryTaskDetailInput!
+            ) {{
+                jobHistoryTaskDetail(input: $input) {{
+                    {Schemas.TASK_DETAIL}
+                }}
+            }}
+        ''',
+        "variables": get_activity_history_task_detail_params,
+    }
+
+    GET_ACTIVITY_HISTORY_TASK_RENDERED_TEMPLATES = {
+        "name": "jobHistoryTaskRenderedTemplates",
+        "query": f'''
+            query jobHistoryTaskRenderedTemplates(
+                $input: JobHistoryTaskRenderedTemplatesInput!
+            ) {{
+                jobHistoryTaskRenderedTemplates(input: $input) {{
+                    {Schemas.TASK_RENDERED_TEMPLATES}
+                }}
+            }}
+        ''',
+        "variables": get_activity_history_task_rendered_templates_params,
+    }
+
+    GET_ACTIVITY_HISTORY_TASK_LOG = {
+        "name": "jobHistoryTaskLog",
+        "query": f'''
+            query jobHistoryTaskLog(
+                $input: JobHistoryTaskLogInput!
+            ) {{
+                jobHistoryTaskLog(input: $input) {{
+                    {Schemas.TASK_LOG_CHUNK}
+                }}
+            }}
+        ''',
+        "variables": get_activity_history_task_log_params,
+    }
+
+    GET_ACTIVITY_HISTORY_TASK_LOG_DOWNLOAD = {
+        "name": "jobHistoryTaskLogDownload",
+        "query": f'''
+            query jobHistoryTaskLogDownload(
+                $input: JobHistoryTaskLogDownloadInput!
+            ) {{
+                jobHistoryTaskLogDownload(input: $input) {{
+                    {Schemas.TASK_LOG_DOWNLOAD}
+                }}
+            }}
+        ''',
+        "variables": get_activity_history_task_log_download_params,
     }
 
     CREATE_ACTIVITY = {
