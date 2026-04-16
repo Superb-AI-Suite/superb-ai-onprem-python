@@ -20,6 +20,7 @@ def create_diagnosis_params(
     model_id: Optional[str] = None,
     discriminator_key: Optional[str] = None,
     discriminator_values: Optional[List[str]] = None,
+    job_history_id: Optional[str] = None,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -43,4 +44,5 @@ def create_diagnosis_params(
         "model_id": model_id,
         "discriminator_key": discriminator_key,
         "discriminator_values": discriminator_values,
+        "job_history_id": job_history_id,
     }
