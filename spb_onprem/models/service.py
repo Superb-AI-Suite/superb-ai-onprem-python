@@ -97,6 +97,7 @@ class ModelService(BaseService):
         score_value: Optional[float] = None,
         score_unit: Optional[str] = None,
         contents: Optional[dict] = None,
+        job_history_id: Optional[str] = None,
     ) -> Model:
         response = self.request_gql(
             Queries.CREATE,
@@ -118,6 +119,7 @@ class ModelService(BaseService):
                 score_value=score_value,
                 score_unit=score_unit,
                 contents=contents,
+                job_history_id=job_history_id,
             ),
         )
         return Model.model_validate(response)

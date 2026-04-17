@@ -47,6 +47,7 @@ class Schemas:
         modelId
         discriminatorKey
         discriminatorValues
+        jobHistoryId
         completedAt
         createdAt
         updatedAt
@@ -124,6 +125,7 @@ class Queries:
                 $model_id: ID,
                 $discriminator_key: String,
                 $discriminator_values: [String!],
+                $job_history_id: ID,
             ) {{
                 createDiagnosis(
                     datasetId: $dataset_id,
@@ -142,6 +144,7 @@ class Queries:
                     modelId: $model_id,
                     discriminatorKey: $discriminator_key,
                     discriminatorValues: $discriminator_values,
+                    jobHistoryId: $job_history_id,
                 ) {{
                     {Schemas.DIAGNOSIS}
                 }}

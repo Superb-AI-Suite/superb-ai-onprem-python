@@ -25,6 +25,7 @@ def create_model_params(
     score_value: Optional[float] = None,
     score_unit: Optional[str] = None,
     contents: Optional[dict] = None,
+    job_history_id: Optional[str] = None,
 ):
     if dataset_id is None:
         raise BadParameterError("dataset_id is required.")
@@ -75,4 +76,5 @@ def create_model_params(
         "score_value": score_value,
         "score_unit": score_unit,
         "contents": contents,
+        "job_history_id": job_history_id,
     }

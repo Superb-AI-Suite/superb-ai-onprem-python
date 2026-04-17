@@ -57,6 +57,7 @@ class Schemas:
         scoreKey
         scoreValue
         scoreUnit
+        jobHistoryId
         createdAt
         updatedAt
         createdBy
@@ -134,6 +135,7 @@ class Queries:
                 $score_unit: String,
                 $contents: JSONObject,
                 $training_annotations: [TrainingAnnotationsInput!],
+                $job_history_id: ID,
             ) {{
                 createModel(
                     datasetId: $dataset_id,
@@ -153,6 +155,7 @@ class Queries:
                     scoreUnit: $score_unit,
                     contents: $contents,
                     trainingAnnotations: $training_annotations,
+                    jobHistoryId: $job_history_id,
                 ) {{
                     {Schemas.MODEL}
                 }}
