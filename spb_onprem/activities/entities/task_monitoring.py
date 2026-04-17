@@ -105,16 +105,8 @@ class TaskMonitoring(CustomBaseModel):
     run_state: Optional[TaskMonitoringRunState] = Field(None, alias="runState")
     raw_run_state: Optional[str] = Field(None, alias="rawRunState")
     linked_run: Optional[TaskMonitoringLinkedRun] = Field(None, alias="linkedRun")
-    nodes: List[TaskNode] = Field(default_factory=list, alias="nodes")
-    edges: List[TaskEdge] = Field(default_factory=list, alias="edges")
-    grouped_nodes: List[TaskGroupNode] = Field(
-        default_factory=list,
-        alias="groupedNodes",
-    )
-    grouped_edges: List[TaskGroupEdge] = Field(
-        default_factory=list,
-        alias="groupedEdges",
-    )
+    nodes: List[TaskGroupNode] = Field(default_factory=list, alias="nodes")
+    edges: List[TaskGroupEdge] = Field(default_factory=list, alias="edges")
 
 
 class TaskKubernetesRuntime(CustomBaseModel):

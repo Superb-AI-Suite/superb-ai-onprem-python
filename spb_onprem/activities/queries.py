@@ -74,24 +74,6 @@ class Schemas:
             label
             kind
             state
-            rawState
-            durationSeconds
-            startedAt
-            endedAt
-            attempt
-            taskRunIndex
-        }
-        edges {
-            id
-            source
-            target
-        }
-        groupedNodes {
-            id
-            taskId
-            label
-            kind
-            state
             nodeCount
             taskNodes {
                 id
@@ -107,7 +89,7 @@ class Schemas:
                 taskRunIndex
             }
         }
-        groupedEdges {
+        edges {
             id
             source
             target

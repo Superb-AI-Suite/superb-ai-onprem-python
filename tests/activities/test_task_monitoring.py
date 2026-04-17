@@ -46,36 +46,6 @@ class TestActivityHistoryTaskMonitoring:
                     "label": "prepare_data",
                     "kind": "TASK",
                     "state": "SUCCESS",
-                    "rawState": "success",
-                    "durationSeconds": 1.25,
-                    "startedAt": "2026-04-14T03:29:59.284079Z",
-                    "endedAt": "2026-04-14T03:30:00.534079Z",
-                    "attempt": 1,
-                    "taskRunIndex": None,
-                },
-                {
-                    "id": "trigger_and_wait_sub_dag",
-                    "taskId": "trigger_and_wait_sub_dag",
-                    "label": "trigger_and_wait_sub_dag",
-                    "kind": "DAG_RUN",
-                    "state": "FAILED",
-                    "rawState": "failed",
-                },
-            ],
-            "edges": [
-                {
-                    "id": "prepare_data->trigger_and_wait_sub_dag",
-                    "source": "prepare_data",
-                    "target": "trigger_and_wait_sub_dag",
-                }
-            ],
-            "groupedNodes": [
-                {
-                    "id": "prepare_data",
-                    "taskId": "prepare_data",
-                    "label": "prepare_data",
-                    "kind": "TASK",
-                    "state": "SUCCESS",
                     "nodeCount": 1,
                     "taskNodes": [
                         {
@@ -112,7 +82,7 @@ class TestActivityHistoryTaskMonitoring:
                     ],
                 },
             ],
-            "groupedEdges": [
+            "edges": [
                 {
                     "id": "prepare_data->trigger_and_wait_sub_dag",
                     "source": "prepare_data",
@@ -136,20 +106,15 @@ class TestActivityHistoryTaskMonitoring:
         assert monitoring.linked_run.run_type == TaskMonitoringRunType.SUB
         assert monitoring.linked_run.run_id == "sub_job_test"
         assert len(monitoring.nodes) == 2
-        assert monitoring.nodes[0].task_id == "prepare_data"
-        assert monitoring.nodes[0].kind == TaskKind.TASK
-        assert monitoring.nodes[0].state == TaskState.SUCCESS
-        assert monitoring.nodes[0].duration_seconds == 1.25
-        assert monitoring.nodes[1].kind == TaskKind.DAG_RUN
-        assert monitoring.nodes[1].state == TaskState.FAILED
+        assert monitoring.nodes[0].node_count == 1
+        assert monitoring.nodes[0].task_nodes[0].task_id == "prepare_data"
+        assert monitoring.nodes[0].task_nodes[0].kind == TaskKind.TASK
+        assert monitoring.nodes[0].task_nodes[0].state == TaskState.SUCCESS
+        assert monitoring.nodes[0].task_nodes[0].duration_seconds == 1.25
+        assert monitoring.nodes[1].task_nodes[0].kind == TaskKind.DAG_RUN
+        assert monitoring.nodes[1].task_nodes[0].state == TaskState.FAILED
         assert len(monitoring.edges) == 1
         assert monitoring.edges[0].source == "prepare_data"
-        assert monitoring.edges[0].target == "trigger_and_wait_sub_dag"
-        assert len(monitoring.grouped_nodes) == 2
-        assert monitoring.grouped_nodes[0].node_count == 1
-        assert monitoring.grouped_nodes[0].task_nodes[0].task_id == "prepare_data"
-        assert len(monitoring.grouped_edges) == 1
-        assert monitoring.grouped_edges[0].source == "prepare_data"
 
         _, variables = activity_service.request_gql.call_args.args
         assert variables == {
