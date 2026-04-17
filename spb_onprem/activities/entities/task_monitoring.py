@@ -88,8 +88,8 @@ class TaskGroupNode(CustomBaseModel):
     label: str = Field(alias="label")
     kind: TaskKind = Field(alias="kind")
     state: TaskState = Field(alias="state")
-    node_count: int = Field(alias="nodeCount")
-    task_nodes: List[TaskNode] = Field(default_factory=list, alias="taskNodes")
+    instance_count: int = Field(alias="instanceCount")
+    instances: List[TaskNode] = Field(default_factory=list, alias="instances")
 
 
 class TaskGroupEdge(CustomBaseModel):

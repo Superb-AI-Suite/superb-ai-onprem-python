@@ -74,8 +74,8 @@ class Schemas:
             label
             kind
             state
-            nodeCount
-            taskNodes {
+            instanceCount
+            instances {
                 id
                 taskId
                 label

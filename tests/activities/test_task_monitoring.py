@@ -46,8 +46,8 @@ class TestActivityHistoryTaskMonitoring:
                     "label": "prepare_data",
                     "kind": "TASK",
                     "state": "SUCCESS",
-                    "nodeCount": 1,
-                    "taskNodes": [
+                    "instanceCount": 1,
+                    "instances": [
                         {
                             "id": "prepare_data",
                             "taskId": "prepare_data",
@@ -69,8 +69,8 @@ class TestActivityHistoryTaskMonitoring:
                     "label": "trigger_and_wait_sub_dag",
                     "kind": "DAG_RUN",
                     "state": "FAILED",
-                    "nodeCount": 1,
-                    "taskNodes": [
+                    "instanceCount": 1,
+                    "instances": [
                         {
                             "id": "trigger_and_wait_sub_dag",
                             "taskId": "trigger_and_wait_sub_dag",
@@ -106,13 +106,13 @@ class TestActivityHistoryTaskMonitoring:
         assert monitoring.linked_run.run_type == TaskMonitoringRunType.SUB
         assert monitoring.linked_run.run_id == "sub_job_test"
         assert len(monitoring.nodes) == 2
-        assert monitoring.nodes[0].node_count == 1
-        assert monitoring.nodes[0].task_nodes[0].task_id == "prepare_data"
-        assert monitoring.nodes[0].task_nodes[0].kind == TaskKind.TASK
-        assert monitoring.nodes[0].task_nodes[0].state == TaskState.SUCCESS
-        assert monitoring.nodes[0].task_nodes[0].duration_seconds == 1.25
-        assert monitoring.nodes[1].task_nodes[0].kind == TaskKind.DAG_RUN
-        assert monitoring.nodes[1].task_nodes[0].state == TaskState.FAILED
+        assert monitoring.nodes[0].instance_count == 1
+        assert monitoring.nodes[0].instances[0].task_id == "prepare_data"
+        assert monitoring.nodes[0].instances[0].kind == TaskKind.TASK
+        assert monitoring.nodes[0].instances[0].state == TaskState.SUCCESS
+        assert monitoring.nodes[0].instances[0].duration_seconds == 1.25
+        assert monitoring.nodes[1].instances[0].kind == TaskKind.DAG_RUN
+        assert monitoring.nodes[1].instances[0].state == TaskState.FAILED
         assert len(monitoring.edges) == 1
         assert monitoring.edges[0].source == "prepare_data"
 
