@@ -61,12 +61,9 @@ class Schemas:
     TASK_MONITORING = '''
         runType
         runId
+        available
         runState
-        dataAvailability {
-            run
-            graph
-            tasks
-        }
+        rawRunState
         linkedRun {
             runType
             runId
@@ -85,6 +82,32 @@ class Schemas:
             taskRunIndex
         }
         edges {
+            id
+            source
+            target
+        }
+        groupedNodes {
+            id
+            taskId
+            label
+            kind
+            state
+            nodeCount
+            taskNodes {
+                id
+                taskId
+                label
+                kind
+                state
+                rawState
+                durationSeconds
+                startedAt
+                endedAt
+                attempt
+                taskRunIndex
+            }
+        }
+        groupedEdges {
             id
             source
             target

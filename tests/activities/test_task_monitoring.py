@@ -3,8 +3,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from spb_onprem.activities.entities import (
-    MonitoringDataAvailability,
-    MonitoringRunAvailability,
     RenderedTemplateValueType,
     TaskDataAvailability,
     TaskDetail,
@@ -12,6 +10,7 @@ from spb_onprem.activities.entities import (
     TaskLogChunk,
     TaskLogDownload,
     TaskMonitoring,
+    TaskMonitoringRunState,
     TaskMonitoringRunType,
     TaskRenderedTemplates,
     TaskState,
@@ -33,12 +32,9 @@ class TestActivityHistoryTaskMonitoring:
         mock_response = {
             "runType": "BASE",
             "runId": "job_test",
-            "runState": "success",
-            "dataAvailability": {
-                "run": "AVAILABLE",
-                "graph": "AVAILABLE",
-                "tasks": "AVAILABLE",
-            },
+            "available": True,
+            "runState": "SUCCESS",
+            "rawRunState": "success",
             "linkedRun": {
                 "runType": "SUB",
                 "runId": "sub_job_test",
@@ -73,6 +69,56 @@ class TestActivityHistoryTaskMonitoring:
                     "target": "trigger_and_wait_sub_dag",
                 }
             ],
+            "groupedNodes": [
+                {
+                    "id": "prepare_data",
+                    "taskId": "prepare_data",
+                    "label": "prepare_data",
+                    "kind": "TASK",
+                    "state": "SUCCESS",
+                    "nodeCount": 1,
+                    "taskNodes": [
+                        {
+                            "id": "prepare_data",
+                            "taskId": "prepare_data",
+                            "label": "prepare_data",
+                            "kind": "TASK",
+                            "state": "SUCCESS",
+                            "rawState": "success",
+                            "durationSeconds": 1.25,
+                            "startedAt": "2026-04-14T03:29:59.284079Z",
+                            "endedAt": "2026-04-14T03:30:00.534079Z",
+                            "attempt": 1,
+                            "taskRunIndex": None,
+                        }
+                    ],
+                },
+                {
+                    "id": "trigger_and_wait_sub_dag",
+                    "taskId": "trigger_and_wait_sub_dag",
+                    "label": "trigger_and_wait_sub_dag",
+                    "kind": "DAG_RUN",
+                    "state": "FAILED",
+                    "nodeCount": 1,
+                    "taskNodes": [
+                        {
+                            "id": "trigger_and_wait_sub_dag",
+                            "taskId": "trigger_and_wait_sub_dag",
+                            "label": "trigger_and_wait_sub_dag",
+                            "kind": "DAG_RUN",
+                            "state": "FAILED",
+                            "rawState": "failed",
+                        }
+                    ],
+                },
+            ],
+            "groupedEdges": [
+                {
+                    "id": "prepare_data->trigger_and_wait_sub_dag",
+                    "source": "prepare_data",
+                    "target": "trigger_and_wait_sub_dag",
+                }
+            ],
         }
         activity_service.request_gql = MagicMock(return_value=mock_response)
 
@@ -84,10 +130,9 @@ class TestActivityHistoryTaskMonitoring:
         assert isinstance(monitoring, TaskMonitoring)
         assert monitoring.run_type == TaskMonitoringRunType.BASE
         assert monitoring.run_id == "job_test"
-        assert monitoring.run_state == "success"
-        assert monitoring.data_availability.run == MonitoringRunAvailability.AVAILABLE
-        assert monitoring.data_availability.graph == MonitoringDataAvailability.AVAILABLE
-        assert monitoring.data_availability.tasks == MonitoringDataAvailability.AVAILABLE
+        assert monitoring.available is True
+        assert monitoring.run_state == TaskMonitoringRunState.SUCCESS
+        assert monitoring.raw_run_state == "success"
         assert monitoring.linked_run.run_type == TaskMonitoringRunType.SUB
         assert monitoring.linked_run.run_id == "sub_job_test"
         assert len(monitoring.nodes) == 2
@@ -100,6 +145,11 @@ class TestActivityHistoryTaskMonitoring:
         assert len(monitoring.edges) == 1
         assert monitoring.edges[0].source == "prepare_data"
         assert monitoring.edges[0].target == "trigger_and_wait_sub_dag"
+        assert len(monitoring.grouped_nodes) == 2
+        assert monitoring.grouped_nodes[0].node_count == 1
+        assert monitoring.grouped_nodes[0].task_nodes[0].task_id == "prepare_data"
+        assert len(monitoring.grouped_edges) == 1
+        assert monitoring.grouped_edges[0].source == "prepare_data"
 
         _, variables = activity_service.request_gql.call_args.args
         assert variables == {
