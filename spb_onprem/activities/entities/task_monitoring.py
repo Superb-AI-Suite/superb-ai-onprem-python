@@ -9,17 +9,13 @@ class TaskMonitoringRunType(str, Enum):
     SUB = "SUB"
 
 
-class MonitoringRunAvailability(str, Enum):
-    AVAILABLE = "AVAILABLE"
-    NOT_FOUND = "NOT_FOUND"
-    EXPIRED = "EXPIRED"
-    UNAVAILABLE = "UNAVAILABLE"
-
-
-class MonitoringDataAvailability(str, Enum):
-    AVAILABLE = "AVAILABLE"
-    PARTIAL = "PARTIAL"
-    UNAVAILABLE = "UNAVAILABLE"
+class TaskMonitoringRunState(str, Enum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+    CANCELED = "CANCELED"
+    UNKNOWN = "UNKNOWN"
 
 
 class TaskState(str, Enum):
@@ -61,12 +57,6 @@ class RenderedTemplateValueType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class TaskMonitoringDataAvailability(CustomBaseModel):
-    run: MonitoringRunAvailability = Field(alias="run")
-    graph: MonitoringDataAvailability = Field(alias="graph")
-    tasks: MonitoringDataAvailability = Field(alias="tasks")
-
-
 class TaskMonitoringLinkedRun(CustomBaseModel):
     run_type: TaskMonitoringRunType = Field(alias="runType")
     run_id: str = Field(alias="runId")
@@ -92,16 +82,31 @@ class TaskEdge(CustomBaseModel):
     target: str = Field(alias="target")
 
 
+class TaskGroupNode(CustomBaseModel):
+    id: str = Field(alias="id")
+    task_id: str = Field(alias="taskId")
+    label: str = Field(alias="label")
+    kind: TaskKind = Field(alias="kind")
+    state: TaskState = Field(alias="state")
+    instance_count: int = Field(alias="instanceCount")
+    instances: List[TaskNode] = Field(default_factory=list, alias="instances")
+
+
+class TaskGroupEdge(CustomBaseModel):
+    id: str = Field(alias="id")
+    source: str = Field(alias="source")
+    target: str = Field(alias="target")
+
+
 class TaskMonitoring(CustomBaseModel):
     run_type: TaskMonitoringRunType = Field(alias="runType")
     run_id: str = Field(alias="runId")
-    run_state: Optional[str] = Field(None, alias="runState")
-    data_availability: TaskMonitoringDataAvailability = Field(
-        alias="dataAvailability"
-    )
+    available: bool = Field(alias="available")
+    run_state: Optional[TaskMonitoringRunState] = Field(None, alias="runState")
+    raw_run_state: Optional[str] = Field(None, alias="rawRunState")
     linked_run: Optional[TaskMonitoringLinkedRun] = Field(None, alias="linkedRun")
-    nodes: List[TaskNode] = Field(default_factory=list, alias="nodes")
-    edges: List[TaskEdge] = Field(default_factory=list, alias="edges")
+    nodes: List[TaskGroupNode] = Field(default_factory=list, alias="nodes")
+    edges: List[TaskGroupEdge] = Field(default_factory=list, alias="edges")
 
 
 class TaskKubernetesRuntime(CustomBaseModel):
