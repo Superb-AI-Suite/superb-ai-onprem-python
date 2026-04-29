@@ -20,26 +20,23 @@ def test_slice_id_exists_false_is_preserved_with_legacy_pascal_case_alias():
     }
 
 
-def test_slice_id_filter_fields_are_serialized_for_data_id_list_query():
+def test_slice_id_exists_false_is_serialized_for_data_id_list_query():
     data_filter = DataListFilter.model_validate(
-        {
-            "must": {
-                "sliceId": "slice-1",
-                "sliceIdIn": ["slice-1", "slice-2"],
-                "sliceIdAll": ["slice-1"],
-                "sliceIdExists": False,
-            }
-        }
+        {"must": {"sliceIdExists": False}}
     )
 
     assert get_data_id_list_params(
         dataset_id="dataset-1",
         data_filter=data_filter,
-    )["filter"] == {
-        "must": {
-            "sliceId": "slice-1",
-            "sliceIdIn": ["slice-1", "slice-2"],
-            "sliceIdAll": ["slice-1"],
-            "sliceIdExists": False,
-        }
-    }
+    )["filter"] == {"must": {"sliceIdExists": False}}
+
+
+def test_slice_id_field_is_not_serialized_to_avoid_slice_filter_overlap():
+    data_filter = DataListFilter.model_validate(
+        {"must": {"sliceId": "slice-1", "sliceIdExists": False}}
+    )
+
+    assert get_data_id_list_params(
+        dataset_id="dataset-1",
+        data_filter=data_filter,
+    )["filter"] == {"must": {"sliceIdExists": False}}
