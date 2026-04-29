@@ -1,4 +1,5 @@
 from typing import Optional, List, Union, Literal
+from pydantic import AliasChoices
 from spb_onprem.base_model import CustomBaseModel, Field
 from spb_onprem.data.enums import DataType, DataStatus
 from spb_onprem.exceptions import BadParameterError
@@ -209,8 +210,34 @@ class DataFilterOptions(CustomBaseModel):
     """
     # ID 및 키 필터
     id_in: Optional[List[str]] = Field(None, alias="idIn", description="특정 데이터 ID 목록 중 하나")
-    slice_id_in: Optional[List[str]] = Field(None, alias="sliceIdIn", description="특정 슬라이스 ID 목록에 속한 데이터")
-    slice_id_all: Optional[List[str]] = Field(None, alias="sliceIdAll", description="모든 슬라이스 ID 목록에 속한 데이터")
+    slice_id: Optional[str] = Field(
+        None,
+        alias="sliceId",
+        validation_alias=AliasChoices("sliceId", "SliceId", "slice_id"),
+        serialization_alias="sliceId",
+        description="특정 슬라이스 ID에 속한 데이터",
+    )
+    slice_id_in: Optional[List[str]] = Field(
+        None,
+        alias="sliceIdIn",
+        validation_alias=AliasChoices("sliceIdIn", "SliceIdIn", "slice_id_in"),
+        serialization_alias="sliceIdIn",
+        description="특정 슬라이스 ID 목록에 속한 데이터",
+    )
+    slice_id_all: Optional[List[str]] = Field(
+        None,
+        alias="sliceIdAll",
+        validation_alias=AliasChoices("sliceIdAll", "SliceIdAll", "slice_id_all"),
+        serialization_alias="sliceIdAll",
+        description="모든 슬라이스 ID 목록에 속한 데이터",
+    )
+    slice_id_exists: Optional[bool] = Field(
+        None,
+        alias="sliceIdExists",
+        validation_alias=AliasChoices("sliceIdExists", "SliceIdExists", "slice_id_exists"),
+        serialization_alias="sliceIdExists",
+        description="슬라이스 연결 존재 여부",
+    )
     
     # 키 패턴 필터
     key_contains: Optional[str] = Field(None, alias="keyContains", description="키에 포함된 문자열")
