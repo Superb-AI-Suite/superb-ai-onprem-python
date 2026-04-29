@@ -210,20 +210,8 @@ class DataFilterOptions(CustomBaseModel):
     """
     # ID 및 키 필터
     id_in: Optional[List[str]] = Field(None, alias="idIn", description="특정 데이터 ID 목록 중 하나")
-    slice_id_in: Optional[List[str]] = Field(
-        None,
-        alias="sliceIdIn",
-        validation_alias=AliasChoices("sliceIdIn", "SliceIdIn", "slice_id_in"),
-        serialization_alias="sliceIdIn",
-        description="특정 슬라이스 ID 목록에 속한 데이터",
-    )
-    slice_id_all: Optional[List[str]] = Field(
-        None,
-        alias="sliceIdAll",
-        validation_alias=AliasChoices("sliceIdAll", "SliceIdAll", "slice_id_all"),
-        serialization_alias="sliceIdAll",
-        description="모든 슬라이스 ID 목록에 속한 데이터",
-    )
+    slice_id_in: Optional[List[str]] = Field(None, alias="sliceIdIn", description="특정 슬라이스 ID 목록에 속한 데이터")
+    slice_id_all: Optional[List[str]] = Field(None, alias="sliceIdAll", description="모든 슬라이스 ID 목록에 속한 데이터")
     slice_id_exists: Optional[bool] = Field(
         None,
         alias="sliceIdExists",
