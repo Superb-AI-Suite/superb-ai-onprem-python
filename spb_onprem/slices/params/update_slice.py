@@ -14,7 +14,17 @@ def update_slice_params(
     slice_description: Union[
         UndefinedType,
         str
-    ] = Undefined
+    ] = Undefined,
+    slice_caption: Union[
+        UndefinedType,
+        None,
+        str
+    ] = Undefined,
+    expected_caption: Union[
+        UndefinedType,
+        None,
+        str
+    ] = Undefined,
 ):
     """Update slice parameters.
     
@@ -23,6 +33,8 @@ def update_slice_params(
         slice_id (str): The ID of the slice to update.
         slice_name (Optional[str]): The name of the slice to update.
         slice_description (Optional[str]): The description of the slice to update.
+        slice_caption (Union[UndefinedType, None, str]): The aggregate caption to update.
+        expected_caption (Union[UndefinedType, None, str]): The expected aggregate caption.
         
     Returns:
         dict: Parameters for slice update
@@ -41,5 +53,9 @@ def update_slice_params(
         variables["name"] = slice_name
     if slice_description is not Undefined:
         variables["description"] = slice_description
+    if slice_caption is not Undefined:
+        variables["caption"] = slice_caption
+    if expected_caption is not Undefined:
+        variables["expectedCaption"] = expected_caption
 
     return variables

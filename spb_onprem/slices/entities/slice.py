@@ -13,6 +13,7 @@ class Slice(CustomBaseModel):
     dataset_id: Optional[str] = Field(None, alias="datasetId", description="상위 데이터셋 ID")
     name: Optional[str] = Field(None, description="슬라이스 이름")
     description: Optional[str] = Field(None, description="슬라이스 설명")
+    caption: Optional[str] = Field(None, description="슬라이스 캡션")
     is_pinned: Optional[bool] = Field(None, alias="isPinned", description="즐겨찾기 고정 여부")
     created_at: Optional[str] = Field(None, alias="createdAt", description="생성일시 (ISO 8601)")
     created_by: Optional[str] = Field(None, alias="createdBy", description="생성자")

@@ -162,6 +162,16 @@ class SliceService(BaseService):
             UndefinedType,
             str
         ] = Undefined,
+        caption: Union[
+            UndefinedType,
+            None,
+            str
+        ] = Undefined,
+        expected_caption: Union[
+            UndefinedType,
+            None,
+            str
+        ] = Undefined,
     ):
         """Update a slice.
         
@@ -170,20 +180,29 @@ class SliceService(BaseService):
             slice_id (str): The ID of the slice to update.
             name (Optional[str]): The name of the slice to update.
             description (Optional[str]): The description of the slice to update.
+            caption (Union[UndefinedType, None, str]): The aggregate caption to update.
+            expected_caption (Union[UndefinedType, None, str]): The expected aggregate caption.
         
         Returns:
             Slice: The updated slice object.
         """
+        query = (
+            Queries.UPDATE_SLICE_WITH_EXPECTED_CAPTION
+            if expected_caption is not Undefined
+            else Queries.UPDATE_SLICE
+        )
         response = self.request_gql(
-            Queries.UPDATE_SLICE,
-            Queries.UPDATE_SLICE["variables"](
+            query,
+            query["variables"](
                 dataset_id=dataset_id,
                 slice_id=slice_id,
                 slice_name=name,
-                slice_description=description
+                slice_description=description,
+                slice_caption=caption,
+                expected_caption=expected_caption,
             )
         )
-        slice_dict = response.get("updateSlice", {})
+        slice_dict = response.get("updateSlice", response)
         return Slice.model_validate(slice_dict)
 
     def delete_slice(

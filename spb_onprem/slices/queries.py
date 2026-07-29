@@ -14,6 +14,7 @@ class Schemas:
         slices {
             id
             name
+            caption
         }
         next
         totalCount
@@ -24,6 +25,7 @@ class Schemas:
         datasetId
         name
         description
+        caption
         isPinned
         createdAt
         createdBy
@@ -106,13 +108,41 @@ class Queries:
                 $dataset_id: String!,
                 $id: ID!,
                 $name: String,
-                $description: String
+                $description: String,
+                $caption: String
             ) {{
                 updateSlice(
                     datasetId: $dataset_id,
                     id: $id,
                     name: $name,
-                    description: $description
+                    description: $description,
+                    caption: $caption
+                ) {{
+                    {Schemas.SLICE}
+                }}
+            }}
+        ''',
+        "variables": update_slice_params,
+    }
+
+    UPDATE_SLICE_WITH_EXPECTED_CAPTION = {
+        "name": "updateSlice",
+        "query": f'''
+            mutation updateSlice(
+                $dataset_id: String!,
+                $id: ID!,
+                $name: String,
+                $description: String,
+                $caption: String,
+                $expectedCaption: String
+            ) {{
+                updateSlice(
+                    datasetId: $dataset_id,
+                    id: $id,
+                    name: $name,
+                    description: $description,
+                    caption: $caption,
+                    expectedCaption: $expectedCaption
                 ) {{
                     {Schemas.SLICE}
                 }}
