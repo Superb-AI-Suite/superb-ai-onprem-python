@@ -27,6 +27,15 @@ def update_params(
     annotation_stats: Union[
         Optional[List[DataAnnotationStat]],
         UndefinedType
+    ] = Undefined,
+    caption: Union[
+        Optional[str],
+        UndefinedType
+    ] = Undefined,
+    expected_caption: Union[
+        UndefinedType,
+        None,
+        str
     ] = Undefined
 ):
     """Make the variables for the updateData query.
@@ -37,6 +46,8 @@ def update_params(
         key (str): The key of the data.
         meta (List[DataMeta]): The meta of the data.
         annotation_stats (List[DataAnnotationStat]): The annotation stats of the data.
+        caption (str): The caption of the data.
+        expected_caption (str): The expected caption of the data.
     """
     variables = {
         "dataset_id": dataset_id,
@@ -62,5 +73,11 @@ def update_params(
         variables["annotation_stats"] = [
             stat.model_dump(by_alias=True, exclude_unset=True) for stat in annotation_stats
         ] if annotation_stats is not None else None
+
+    if caption is not Undefined:
+        variables["caption"] = caption
+
+    if expected_caption is not Undefined:
+        variables["expectedCaption"] = expected_caption
 
     return variables

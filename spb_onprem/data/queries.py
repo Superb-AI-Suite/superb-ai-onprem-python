@@ -43,6 +43,7 @@ class Schemas:
         id
         datasetId
         key
+        caption
         type
         scene {
             id
@@ -189,7 +190,8 @@ class Queries():
                 $data_id: ID!,
                 $key: String,
                 $meta: [DataMetaInput!],
-                $annotation_stats: [AnnotationStatInput!]
+                $annotation_stats: [AnnotationStatInput!],
+                $caption: String
             ) {{
             updateData(
                 datasetId: $dataset_id,
@@ -197,7 +199,39 @@ class Queries():
                 key: $key,
                 meta: $meta,
                 annotationStats: $annotation_stats,
-            ) 
+                caption: $caption,
+            )
+                {{
+                    {Schemas.DATA}
+                }}
+            }}
+        ''',
+        "variables": update_params,
+    }
+
+    # Guarded variant: only used when expected_caption is provided, so the
+    # unguarded UPDATE query never carries an undefined $expectedCaption.
+    UPDATE_WITH_EXPECTED_CAPTION = {
+        "name": "updateData",
+        "query": f'''
+            mutation updateData(
+                $dataset_id: ID!,
+                $data_id: ID!,
+                $key: String,
+                $meta: [DataMetaInput!],
+                $annotation_stats: [AnnotationStatInput!],
+                $caption: String,
+                $expectedCaption: String
+            ) {{
+            updateData(
+                datasetId: $dataset_id,
+                id: $data_id,
+                key: $key,
+                meta: $meta,
+                annotationStats: $annotation_stats,
+                caption: $caption,
+                expectedCaption: $expectedCaption,
+            )
                 {{
                     {Schemas.DATA}
                 }}
