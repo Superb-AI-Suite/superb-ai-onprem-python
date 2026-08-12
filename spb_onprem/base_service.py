@@ -225,7 +225,7 @@ class BaseService():
         except requests.exceptions.RequestException as e:
             print(f"An error occurred during the HTTP request: {str(e)}")
             raise BadRequestError(f"HTTP request failed: {str(e)}") from e
-        except ValueError:
+        except ValueError as e:
             raise BadRequestParameterError("Failed to parse the HTTP response as JSON.") from e
         except Exception as e:
             raise RequestError(f"An error occurred while processing the HTTP response: {str(e)}") from e
