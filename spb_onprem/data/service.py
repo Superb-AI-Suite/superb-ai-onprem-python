@@ -236,6 +236,10 @@ class DataService(BaseService):
             None,
             str,
         ] = Undefined,
+        caption_source: Union[
+            str,
+            UndefinedType,
+        ] = Undefined,
     ):
         """Update a data.
 
@@ -247,6 +251,8 @@ class DataService(BaseService):
             caption (Union[Optional[str], UndefinedType], optional): The caption of the data. Defaults to Undefined.
             expected_caption (Union[UndefinedType, None, str], optional): The expected caption of the data.
                 Omitted when Undefined, sent as null when None. Defaults to Undefined.
+            caption_source (Union[str, UndefinedType], optional): "GROUND_TRUTH" or
+                "VLM_GENERATED" (contract v2 slot). Defaults to Undefined.
 
         Returns:
             Data: The updated data.
@@ -266,6 +272,7 @@ class DataService(BaseService):
                 annotation_stats=annotation_stats,
                 caption=caption,
                 expected_caption=expected_caption,
+                caption_source=caption_source,
             )
         )
         data = Data.model_validate(response)

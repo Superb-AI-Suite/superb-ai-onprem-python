@@ -36,6 +36,10 @@ def update_params(
         UndefinedType,
         None,
         str
+    ] = Undefined,
+    caption_source: Union[
+        str,
+        UndefinedType
     ] = Undefined
 ):
     """Make the variables for the updateData query.
@@ -48,6 +52,8 @@ def update_params(
         annotation_stats (List[DataAnnotationStat]): The annotation stats of the data.
         caption (str): The caption of the data.
         expected_caption (str): The expected caption of the data.
+        caption_source (str): Which slot the caption writes to (contract v2):
+            "GROUND_TRUTH" or "VLM_GENERATED". Omitted = server default (VLM).
     """
     variables = {
         "dataset_id": dataset_id,
@@ -79,5 +85,8 @@ def update_params(
 
     if expected_caption is not Undefined:
         variables["expectedCaption"] = expected_caption
+
+    if caption_source is not Undefined:
+        variables["captionSource"] = caption_source
 
     return variables

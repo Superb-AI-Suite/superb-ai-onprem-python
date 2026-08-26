@@ -80,6 +80,31 @@ class TestUpdateParamsExpectedCaption:
 class TestUpdateQueryCaption:
     """The updateData GraphQL document must carry the caption variable."""
 
+    def test_caption_source_is_sent_with_the_v2_slot_name(self):
+        variables = update_params(
+            dataset_id="ds-1",
+            data_id="d-1",
+            caption="generated",
+            caption_source="VLM_GENERATED",
+        )
+        assert variables["captionSource"] == "VLM_GENERATED"
+
+    def test_caption_source_undefined_is_omitted(self):
+        variables = update_params(
+            dataset_id="ds-1",
+            data_id="d-1",
+            caption="generated",
+        )
+        assert "captionSource" not in variables
+
+    def test_update_queries_declare_caption_source_variable(self):
+        from spb_onprem.data.queries import Queries
+        assert "$captionSource: CaptionSource" in Queries.UPDATE["query"]
+        assert (
+            "$captionSource: CaptionSource"
+            in Queries.UPDATE_WITH_EXPECTED_CAPTION["query"]
+        )
+
     def test_update_query_declares_caption_variable(self):
         query = Queries.UPDATE["query"]
         assert "$caption: String" in query

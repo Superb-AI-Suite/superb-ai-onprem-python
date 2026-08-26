@@ -191,7 +191,8 @@ class Queries():
                 $key: String,
                 $meta: [DataMetaInput!],
                 $annotation_stats: [AnnotationStatInput!],
-                $caption: String
+                $caption: String,
+                $captionSource: CaptionSource
             ) {{
             updateData(
                 datasetId: $dataset_id,
@@ -200,6 +201,7 @@ class Queries():
                 meta: $meta,
                 annotationStats: $annotation_stats,
                 caption: $caption,
+                captionSource: $captionSource,
             )
                 {{
                     {Schemas.DATA}
@@ -221,7 +223,8 @@ class Queries():
                 $meta: [DataMetaInput!],
                 $annotation_stats: [AnnotationStatInput!],
                 $caption: String,
-                $expectedCaption: String
+                $expectedCaption: String,
+                $captionSource: CaptionSource
             ) {{
             updateData(
                 datasetId: $dataset_id,
@@ -231,6 +234,7 @@ class Queries():
                 annotationStats: $annotation_stats,
                 caption: $caption,
                 expectedCaption: $expectedCaption,
+                captionSource: $captionSource,
             )
                 {{
                     {Schemas.DATA}

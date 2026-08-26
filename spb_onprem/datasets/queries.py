@@ -17,6 +17,14 @@ class Schemas:
         updatedBy
         sliceCount
         dataCount
+        captionSettings {
+            dataDefinition
+            captionTargets {
+                target
+                terms
+            }
+            excludedTerms
+        }
     '''
 
 class Queries():
