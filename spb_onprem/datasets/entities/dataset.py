@@ -14,6 +14,12 @@ class Dataset(CustomBaseModel):
     name: Optional[str] = Field(None, description="데이터셋 이름")
     description: Optional[str] = Field(None, description="데이터셋 설명")
 
+    caption_settings: Optional[dict] = Field(
+        None,
+        alias="captionSettings",
+        description="캡션 설정 (dataDefinition / captionTargets / excludedTerms)",
+    )
+
     created_at: Optional[str] = Field(None, alias="createdAt", description="생성일시 (ISO 8601)")
     updated_at: Optional[str] = Field(None, alias="updatedAt", description="수정일시 (ISO 8601)")
     created_by: Optional[str] = Field(None, alias="createdBy", description="생성자")

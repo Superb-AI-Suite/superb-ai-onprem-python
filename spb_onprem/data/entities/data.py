@@ -20,6 +20,7 @@ class Data(CustomBaseModel):
     id: Optional[str] = Field(None, description="데이터 고유 식별자")
     dataset_id: Optional[str] = Field(None, alias="datasetId", description="상위 데이터셋 ID")
     key: Optional[str] = Field(None, description="사용자 정의 고유 키")
+    caption: Optional[str] = Field(None, description="데이터 캡션")
     
     # 데이터 타입 및 내용
     type: Optional[DataType] = Field(None, description="데이터 타입 (IMAGE, VIDEO 등)")

@@ -227,6 +227,19 @@ class DataService(BaseService):
             Optional[List[DataAnnotationStat]],
             UndefinedType,
         ] = Undefined,
+        caption: Union[
+            Optional[str],
+            UndefinedType,
+        ] = Undefined,
+        expected_caption: Union[
+            UndefinedType,
+            None,
+            str,
+        ] = Undefined,
+        caption_source: Union[
+            str,
+            UndefinedType,
+        ] = Undefined,
     ):
         """Update a data.
 
@@ -235,18 +248,31 @@ class DataService(BaseService):
             data_id (str): The data id.
             key (Union[str, UndefinedType], optional): The key of the data. Defaults to Undefined.
             meta (Union[List[DataMeta], UndefinedType], optional): The meta data. Defaults to Undefined.
+            caption (Union[Optional[str], UndefinedType], optional): The caption of the data. Defaults to Undefined.
+            expected_caption (Union[UndefinedType, None, str], optional): The expected caption of the data.
+                Omitted when Undefined, sent as null when None. Defaults to Undefined.
+            caption_source (Union[str, UndefinedType], optional): "GROUND_TRUTH" or
+                "VLM_GENERATED" (contract v2 slot). Defaults to Undefined.
 
         Returns:
             Data: The updated data.
         """
+        query = (
+            Queries.UPDATE_WITH_EXPECTED_CAPTION
+            if expected_caption is not Undefined
+            else Queries.UPDATE
+        )
         response = self.request_gql(
-            Queries.UPDATE,
-            variables=Queries.UPDATE["variables"](
+            query,
+            variables=query["variables"](
                 dataset_id=dataset_id,
                 data_id=data_id,
                 key=key,
                 meta=meta,
                 annotation_stats=annotation_stats,
+                caption=caption,
+                expected_caption=expected_caption,
+                caption_source=caption_source,
             )
         )
         data = Data.model_validate(response)
