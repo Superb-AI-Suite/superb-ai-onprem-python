@@ -7,5 +7,6 @@ class SceneType(str, Enum):
     This is used to determine the type of the file.
     """
     IMAGE = "IMAGE"
+    VIDEO = "VIDEO"
     MCAP = "MCAP"
     ETC = "ETC"
