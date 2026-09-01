@@ -136,6 +136,7 @@ class DiagnosisService(BaseService):
         model_id: Optional[str] = None,
         discriminator_key: Optional[str] = None,
         discriminator_values: Optional[List[str]] = None,
+        job_history_id: Optional[str] = None,
     ) -> Diagnosis:
         """diagnosis 생성.
 
@@ -179,6 +180,7 @@ class DiagnosisService(BaseService):
                 model_id=model_id,
                 discriminator_key=discriminator_key,
                 discriminator_values=discriminator_values,
+                job_history_id=job_history_id,
             ),
         )
         return Diagnosis.model_validate(response)
