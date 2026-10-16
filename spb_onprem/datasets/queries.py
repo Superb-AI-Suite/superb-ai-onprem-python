@@ -11,6 +11,7 @@ class Schemas:
         id
         name
         description
+        type
         createdAt
         createdBy
         updatedAt
@@ -73,8 +74,8 @@ class Queries():
     CREATE_DATASET = {
         "name": "createDataset",
         "query": f'''
-        mutation CreateDataset($name: String!, $description: String) {{
-            createDataset(name: $name, description: $description) {{
+        mutation CreateDataset($name: String!, $description: String, $type: DatasetType) {{
+            createDataset(name: $name, description: $description, type: $type) {{
                 {Schemas.DATASET}
             }}
         }}
