@@ -5,6 +5,7 @@ from spb_onprem.base_types import Undefined, UndefinedType
 from .queries import Queries
 from .entities import Dataset
 from .params.datasets import DatasetsFilter
+from .enums import DatasetType
 
 
 class DatasetService(BaseService):
@@ -78,6 +79,10 @@ class DatasetService(BaseService):
             str,
             UndefinedType,
         ] = Undefined,
+        type: Union[
+            Optional[DatasetType],
+            UndefinedType,
+        ] = Undefined,
     ):
         """
         Create a new dataset.
@@ -85,6 +90,9 @@ class DatasetService(BaseService):
         Args:
             name (str): The name of the dataset to create.
             description (Optional[str]): The description of the dataset to create.
+            type (Optional[DatasetType]): The dataset type. Pass DatasetType.VLM
+                for a VLM dataset; omit it (or pass None) for a Computer Vision
+                dataset. It cannot be changed after creation.
 
         Returns:
             Dataset: The created dataset object.
@@ -94,6 +102,7 @@ class DatasetService(BaseService):
             Queries.CREATE_DATASET["variables"](
                 name=name,
                 description=description,
+                type=type,
             ),
         )
         return Dataset.model_validate(response)

@@ -13,6 +13,7 @@ class ModelTaskType(str, Enum):
     OBJECT_DETECTION = "OBJECT_DETECTION"
     INSTANCE_SEGMENTATION = "INSTANCE_SEGMENTATION"
     OCR = "OCR"
+    VLM = "VLM"
 
 
 class ModelOrderField(str, Enum):

@@ -66,6 +66,7 @@ from .entities import (
     CommentStatus,
     ModelTaskType,
     ModelStatus,
+    DatasetType,
 )
 
 
@@ -207,6 +208,7 @@ __all__ = (
     "CommentStatus",
     "ModelTaskType",
     "ModelStatus",
+    "DatasetType",
     
     # Filters
     "DateTimeRangeFilterOption",

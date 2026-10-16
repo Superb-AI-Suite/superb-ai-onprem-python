@@ -12,6 +12,7 @@ from .data.entities import (
 )
 from .data.entities.comment import CommentStatus
 from .datasets.entities import Dataset
+from .datasets.enums import DatasetType
 from .slices.entities import Slice
 from .data.enums import (
     DataType,
@@ -125,4 +126,5 @@ __all__ = [
     "CommentStatus",
     "ModelTaskType",
     "ModelStatus",
+    "DatasetType",
 ]

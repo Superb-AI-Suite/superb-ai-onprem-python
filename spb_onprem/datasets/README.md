@@ -43,6 +43,21 @@ print(f"Created: {dataset.created_at}")
 print(f"ID: {dataset.id}")
 ```
 
+### Dataset Type
+```python
+from spb_onprem.datasets import DatasetType
+
+# Create a Vision-Language (VLM) dataset.
+# Omit `type` (or pass None) for a Computer Vision dataset.
+# The type is set only on creation and cannot be changed later.
+vlm_dataset = service.create_dataset(
+    name="VLM Fine-tuning Dataset",
+    type=DatasetType.VLM,
+)
+
+print(vlm_dataset.type)  # DatasetType.VLM (None for a Computer Vision dataset)
+```
+
 ### Dataset Management
 ```python
 # Update dataset information

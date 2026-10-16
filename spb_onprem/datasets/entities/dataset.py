@@ -1,6 +1,7 @@
 from typing import Optional
 from spb_onprem.base_model import CustomBaseModel, Field
 from spb_onprem.data.entities.data import Data
+from spb_onprem.datasets.enums import DatasetType
 
 
 class Dataset(CustomBaseModel):
@@ -13,6 +14,10 @@ class Dataset(CustomBaseModel):
     id: Optional[str] = Field(None, description="데이터셋 고유 식별자")
     name: Optional[str] = Field(None, description="데이터셋 이름")
     description: Optional[str] = Field(None, description="데이터셋 설명")
+    type: Optional[DatasetType] = Field(
+        None,
+        description="데이터셋 종류. VLM 데이터셋이면 DatasetType.VLM, Computer Vision 데이터셋이면 None",
+    )
 
     caption_settings: Optional[dict] = Field(
         None,
