@@ -14,6 +14,7 @@ class ModelTaskType(str, Enum):
     INSTANCE_SEGMENTATION = "INSTANCE_SEGMENTATION"
     OCR = "OCR"
     VLM = "VLM"
+    VISION_GENERATION = "VISION_GENERATION"
 
 
 class ModelOrderField(str, Enum):

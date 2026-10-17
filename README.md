@@ -18,6 +18,8 @@
 - **🤖 Model Tracking**: Register and monitor ML model performance
 - **📈 Analytics Reports**: Generate and visualize dataset analytics
 
+모델 생성·수정과 조회 필터에는 `ModelTaskType`을 사용합니다. `VLM`은 시각·언어 이해 모델을, `VISION_GENERATION`은 이미지·영상 생성 모델을 나타냅니다. 생성 모델 타입으로 API를 호출하려면 서버에도 해당 타입 지원이 반영되어 있어야 합니다.
+
 ## 🔧 Installation
 
 ### Step 1: Install the SDK
