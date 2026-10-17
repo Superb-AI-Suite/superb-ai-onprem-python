@@ -185,7 +185,15 @@ class BaseService():
                 logger.error(f"GraphQL Request Failed - {error_details}")
                 logger.error(f"Response body: {response_text}")
                 logger.error(f"Request URL: {e.response.url}")
-                logger.error(f"Request headers: {dict(e.response.request.headers) if e.response.request else 'N/A'}")
+                # Never log credentials: redact Authorization and other sensitive headers.
+                if e.response.request is not None:
+                    redacted = {
+                        k: ("<redacted>" if k.lower() in ("authorization", "cookie", "x-api-key") else v)
+                        for k, v in dict(e.response.request.headers).items()
+                    }
+                else:
+                    redacted = "N/A"
+                logger.error(f"Request headers: {redacted}")
             raise BadResponseError(f"HTTP request failed: {str(e)}") from e
         except BaseSDKError as e:
             raise e
