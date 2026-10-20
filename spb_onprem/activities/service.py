@@ -84,9 +84,17 @@ class ActivityService(BaseService):
         length: int = 10
     ) -> Tuple[List[Activity], Optional[str], int]:
         """Get activities.
-        
+
+        Activity definitions are platform-wide: most have no dataset, and
+        ``startJob(datasetId)`` decides where a run happens. The platform's
+        ``jobs`` query has no dataset argument, so ``dataset_id`` does not
+        filter (kept for compatibility). To list only the definitions made for
+        one dataset, pass ``ActivitiesFilter(must_filter=
+        ActivitiesFilterOptions(dataset_id_in=[...]))``; that leaves out the
+        platform-wide ones.
+
         Args:
-            dataset_id (str): The ID of the dataset to get activities for.
+            dataset_id (str): Not used to filter (see above).
             activity_filter (Optional[ActivitiesFilter]): The filter to apply to the activities.
             cursor (Optional[str]): The cursor to use for pagination.
             length (int): The number of activities to get.
