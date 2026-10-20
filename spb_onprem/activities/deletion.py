@@ -14,6 +14,8 @@ an ``<entity>_filter``; its progress shows in the Activity log. The singular
 - DELETE_MODEL / DELETE_DIAGNOSIS / DELETE_ANALYTICS_REPORT: the files the entity and
   its items reference, then the item rows and the entity row.
 - REMOVE_DATA_FROM_SLICE: takes the data out of the slice; it deletes no files.
+- DELETE_MODEL_DEPLOYMENT (``ModelDeploymentService.delete_model_deployments``):
+  removes the model servers of the deployments, then the deployment rows.
 
 The functions return the started ``ActivityHistory``. To block until it ends,
 call ``ActivityService.wait_for_activity(history.id)``.
@@ -45,6 +47,7 @@ class DeletionActivityType(str, Enum):
     DELETE_DATA = "DELETE_DATA"
     DELETE_SLICE = "DELETE_SLICE"
     REMOVE_DATA_FROM_SLICE = "REMOVE_DATA_FROM_SLICE"
+    DELETE_MODEL_DEPLOYMENT = "DELETE_MODEL_DEPLOYMENT"
 
 
 def require_id(value: Optional[str], name: str) -> str:
