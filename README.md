@@ -270,6 +270,13 @@ except UnknownError as e:
 ```
 
 
+## 🔐 Security notes
+
+- Platform credentials are sent only to the platform API host, never to presigned storage URLs.
+- SDK error messages and logs hide credentials and presigned URL signatures. urllib3's own
+  DEBUG logging (off by default) is not the SDK's: if you turn it on, presigned URLs, signature
+  included, can show up in your logs.
+
 ## 🧪 Requirements
 
 - Python >= 3.7

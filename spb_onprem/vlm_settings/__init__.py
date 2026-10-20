@@ -7,16 +7,23 @@ from .entities import (
     VLMEvidenceShape,
     VLMNumberRange,
     VLMQuestion,
-    VLMQuestionSet,
+    VLMSettings,
+    VLMSettingsChangeError,
+    VLMSettingsValidationError,
+    new_ulid,
 )
-from .params import VLMSettingsValidationError, collect_vlm_settings_violations, vlm_settings_payload
+from .params import (
+    collect_vlm_settings_transition_violations,
+    collect_vlm_settings_violations,
+    vlm_settings_payload,
+)
 from .service import VLMSettingsService
 
 __all__ = (
     "VLMSettingsService",
     "DatasetVLMSettings",
     "SliceVLMSettings",
-    "VLMQuestionSet",
+    "VLMSettings",
     "VLMQuestion",
     "VLMAnswerOption",
     "VLMNumberRange",
@@ -24,6 +31,9 @@ __all__ = (
     "VLMAnswerType",
     "VLMEvidenceShape",
     "VLMSettingsValidationError",
+    "VLMSettingsChangeError",
     "collect_vlm_settings_violations",
+    "collect_vlm_settings_transition_violations",
     "vlm_settings_payload",
+    "new_ulid",
 )

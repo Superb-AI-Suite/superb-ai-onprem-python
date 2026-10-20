@@ -13,7 +13,7 @@ from .vlm_settings import (
     VLMSettingsService,
     DatasetVLMSettings,
     SliceVLMSettings,
-    VLMQuestionSet,
+    VLMSettings,
     VLMQuestion,
     VLMAnswerOption,
     VLMNumberRange,
@@ -21,6 +21,7 @@ from .vlm_settings import (
     VLMAnswerType,
     VLMEvidenceShape,
     VLMSettingsValidationError,
+    VLMSettingsChangeError,
 )
 from .model_deployments import (
     ModelDeploymentService,
@@ -168,7 +169,7 @@ __all__ = (
     "VLMSettingsService",
     "DatasetVLMSettings",
     "SliceVLMSettings",
-    "VLMQuestionSet",
+    "VLMSettings",
     "VLMQuestion",
     "VLMAnswerOption",
     "VLMNumberRange",
@@ -176,6 +177,7 @@ __all__ = (
     "VLMAnswerType",
     "VLMEvidenceShape",
     "VLMSettingsValidationError",
+    "VLMSettingsChangeError",
     "ModelDeploymentService",
     "ModelDeployDefinitionService",
     "ModelDeployment",

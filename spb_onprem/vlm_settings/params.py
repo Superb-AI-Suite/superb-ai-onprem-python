@@ -1,14 +1,17 @@
 """Variables and client-side checks for the VLM settings queries."""
-import copy
 import math
 import re
-from typing import Any, Dict, List, Mapping, Optional, Union
-
-from pydantic import BaseModel
+from typing import Any, Dict, List, Mapping, Optional
 
 from spb_onprem.exceptions import BadParameterError
 
-from .entities import VLMAnswerType, VLMEvidenceShape, VLMQuestionSet
+from .entities import (
+    VLMAnswerType,
+    VLMEvidenceShape,
+    VLMSettings,
+    VLMSettingsChangeError,
+    VLMSettingsValidationError,
+)
 
 ULID_PATTERN = re.compile(r"^[0-7][0-9A-HJKMNP-TV-Z]{25}$")
 ISO_UTC_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$")
@@ -28,20 +31,23 @@ ANSWER_TYPES = frozenset(item.value for item in VLMAnswerType)
 EVIDENCE_SHAPES = frozenset(item.value for item in VLMEvidenceShape)
 
 
-class VLMSettingsValidationError(BadParameterError):
-    """The question set breaks a platform rule; nothing was sent.
-
-    Attributes:
-        violations (List[str]): One message per problem.
-    """
-
-    def __init__(self, violations: List[str]):
-        super().__init__("Invalid VLM settings: " + " ".join(violations))
-        self.violations = violations
-
-
 def _non_empty(value: Any) -> bool:
     return isinstance(value, str) and value.strip() != ""
+
+
+def _one_of(value: Any, allowed: frozenset) -> bool:
+    """True for a string in ``allowed``; False for anything else (also lists and dicts)."""
+    return isinstance(value, str) and value in allowed
+
+
+def _finite_number(value: Any) -> bool:
+    """A JSON number the platform reads as finite (an int too large for a float is not)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except OverflowError:
+        return False
 
 
 def collect_vlm_settings_violations(settings: Any) -> List[str]:
@@ -50,7 +56,7 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
     This covers the shape of the question set: keys, IDs, answer types,
     options, number ranges, evidence classes and timestamps. The platform also
     checks sizes and that an update only adds, deletes or restores (see
-    ``VLMQuestionSet``); those come back as ``InvalidInputError``.
+    ``VLMSettings``); those come back as ``InvalidInputError``.
     """
     if not isinstance(settings, Mapping):
         return ["settings must be an object."]
@@ -102,7 +108,7 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
                 if key in names:
                     violations.append(f'{at}: name "{name}" is duplicated.')
                 names.add(key)
-            if item.get("shape") not in EVIDENCE_SHAPES:
+            if not _one_of(item.get("shape"), EVIDENCE_SHAPES):
                 violations.append(f'{at}: unknown shape "{item.get("shape")}".')
             color = item.get("color")
             if "color" in item and not (isinstance(color, str) and HEX_COLOR_PATTERN.match(color)):
@@ -120,10 +126,10 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
         if not _non_empty(question.get("text")):
             violations.append(f"{label}: text must be a non-empty string.")
         answer_type = question.get("answerType")
-        if answer_type not in ANSWER_TYPES:
+        if not _one_of(answer_type, ANSWER_TYPES):
             violations.append(f'{label}: unknown answerType "{answer_type}".')
         options = question.get("options")
-        if answer_type in CHOICE_ANSWER_TYPES:
+        if _one_of(answer_type, CHOICE_ANSWER_TYPES):
             if not isinstance(options, list) or not options:
                 violations.append(f"{label}: choice questions need at least one option.")
         elif isinstance(options, list) and options:
@@ -160,7 +166,7 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
                     value = number_range.get(bound)
                     if value is None:
                         continue
-                    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                    if not _finite_number(value):
                         violations.append(f"{label}: numberRange.{bound} must be a finite number.")
                     else:
                         bounds[bound] = value
@@ -186,24 +192,94 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
     return violations
 
 
-def vlm_settings_payload(settings: Union[VLMQuestionSet, Mapping[str, Any]]) -> Dict[str, Any]:
+def _questions_by_id(settings: Optional[Mapping[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """Question id -> (question, its class id -> class), over current and deleted lists."""
+    index: Dict[str, Dict[str, Any]] = {}
+    if not isinstance(settings, Mapping):
+        return index
+    for question in list(settings.get("questions") or []) + list(settings.get("deletedQuestions") or []):
+        if not isinstance(question, Mapping) or not isinstance(question.get("id"), str):
+            continue
+        classes = {}
+        for item in list(question.get("evidenceClasses") or []) + list(question.get("deletedEvidenceClasses") or []):
+            if isinstance(item, Mapping) and isinstance(item.get("id"), str):
+                classes[item["id"]] = item
+        index[question["id"]] = {"question": question, "classes": classes}
+    return index
+
+
+def _options_key(options: Any) -> list:
+    pairs = [(o.get("id"), o.get("label")) for o in (options or []) if isinstance(o, Mapping)]
+    return sorted(pairs, key=lambda pair: str(pair[0]))
+
+
+def _range_key(number_range: Any) -> tuple:
+    bounds = number_range if isinstance(number_range, Mapping) else {}
+    return bounds.get("min"), bounds.get("max")
+
+
+def collect_vlm_settings_transition_violations(previous: Any, next_settings: Any) -> List[str]:
+    """Changes from the stored settings the platform refuses (same rules as zenith).
+
+    Questions and evidence classes are only added, deleted or restored: every
+    stored id must stay (current or deleted list), and a question's text,
+    answer type, options and number range, and a class's name and shape, must
+    not change. A class stays under the question it was made in.
+    """
+    violations: List[str] = []
+    before = _questions_by_id(previous)
+    after = _questions_by_id(next_settings)
+    for question_id, old in before.items():
+        current = after.get(question_id)
+        if current is None:
+            violations.append(f"question {question_id} was removed; delete it with delete_question instead.")
+            continue
+        old_q, new_q = old["question"], current["question"]
+        for key, label in (("text", "text"), ("answerType", "answer_type")):
+            if old_q.get(key) != new_q.get(key):
+                violations.append(f"question {question_id}: {label} cannot change.")
+        if _options_key(old_q.get("options")) != _options_key(new_q.get("options")):
+            violations.append(f"question {question_id}: options cannot change.")
+        if _range_key(old_q.get("numberRange")) != _range_key(new_q.get("numberRange")):
+            violations.append(f"question {question_id}: number_range cannot change.")
+        for class_id, old_class in old["classes"].items():
+            new_class = current["classes"].get(class_id)
+            if new_class is None:
+                violations.append(
+                    f"evidence class {class_id} of question {question_id} was removed; "
+                    "delete it with delete_evidence_class instead."
+                )
+                continue
+            for key in ("name", "shape"):
+                if old_class.get(key) != new_class.get(key):
+                    violations.append(f"evidence class {class_id}: {key} cannot change.")
+    return violations
+
+
+def vlm_settings_payload(settings: VLMSettings, check_change: bool = True) -> Dict[str, Any]:
     """The ``settings`` JSON to send, checked.
 
-    A ``VLMQuestionSet`` is sent with its camelCase keys and only the fields
-    that were set. A dict is sent as it is (it must use the camelCase keys).
+    Takes a ``VLMSettings`` (like the SDK filters take their filter class); for
+    a dict, use ``VLMSettings.model_validate(data)``. When the settings were
+    read from the platform, the change is checked against what was read.
 
     Raises:
         VLMSettingsValidationError: If the question set breaks a platform rule.
+        VLMSettingsChangeError: If it changes what cannot change.
     """
-    if isinstance(settings, BaseModel):
-        payload = settings.model_dump(mode="json", by_alias=True, exclude_unset=True)
-    elif isinstance(settings, Mapping):
-        payload = copy.deepcopy(dict(settings))
-    else:
-        raise VLMSettingsValidationError(["settings must be an object (a VLMQuestionSet or a dict)."])
+    if not isinstance(settings, VLMSettings):
+        raise VLMSettingsValidationError([
+            f"settings must be a VLMSettings (got {type(settings).__name__}); "
+            "for a dict use VLMSettings.model_validate(data)."
+        ])
+    payload = settings.to_payload()
     violations = collect_vlm_settings_violations(payload)
     if violations:
         raise VLMSettingsValidationError(violations)
+    if check_change and settings._saved is not None:
+        changes = collect_vlm_settings_transition_violations(settings._saved, payload)
+        if changes:
+            raise VLMSettingsChangeError(changes)
     return payload
 
 
@@ -222,11 +298,15 @@ def slice_vlm_settings_params(dataset_id: str, slice_id: str) -> dict:
 
 
 def create_dataset_vlm_settings_params(dataset_id: str, settings: Any) -> dict:
-    return {**dataset_vlm_settings_params(dataset_id), "settings": vlm_settings_payload(settings)}
+    # A new record: there is nothing stored to compare with.
+    return {**dataset_vlm_settings_params(dataset_id), "settings": vlm_settings_payload(settings, check_change=False)}
 
 
 def create_slice_vlm_settings_params(dataset_id: str, slice_id: str, settings: Any) -> dict:
-    return {**slice_vlm_settings_params(dataset_id, slice_id), "settings": vlm_settings_payload(settings)}
+    return {
+        **slice_vlm_settings_params(dataset_id, slice_id),
+        "settings": vlm_settings_payload(settings, check_change=False),
+    }
 
 
 def _with_version(params: dict, expected_updated_at: Optional[str]) -> dict:
@@ -240,13 +320,15 @@ def _with_version(params: dict, expected_updated_at: Optional[str]) -> dict:
 def update_dataset_vlm_settings_params(
     dataset_id: str, settings: Any, expected_updated_at: Optional[str] = None
 ) -> dict:
-    return _with_version(create_dataset_vlm_settings_params(dataset_id, settings), expected_updated_at)
+    params = {**dataset_vlm_settings_params(dataset_id), "settings": vlm_settings_payload(settings)}
+    return _with_version(params, expected_updated_at)
 
 
 def update_slice_vlm_settings_params(
     dataset_id: str, slice_id: str, settings: Any, expected_updated_at: Optional[str] = None
 ) -> dict:
-    return _with_version(create_slice_vlm_settings_params(dataset_id, slice_id, settings), expected_updated_at)
+    params = {**slice_vlm_settings_params(dataset_id, slice_id), "settings": vlm_settings_payload(settings)}
+    return _with_version(params, expected_updated_at)
 
 
 def delete_dataset_vlm_settings_params(dataset_id: str, expected_updated_at: Optional[str] = None) -> dict:

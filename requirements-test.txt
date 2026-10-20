@@ -2,6 +2,8 @@
 pytest>=7.0.0
 pytest-cov>=4.0.0
 pytest-mock>=3.10.0
+# Validates the SDK's GraphQL documents against the platform schema (MIT)
+graphql-core>=3.2,<4
 
 # Additional testing utilities
 coverage>=7.0.0

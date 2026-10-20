@@ -74,3 +74,26 @@ def test_presigned_request_error_hides_signature_and_credentials(capsys, caplog)
     # And no platform credentials were sent to the storage host in the first place.
     sent_headers = session.request.call_args.kwargs["headers"]
     assert "Authorization" not in sent_headers
+
+
+def test_debug_output_hides_presigned_signatures(capsys, monkeypatch):
+    """SDK_DEBUG_GQL=1 prints responses; an uploadURL's signature must not show."""
+    monkeypatch.setenv("SDK_DEBUG_GQL", "1")
+    service = _service()
+    upload_url = f"https://storage.example.test/bucket/key?{SIGNATURE}&X-Amz-Date=20261020"
+    session = Mock()
+    session.post.return_value.status_code = 200
+    session.post.return_value.elapsed = None
+    session.post.return_value.raise_for_status.return_value = None
+    session.post.return_value.json.return_value = {
+        "data": {"createContent": {"uploadURL": upload_url, "content": {"id": "c"}}}
+    }
+
+    with patch.object(BaseService, "requests_retry_session", return_value=session):
+        result = service.request_gql({"name": "createContent", "query": "mutation { x }"}, {})
+
+    out = capsys.readouterr().out
+    assert "SDK_DEBUG_GQL: response_json" in out
+    assert "storage.example.test/bucket/key?<redacted>" in out
+    assert SIGNATURE not in out
+    assert result["uploadURL"] == upload_url  # only the printout is redacted

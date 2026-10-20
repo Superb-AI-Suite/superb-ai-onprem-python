@@ -4,54 +4,91 @@
 the questions labelers answer, the answer format, the evidence classes they mark and the
 reasoning guides. These are the same calls the web app makes.
 
+Build the settings like an SDK filter: assemble the classes and pass them to the service.
+The SDK fills in the `id` (ULID) and `added_at` of new questions, options and evidence classes.
+
+## Create
+
 ```python
 from spb_onprem import (
-    VLMSettingsService, VLMQuestionSet, VLMQuestion, VLMAnswerOption, VLMEvidenceClass,
-    VLMAnswerType, VLMEvidenceShape,
+    VLMSettingsService, VLMSettings, VLMQuestion, VLMEvidenceClass,
+    VLMAnswerType, VLMEvidenceShape, VLMNumberRange,
 )
-from spb_onprem.exceptions import ConflictError
 
 service = VLMSettingsService()
 
-question_set = VLMQuestionSet(
+settings = VLMSettings(
     reasoning_guide="Look at the whole clip before answering.",
     questions=[
         VLMQuestion(
-            id="01JABCDEFGHJKMNPQRSTVWXYZ0",          # ULID, never reused
-            text="Is the robot holding an object?",
+            text="Does this object have a visible defect?",
+            answer_type=VLMAnswerType.BOOLEAN,
+            evidence_classes=[VLMEvidenceClass(name="defect", shape=VLMEvidenceShape.BOX)],
+        ),
+        VLMQuestion(
+            text="Which part is damaged?",
             answer_type=VLMAnswerType.SINGLE_CHOICE,
-            options=[
-                VLMAnswerOption(id="01JABCDEFGHJKMNPQRSTVWXYZ1", label="Yes"),
-                VLMAnswerOption(id="01JABCDEFGHJKMNPQRSTVWXYZ2", label="No"),
-            ],
-            reasoning_guide="Check the gripper.",
-            evidence_classes=[
-                VLMEvidenceClass(id="01JABCDEFGHJKMNPQRSTVWXYZ3", name="gripper",
-                                 shape=VLMEvidenceShape.BOX, color="#FF0000"),
-            ],
+            options=["Lid", "Body", "Label"],            # labels; ids are filled in
+            reasoning_guide="Pick the part with the largest damage.",
+        ),
+        VLMQuestion(
+            text="How many scratches?",
+            answer_type=VLMAnswerType.NUMBER,
+            number_range=VLMNumberRange(min=0, max=50),
         ),
     ],
-    deleted_questions=[],
 )
 
-# Dataset question set (only on a VLM dataset; fails with ConflictError if one exists)
-record = service.create_dataset_vlm_settings("dataset_123", question_set)
+record = service.create_dataset_vlm_settings("dataset_123", settings)   # only on a VLM dataset
 
 # A slice gets its own set; the platform never copies it. Create it from what you read.
-current = service.get_dataset_vlm_settings("dataset_123")      # None when there is none
-service.create_slice_vlm_settings("dataset_123", "slice_456", current.settings)
-
-# Update: send the whole set and the version you read (optimistic lock)
-settings = current.settings.model_dump(by_alias=True, exclude_unset=True)
-settings["reasoningGuide"] = "Answer in one sentence."
-try:
-    service.update_dataset_vlm_settings("dataset_123", settings, expected_updated_at=current.version)
-except ConflictError as error:
-    print("Changed since read:", error.details)               # read again and retry
-
-# Delete the whole set (a new one can be created afterwards)
-service.delete_slice_vlm_settings("dataset_123", "slice_456")
+dataset_record = service.get_dataset_vlm_settings("dataset_123")        # None when there is none
+service.create_slice_vlm_settings("dataset_123", "slice_456", dataset_record.settings)
 ```
+
+## Edit: read, change with helpers, update once
+
+The platform only lets you **add, delete or restore** questions and evidence classes. The helpers
+do the moving between lists and the `deleted_at` time for you:
+
+```python
+from spb_onprem.exceptions import ConflictError
+
+record = service.get_dataset_vlm_settings("dataset_123")
+settings = record.settings
+
+settings.add_question(text="Is the label readable?", answer_type=VLMAnswerType.BOOLEAN)
+settings.delete_question(old_question_id)        # -> deleted_questions, with deleted_at
+settings.restore_question(deleted_question_id)   # -> back to questions
+
+question = settings.get_question(question_id)
+question.add_evidence_class(name="scratch", shape=VLMEvidenceShape.BOX, color="#FF8800")
+question.delete_evidence_class(class_id)
+question.restore_evidence_class(deleted_class_id)
+question.set_evidence_class_color(class_id, "#00AAFF")   # color can change
+
+question.reasoning_guide = "Check the edges first."      # guides can change
+settings.reasoning_guide = "Answer in one sentence."
+
+try:
+    record = service.update_dataset_vlm_settings(
+        "dataset_123", settings, expected_updated_at=record.version,   # optimistic lock
+    )
+except ConflictError as error:
+    print("Someone saved in between:", error.details)                # read again and redo
+```
+
+The returned record is ready for the next edit. The same works for a slice
+(`get_slice_vlm_settings` → helpers → `update_slice_vlm_settings`).
+
+### What cannot change
+
+A question's `id`, `text`, `answer_type`, `options` and `number_range`, and an evidence
+class's `id`, `name` and `shape`, are fixed once created (labels already point at them).
+Assigning one raises `VLMSettingsChangeError` with the reason. Changing them in place
+(for example `question.options.append(...)`), removing a question or class from its list,
+or moving a class to another question is caught by `update_*` before sending, against the
+settings that were read. To change a question, delete it and add a new one.
 
 ## Functions
 
@@ -66,21 +103,25 @@ service.delete_slice_vlm_settings("dataset_123", "slice_456")
 | `update_slice_vlm_settings(dataset_id, slice_id, settings, expected_updated_at=None)` | `SliceVLMSettings` |
 | `delete_slice_vlm_settings(dataset_id, slice_id, expected_updated_at=None)` | `bool` |
 
-`settings` is a `VLMQuestionSet` or a dict with the camelCase keys
-(`reasoningGuide`, `questions`, `deletedQuestions`). A record's `version` is `updatedAt`, or
-`createdAt` when never updated; pass it as `expected_updated_at`. Leaving it out skips the check.
+| Helper | On |
+| --- | --- |
+| `add_question(question=None, **fields)`, `delete_question(id)`, `restore_question(id)`, `get_question(id)` | `VLMSettings` |
+| `add_evidence_class(evidence_class=None, *, name, shape, color)`, `delete_evidence_class(id)`, `restore_evidence_class(id)`, `set_evidence_class_color(id, color)`, `get_evidence_class(id)` | `VLMQuestion` |
+
+`settings` is a `VLMSettings`, like the SDK filters take their filter class; for a dict use
+`VLMSettings.model_validate(data)`. A record's `version` is `updatedAt`, or `createdAt` when
+never updated; pass it as `expected_updated_at`. Leaving it out skips the check.
 
 ## Rules
 
 - Answer types: `TEXT`, `SINGLE_CHOICE`, `MULTI_CHOICE` (need `options`), `NUMBER`
-  (optional `numberRange {min, max}`), `BOOLEAN`, `STRUCTURED_CAPTION`.
+  (optional `number_range`), `BOOLEAN`, `STRUCTURED_CAPTION`.
 - Evidence shapes: `BOX`, `POINT`, `NONE`. `color` is `#RRGGBB`.
-- Questions and evidence classes are only added, deleted (moved to `deletedQuestions` /
-  `deletedEvidenceClasses`) or restored. Text, answer type, options, number range, and a class's
-  name and shape never change. IDs are ULIDs and are never reused.
+- IDs are ULIDs and are never reused; option labels and evidence class names are unique
+  in a question (case-insensitive).
 - Unknown keys are refused. The SDK checks the shape before sending
-  (`VLMSettingsValidationError`, a `BadParameterError`, with `.violations`). Sizes and the
-  add/delete/restore rule are checked by the platform.
+  (`VLMSettingsValidationError`, a `BadParameterError`, with `.violations`); sizes are checked by
+  the platform.
 
 ## Errors from the platform
 
