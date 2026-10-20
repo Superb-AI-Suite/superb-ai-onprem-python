@@ -134,6 +134,11 @@ class DeploymentInvokeRequest:
                     jsonlib.loads(value)
                 except ValueError as error:
                     raise BadParameterError(f"A json part given as str must be valid JSON ({error}).") from None
+            else:
+                try:
+                    jsonlib.dumps(value, allow_nan=False)
+                except (TypeError, ValueError) as error:
+                    raise BadParameterError(f"A json part must be JSON serializable ({error}).") from None
         for name in FILE_PART_NAMES:
             setattr(self, name, [_as_file(item, name) for item in _as_list(getattr(self, name))])
         if not any(getattr(self, name) for name in PART_NAMES):
@@ -145,7 +150,7 @@ class DeploymentInvokeRequest:
         for value in self.text:
             parts.append(("text", (None, value.encode("utf-8"), "text/plain; charset=utf-8")))
         for value in self.json:
-            text = value if isinstance(value, str) else jsonlib.dumps(value, ensure_ascii=False)
+            text = value if isinstance(value, str) else jsonlib.dumps(value, ensure_ascii=False, allow_nan=False)
             parts.append(("json", (None, text.encode("utf-8"), "application/json")))
         total = sum(len(body) for _, (_, body, _) in parts)
         for name in FILE_PART_NAMES:

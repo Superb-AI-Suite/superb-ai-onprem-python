@@ -115,6 +115,8 @@ class TestRequest:
         ({"json": ["{not json"]}, "valid JSON"),
         ({"text": [1]}, "strings"),
         ({"image": [b"raw"]}, "from_bytes"),
+        ({"json": [{"bad": {1, 2}}]}, "serializable"),
+        ({"json": [{"nan": float("nan")}]}, "serializable"),
     ])
     def test_validation(self, kwargs, match):
         if match is None:
