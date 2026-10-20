@@ -123,6 +123,12 @@ class TestRequest:
         with pytest.raises(BadParameterError, match=match):
             DeploymentInvokeRequest(**kwargs)
 
+    def test_a_list_is_several_json_parts(self):
+        assert DeploymentInvokeRequest(json=[{"a": 1}, [1, 2]]).json == [{"a": 1}, [1, 2]]
+        assert DeploymentInvokeRequest(json={"a": 1}).json == [{"a": 1}]
+        files = DeploymentInvokeRequest(json=[[1, 2]]).multipart_files()
+        assert [body for _, (_, body, _) in files] == [b"[1, 2]"]
+
     def test_file_needs_exactly_one_source_and_a_name(self, tmp_path):
         with pytest.raises(BadParameterError):
             DeploymentInvokeFile(filename="a.png")

@@ -107,8 +107,9 @@ class DeploymentInvokeRequest:
     Args:
         text: Text parts (for example a prompt or a question).
         json: JSON parts, one JSON document each (model options such as a
-            seed). A dict, list, number or bool is serialized; a str is sent as
-            it is and must already be valid JSON.
+            seed). A dict, number or bool is serialized; a str is sent as it is
+            and must already be valid JSON. A list means several parts, so
+            send a JSON array as ``[[...]]`` or as a str.
         image / video / file: File parts: ``DeploymentInvokeFile`` or a path.
 
     Which parts a model reads is up to its server (see the template's
@@ -126,7 +127,7 @@ class DeploymentInvokeRequest:
         for value in self.text:
             if not isinstance(value, str):
                 raise BadParameterError("text parts must be strings.")
-        self.json = _as_list(self.json) if not isinstance(self.json, dict) else [self.json]
+        self.json = _as_list(self.json)
         for value in self.json:
             if isinstance(value, str):
                 try:

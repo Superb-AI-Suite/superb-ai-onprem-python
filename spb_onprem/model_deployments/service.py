@@ -28,6 +28,7 @@ from .entities import (
 from .enums import ENDED_MODEL_DEPLOYMENT_STATUSES, ModelDeploymentStatus
 from .invoke import DeploymentInvokeRequest, DeploymentInvokeResult, invoke_error, parse_multipart
 from .params import ModelDeploymentFilter, ModelDeploymentOrderBy
+from .params.filters import check_deployment_filter_keys
 from .params.deployments import ExpiresAt
 from .queries import Queries
 
@@ -54,8 +55,8 @@ class ModelDeploymentService(BaseService):
     - ``start_model_deployment``: a STOPPED, FAILED or EXPIRED deployment runs
       again as a new generation (DEPLOY_MODEL).
     - ``delete_model_deployments``: one DELETE_MODEL_DEPLOYMENT activity for all
-      targets. A deployment whose server is gone is deleted at once; the others
-      become DELETING until their server is removed.
+      targets. When it runs, a deployment whose server is gone is deleted at
+      once; the others become DELETING until their server is removed.
 
     Creating, updating, stopping, starting, pinning and deleting need a dataset
     admin (Owner, WorkspaceAdmin or DATASET-ADMIN); another member's delete is
@@ -292,39 +293,48 @@ class ModelDeploymentService(BaseService):
     ) -> ActivityHistory:
         """Start deleting deployments.
 
-        Starts one ``DELETE_MODEL_DEPLOYMENT`` activity for every deployment that
-        ``deployment_ids`` or ``deployment_filter`` selects (pass exactly one).
-        The platform picks the targets when the request arrives: a deployment
-        whose server is gone (STOPPED, FAILED, EXPIRED) is deleted at once, and
-        the others become DELETING until the activity removes their server.
-        Runtime records go with the deployment. Running deployments may be
-        deleted directly; stopping them first is not required.
+        Starts one ``DELETE_MODEL_DEPLOYMENT`` activity with ``deployment_ids``
+        or ``deployment_filter`` as its filter (pass exactly one). The request
+        changes no deployment. When the activity runs, it picks the deployments
+        that match at that moment: one whose server is gone (STOPPED, FAILED,
+        EXPIRED) is deleted at once, the others become DELETING and are deleted
+        when their server is removed. Runtime records go with the deployment.
+        Running deployments may be deleted without a stop.
+
+        Nothing matching (or already deleted) is a success that deletes
+        nothing. A condition the activity cannot handle (for example a filter
+        the platform refuses, or a server that cannot be removed) makes the
+        activity FAILED in the Activity log; it is not an error of this call.
+        Use ``ActivityService.wait_for_activity`` and check its ``status``.
 
         A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
-        DATASET-ADMIN) submits it as AWAITING_APPROVAL; nothing changes until
-        an admin approves. To block until it ends, use
-        ``ActivityService.wait_for_activity``.
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL; nothing happens until
+        an admin approves.
 
         Args:
             dataset_id (str): The dataset ID.
             deployment_ids (Optional[List[str]]): The deployment IDs.
             deployment_filter (Optional[ModelDeploymentFilter | dict]): A
                 ModelDeploymentFilter (``{"must": ..., "not": ...}``). A dict is
-                sent as it is, in the GraphQL field names. A filter without a
-                condition is refused. A filter with only ``not`` selects every
-                deployment except those.
+                sent as it is, in the GraphQL field names (``idIn``,
+                ``nameContains``, ``statusIn``, ``definitionIdIn``). A filter
+                without a condition is refused. A filter with only ``not``
+                selects every deployment except those.
 
         Raises:
             BadParameterError: If dataset_id is missing.
             BadDeletionTargetError: If none or both of deployment_ids and
-                deployment_filter are given, or they are empty (also a
-                ValueError).
-            InvalidInputError: If the platform refuses the filter.
+                deployment_filter are given, they are empty, or a dict filter
+                has an unknown key (also a ValueError).
+            InvalidInputError / ForbiddenError: If the platform refuses the
+                request itself (for example no role in the dataset).
 
         Returns:
             ActivityHistory: The started activity.
         """
         require_id(dataset_id, "dataset_id")
+        if isinstance(deployment_filter, Mapping):
+            check_deployment_filter_keys(deployment_filter, "deployment_filter")
         parameters = {
             "dataset_id": dataset_id,
             "deployment_filter": deletion_filter(

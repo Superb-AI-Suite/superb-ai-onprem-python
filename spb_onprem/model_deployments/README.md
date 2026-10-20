@@ -100,9 +100,15 @@ ActivityService().wait_for_activity(history.id, dataset_id="dataset_123")
 
 - Stop: PENDING, STARTING, READY or UNRESPONSIVE. Start: STOPPED, FAILED or EXPIRED. Otherwise
   `ConflictError`.
-- Delete does not need a stop first. A deployment whose server is gone is deleted at once; the
-  others become DELETING until the activity removes their server. A filter without a condition is
-  refused. A non-admin's delete is submitted as `AWAITING_APPROVAL`.
+- Delete does not need a stop first. The request changes nothing: when the activity runs, it picks
+  the deployments that match then. A deployment whose server is gone is deleted at once; the others
+  become DELETING until the activity removes their server.
+- Nothing matching (or already deleted) is a success. What the activity cannot handle (a filter the
+  platform refuses, a server that cannot be removed) shows as a FAILED activity, not as an error of
+  `delete_model_deployments`; check `wait_for_activity(...).status`.
+- A filter without a condition, or a dict filter with keys other than `must`/`not` and `idIn`,
+  `nameContains`, `statusIn`, `definitionIdIn`, is refused before sending (`BadDeletionTargetError`).
+  A non-admin's delete is submitted as `AWAITING_APPROVAL`.
 - Status and history: `get_model_deployment(...)` (with `runtime`, the current generation),
   `get_model_deployments(dataset_id, filter=..., order_by=..., cursor=..., length=...)` (pages of up
   to 100, without `runtime`), `get_model_deployment_runtimes(...)` (every generation: image,

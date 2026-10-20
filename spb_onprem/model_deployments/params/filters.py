@@ -1,7 +1,7 @@
 from typing import Any, List, Mapping, Optional, Union
 
 from spb_onprem.base_model import CustomBaseModel, Field
-from spb_onprem.exceptions import BadParameterError
+from spb_onprem.exceptions import BadDeletionTargetError, BadParameterError
 from spb_onprem.models.enums import OrderDirection
 
 from ..enums import ModelDeploymentOrderField, ModelDeploymentStatus
@@ -48,3 +48,25 @@ def filter_variable(
     if isinstance(value, Mapping):
         return dict(value)
     raise BadParameterError(f"{name} must be {expected.__name__} or a dict.")
+
+
+FILTER_KEYS = ("must", "not")
+FILTER_OPTION_KEYS = ("idIn", "nameContains", "statusIn", "definitionIdIn")
+
+
+def check_deployment_filter_keys(value: Mapping[str, Any], name: str) -> None:
+    """Refuse a dict filter with keys a ModelDeploymentFilter does not have.
+
+    The platform checks the deletion filter only when the activity runs (C20),
+    so a typo would end as a failed activity. The SDK refuses it before sending.
+    """
+    unknown = [key for key in value if key not in FILTER_KEYS]
+    for side in FILTER_KEYS:
+        options = value.get(side)
+        if isinstance(options, Mapping):
+            unknown += [f"{side}.{key}" for key in options if key not in FILTER_OPTION_KEYS]
+    if unknown:
+        raise BadDeletionTargetError(
+            f"{name} has unknown keys {sorted(unknown)}; use {', '.join(FILTER_KEYS)} with "
+            f"{', '.join(FILTER_OPTION_KEYS)} (GraphQL field names)."
+        )

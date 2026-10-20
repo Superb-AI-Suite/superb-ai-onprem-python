@@ -3,7 +3,8 @@
 It answers the GraphQL documents the SDK sends (through ``BaseService.request_gql``)
 with the rules of zenith (branch fde-85-model-task-type-vlm) that the SDK relies on:
 status transitions of stop/start/delete, template visibility and deletion
-(C17 revision 3), and DELETE_MODEL_DEPLOYMENT through startJob (C17 revision 2).
+(C17 revision 3), and DELETE_MODEL_DEPLOYMENT through startJob: the request only
+records the activity and the targets are picked when it runs (C20).
 Data is synthetic.
 """
 import copy
@@ -265,22 +266,33 @@ class FakePlatform:
 
     # activities -----------------------------------------------------------------
     def startJob(self, datasetId, jobType, parameters=None, sliceId=None, **_):
+        """C20: the request only records the activity; nothing is checked or changed yet."""
         if jobType != "DELETE_MODEL_DEPLOYMENT":
             raise PlatformError("BAD_REQUEST", f"Unexpected job type {jobType}.")
-        if parameters.get("dataset_id") != datasetId:
-            raise PlatformError("BAD_REQUEST", "Parameter dataset_id must be the activity dataset.")
-        must = parameters["deployment_filter"].get("must") or {}
-        ids = [r["id"] for r in self.modelDeployments(datasetId, {"must": must})["modelDeployments"]]
         history = {"id": f"history-{len(self.jobs) + 1}", "jobId": "job-delete-deployment",
                    "datasetId": datasetId, "status": "PENDING" if self.admin else "AWAITING_APPROVAL",
-                   "parameters": parameters, "meta": {"deploymentIds": ids}}
+                   "parameters": parameters}
         self.jobs.append(history)
-        if self.admin:
-            for deployment_id in ids:
-                if self.deployments[deployment_id]["status"] in ENDED:
-                    del self.deployments[deployment_id]
-                else:
-                    self.deployments[deployment_id]["status"] = "DELETING"
+        return history
+
+    def run_deletion_activity(self, history_id: str) -> dict:
+        """What the DELETE_MODEL_DEPLOYMENT activity does when it runs (beginModelDeploymentDeletion)."""
+        history = next(job for job in self.jobs if job["id"] == history_id)
+        assert history["status"] == "PENDING", "an activity awaiting approval does not run"
+        parameters = history["parameters"]
+        deployment_filter = parameters.get("deployment_filter") or {}
+        unknown = set(deployment_filter) - {"must", "not"} or set(deployment_filter.get("must") or {}) - {
+            "idIn", "nameContains", "statusIn", "definitionIdIn"}
+        if parameters.get("dataset_id") != history["datasetId"] or unknown:
+            history["status"] = "FAILED"
+            return history
+        ids = [r["id"] for r in self.modelDeployments(history["datasetId"], deployment_filter)["modelDeployments"]]
+        for deployment_id in ids:
+            if self.deployments[deployment_id]["status"] in ENDED:
+                del self.deployments[deployment_id]
+            else:
+                self.deployments[deployment_id]["status"] = "DELETING"
+        history["status"] = "SUCCESS"
         return history
 
     # what the platform would do later --------------------------------------------

@@ -318,7 +318,7 @@ class TestLifecycle:
 
 
 class TestDelete:
-    def test_ids_start_one_activity(self, platform, deployments):
+    def test_ids_start_one_activity_that_picks_targets_when_it_runs(self, platform, deployments):
         running = deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "running")
         stopped = deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "stopped")
         platform.runtime_reports(running.id, "READY")
@@ -335,25 +335,40 @@ class TestDelete:
                            "deployment_filter": {"must": {"idIn": [running.id, stopped.id]}}},
         }
         assert len(platform.jobs) == 1
+        # C20: the request changes nothing.
+        assert deployments.get_model_deployment(DATASET, running.id).status == ModelDeploymentStatus.READY
+        assert deployments.get_model_deployment(DATASET, stopped.id).status == ModelDeploymentStatus.STOPPED
+
+        platform.run_deletion_activity(history.id)
+
         # A stopped deployment goes at once; a running one waits for its server to be removed.
         assert deployments.get_model_deployment(DATASET, stopped.id) is None
         assert deployments.get_model_deployment(DATASET, running.id).status == ModelDeploymentStatus.DELETING
+
+    def test_missing_targets_are_not_refused(self, platform, deployments):
+        history = deployments.delete_model_deployments(DATASET, deployment_ids=["01JGONE0000000000000000000"])
+
+        assert history.status == ActivityStatus.PENDING
+        assert platform.run_deletion_activity(history.id)["status"] == "SUCCESS"
 
     def test_filter_model(self, platform, deployments):
         deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "old-1")
         deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "new-1")
 
-        deployments.delete_model_deployments(
+        history = deployments.delete_model_deployments(
             DATASET,
             deployment_filter=ModelDeploymentFilter(must_filter=ModelDeploymentFilterOptions(name_contains="old")),
         )
+        platform.run_deletion_activity(history.id)
 
         assert _variables(platform)["parameters"]["deployment_filter"] == {"must": {"nameContains": "old"}}
         assert [d["name"] for d in platform.deployments.values() if d["status"] == "DELETING"] == ["old-1"]
 
     def test_dict_filter_is_sent_as_it_is(self, platform, deployments):
-        deployments.delete_model_deployments(DATASET, deployment_filter={"must": {"statusIn": ["FAILED"]}})
-        assert _variables(platform)["parameters"]["deployment_filter"] == {"must": {"statusIn": ["FAILED"]}}
+        deployments.delete_model_deployments(DATASET, deployment_filter={"must": {"statusIn": ["FAILED"]},
+                                                                         "not": {"idIn": ["x"]}})
+        assert _variables(platform)["parameters"]["deployment_filter"] == {
+            "must": {"statusIn": ["FAILED"]}, "not": {"idIn": ["x"]}}
 
     @pytest.mark.parametrize("kwargs", [
         {},
@@ -365,6 +380,10 @@ class TestDelete:
         {"deployment_filter": {"must": {"idIn": []}}},
         {"deployment_filter": {"must": {"nameContains": "  "}}},
         {"deployment_filter": ModelDeploymentFilter()},
+        # Checked by the platform only when the activity runs (C20), so the SDK refuses them first.
+        {"deployment_filter": {"must": {"id_in": ["a"]}}},
+        {"deployment_filter": {"must_filter": {"idIn": ["a"]}}},
+        {"deployment_filter": {"not": {"nameIn": ["a"]}}},
     ])
     def test_refused_targets(self, platform, deployments, kwargs):
         with pytest.raises(BadDeletionTargetError):
