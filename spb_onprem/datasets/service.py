@@ -153,9 +153,11 @@ class DatasetService(BaseService):
         deleting the dataset at once. The activity deletes, with their files,
         the dataset's model deployments and diagnoses, then its models,
         analytics reports, slices and data, and then the dataset. A deployment
-        does not block it; it is deleted first. The server refuses the request
-        while a training, diagnosis or analytics report of the dataset is still
-        running. To block until the activity ends, use
+        does not block it; it is deleted first. The request is not refused for
+        the state of what it deletes: if something cannot be deleted when the
+        activity runs (e.g. a training, diagnosis or analytics report is still
+        running), the activity ends FAILED (see its ``status`` and ``meta``).
+        To block until the activity ends, use
         ``ActivityService.wait_for_activity``.
         A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
         DATASET-ADMIN) submits it as AWAITING_APPROVAL.

@@ -156,9 +156,12 @@ activity per target; pass all the IDs to the plural function instead.
 - The history is always truthy, so `if service.delete_x(...)` keeps running, but `bool(...)` no
   longer tells whether anything was deleted (and `== True` is False). Use
   `ActivityService().wait_for_activity(history.id)` and check its `status`.
-- The deletion functions never return `False` any more. Errors from the server's
-  request-time checks (`CONFLICT` for running targets or models with deployments,
-  `NOT_FOUND`, `BAD_REQUEST`) are raised as `UnknownError` / `NotFoundError`.
+- The deletion functions never return `False` any more. The request is checked only for its
+  form (a malformed filter, such as an empty `idIn`, raises `InvalidInputError`). The targets
+  are found when the activity runs: if none match or they are already deleted, the activity
+  succeeds without deleting anything; a target that cannot be deleted then (still running, a
+  model used by a deployment) is not refused at request time but makes the activity `FAILED`
+  (see its `status` and `meta`).
 - `ActivityStatus.CANCELLED` is now an alias of `CANCELED`; its value is `"CANCELED"`, so
   comparing a status with the string `"CANCELLED"` is False.
 - Progress and errors show in the Activity log. A non-admin of the dataset submits the

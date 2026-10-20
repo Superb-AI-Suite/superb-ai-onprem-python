@@ -199,6 +199,10 @@ class SliceService(BaseService):
         each slice's annotation files, then the slice; the data stay in the
         dataset. To block until it ends, use
         ``ActivityService.wait_for_activity``.
+        Targets are found when the activity runs. If none match or they are
+        already deleted, it succeeds without deleting anything. A target that
+        cannot be deleted then (for example a storage error) is not refused at request time; the
+        activity ends FAILED (see its ``status`` and ``meta``).
         A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
         DATASET-ADMIN) submits it as AWAITING_APPROVAL.
 
@@ -215,8 +219,9 @@ class SliceService(BaseService):
             BadDeletionTargetError: If none or both of slice_ids and
                 slice_filter are given, or they are empty (also a
                 ValueError).
-            UnknownError / NotFoundError: If the server refuses the request at
-                once (for example the request is not allowed).
+            InvalidInputError: If the platform refuses the filter (format
+                checks at request time, e.g. an empty ``idIn``).
+            UnknownError: Other request errors (e.g. no role in the dataset).
 
         Returns:
             ActivityHistory: The started activity.

@@ -305,6 +305,8 @@ class DataService(BaseService):
         of them. To block until it ends, use ``ActivityService.wait_for_activity``.
         A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
         DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+        The data are found when the activity runs; if none match, it succeeds
+        without changing anything.
 
         Args:
             dataset_id (str): The dataset id.
@@ -383,6 +385,8 @@ class DataService(BaseService):
         ``ActivityService.wait_for_activity``. A caller who is not an admin of
         the dataset (Owner, WorkspaceAdmin or DATASET-ADMIN) submits it as
         AWAITING_APPROVAL.
+        The data are found when the activity runs; if none match, it succeeds
+        without changing anything.
 
         Args:
             dataset_id (str): The dataset id.
