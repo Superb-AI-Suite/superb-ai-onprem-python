@@ -12,7 +12,7 @@ from spb_onprem.activities.deletion import (
     start_deletion_activity,
 )
 from spb_onprem.activities.entities import ActivityHistory
-from spb_onprem.base_service import BaseService
+from spb_onprem.base_service import BaseService, redact_url_queries
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError, BadResponseError
 from spb_onprem.models.entities import Model
@@ -404,8 +404,10 @@ class ModelDeploymentService(BaseService):
                 allow_redirects=False,
             )
         except requests.exceptions.RequestException as error:
-            # The exception text has the URL only (no credentials, no query).
-            raise BadResponseError(f"Model deployment invoke failed: {type(error).__name__}: {error}") from error
+            # Same rule as BaseService.request: hide URL queries and keep no exception chain.
+            raise BadResponseError(
+                f"Model deployment invoke failed: {type(error).__name__}: {redact_url_queries(str(error), url)}"
+            ) from None
         if response.status_code != 200:
             if 300 <= response.status_code < 400:
                 raise BadResponseError(

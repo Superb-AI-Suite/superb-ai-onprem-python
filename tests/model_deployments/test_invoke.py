@@ -237,9 +237,11 @@ class TestCall:
         service = _service()
         with patch("spb_onprem.model_deployments.service.requests.post",
                    side_effect=requests.exceptions.ConnectionError("refused")) as post:
-            with pytest.raises(BadResponseError, match="ConnectionError"):
+            with pytest.raises(BadResponseError, match="ConnectionError") as raised:
                 service.invoke_model_deployment("d", "x", DeploymentInvokeRequest(text="hi"))
         post.assert_called_once()
+        # Same rule as BaseService.request: no exception chain.
+        assert raised.value.__cause__ is None and raised.value.__suppress_context__
 
     @pytest.mark.parametrize("content_type,body,match", [
         ("application/json", b"{}", "multipart/form-data"),

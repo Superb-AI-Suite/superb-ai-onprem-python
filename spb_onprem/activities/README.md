@@ -142,6 +142,7 @@ takes data out of a slice). Each returns the started `ActivityHistory`.
 | `DataService.delete_data` | `DELETE_DATA` | `dataset_id`, `data_filter` |
 | `DataService.remove_data_from_slice` | `REMOVE_DATA_FROM_SLICE` | `dataset_id`, `slice_id`, `data_filter` |
 | `DatasetService.delete_dataset` | `DELETE_DATASET` | `dataset_id` |
+| `ModelDeploymentService.delete_model_deployments` | `DELETE_MODEL_DEPLOYMENT` | `dataset_id`, `deployment_filter` |
 
 IDs are sent as the filter `{"must": {"idIn": [...]}}`. A filter model is sent with
 its camelCase aliases (`{"must": {...}, "not": {...}}`). The deprecated singular

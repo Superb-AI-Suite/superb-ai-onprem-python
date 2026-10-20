@@ -130,7 +130,7 @@ Ready for more? Check out our [comprehensive documentation](#-documentation) bel
 
 Deleting no longer removes rows at once. Each call starts **one** activity
 (`DELETE_MODEL`, `DELETE_DIAGNOSIS`, `DELETE_ANALYTICS_REPORT`, `DELETE_SLICE`,
-`DELETE_DATA`, `REMOVE_DATA_FROM_SLICE`, `DELETE_DATASET`) and returns its
+`DELETE_DATA`, `REMOVE_DATA_FROM_SLICE`, `DELETE_DATASET`, `DELETE_MODEL_DEPLOYMENT`) and returns its
 `ActivityHistory` instead of `bool` (or `Data` for `remove_data_from_slice`). The
 delete activities also delete the files in storage; `REMOVE_DATA_FROM_SLICE` only
 takes data out of a slice and deletes no files.
