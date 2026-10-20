@@ -18,7 +18,9 @@ def datetime_variable(value: Optional[ExpiresAt], name: str) -> Optional[str]:
     """An ISO 8601 UTC time for a GraphQL DateTime.
 
     A ``timedelta`` is counted from now. A naive ``datetime`` is local time.
-    A ``str`` is sent as it is.
+    A ``str`` must be ISO 8601 with a UTC offset or ``Z``; it is sent as it is.
+    One without an offset is refused (the platform would read it in its own
+    time zone).
     """
     if value is None:
         return None
@@ -29,6 +31,15 @@ def datetime_variable(value: Optional[ExpiresAt], name: str) -> Optional[str]:
     if isinstance(value, datetime):
         return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
     if isinstance(value, str) and value.strip():
+        text = value.strip()
+        try:
+            parsed = datetime.fromisoformat(text[:-1] + "+00:00" if text.endswith(("Z", "z")) else text)
+        except ValueError:
+            raise BadParameterError(f"{name} must be an ISO 8601 time (got {value!r}).") from None
+        if parsed.tzinfo is None:
+            raise BadParameterError(
+                f"{name} needs a UTC offset or Z (got {value!r}); e.g. 2026-10-20T09:00:00Z."
+            )
         return value
     raise BadParameterError(f"{name} must be a datetime, a timedelta or an ISO 8601 string.")
 

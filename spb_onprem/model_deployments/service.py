@@ -121,7 +121,7 @@ class ModelDeploymentService(BaseService):
         self,
         dataset_id: str,
         deployment_id: str,
-        until: Collection[ModelDeploymentStatus] = (ModelDeploymentStatus.READY,),
+        until: Union[ModelDeploymentStatus, str, Collection[ModelDeploymentStatus]] = (ModelDeploymentStatus.READY,),
         timeout: float = 1800.0,
         poll_interval: float = 10.0,
     ) -> Optional[ModelDeployment]:
@@ -133,7 +133,8 @@ class ModelDeploymentService(BaseService):
         ``status`` of what it returns.
 
         Args:
-            until: Statuses to wait for. Defaults to READY.
+            until: A status or statuses to wait for (enum values or their
+                names, e.g. ``"READY"``). Defaults to READY.
             timeout: Seconds to wait in total. Defaults to 1800 (loading a large
                 model can take minutes).
             poll_interval: Seconds between two reads. Defaults to 10.
@@ -146,7 +147,14 @@ class ModelDeploymentService(BaseService):
             raise ValueError("timeout must be positive.")
         if poll_interval <= 0:
             raise ValueError("poll_interval must be positive.")
-        targets = {ModelDeploymentStatus(status) for status in until}
+        if isinstance(until, (str, ModelDeploymentStatus)):
+            until = (until,)
+        try:
+            targets = {ModelDeploymentStatus(status) for status in until}
+        except (TypeError, ValueError):
+            raise BadParameterError(
+                f"until must be ModelDeploymentStatus values or their names (got {until!r})."
+            ) from None
         deadline = time.monotonic() + timeout
         while True:
             deployment = self.get_model_deployment(dataset_id, deployment_id)
@@ -189,7 +197,9 @@ class ModelDeploymentService(BaseService):
                 template's base model (no fine-tuned weights).
             description: Free text.
             expires_at: When the server is removed: a datetime, an ISO 8601
-                string, or a timedelta from now. None never expires.
+                string, or a timedelta from now. None never expires. A naive
+                datetime (no tzinfo) is read as this machine's local time; a
+                string needs a UTC offset or ``Z`` (one without is refused).
             gpu_types: GPU product labels the server may run on (for example
                 ``["NVIDIA-A100-SXM4-80GB"]``). None or empty: any GPU.
             gpu_count: 1 to 8. Defaults to 1.
@@ -273,7 +283,8 @@ class ModelDeploymentService(BaseService):
         Args:
             expires_at: A new expiry (datetime, ISO 8601 string or timedelta
                 from now). Without it, a remaining expiry is kept and a passed
-                one is renewed for the same duration.
+                one is renewed for the same duration. A naive datetime is read
+                as local time; a string needs a UTC offset or ``Z``.
         """
         response = self.request_gql(
             Queries.START_MODEL_DEPLOYMENT,

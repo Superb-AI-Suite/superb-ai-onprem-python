@@ -197,11 +197,26 @@ class TestLifecycle:
         expires = datetime.fromisoformat(sent["expiresAt"].replace("Z", "+00:00"))
         assert timedelta(hours=2) <= expires - before < timedelta(hours=2, minutes=1)
 
-    @pytest.mark.parametrize("bad", [timedelta(0), timedelta(seconds=-1), 5, ""])
+    @pytest.mark.parametrize("bad", [
+        timedelta(0), timedelta(seconds=-1), 5, "",
+        "2026-12-31T09:00:00",          # no offset: refused
+        "next tuesday",
+    ])
     def test_bad_expiry_is_refused_before_sending(self, platform, deployments, bad):
         with pytest.raises(BadParameterError):
             deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "x", expires_at=bad)
         assert platform.requests == []
+
+    @pytest.mark.parametrize("value", ["2026-12-31T09:00:00Z", "2026-12-31T18:00:00+09:00", "2026-12-31T09:00:00.000Z"])
+    def test_expiry_string_with_offset_is_sent_as_is(self, platform, deployments, value):
+        deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "x", expires_at=value)
+        assert _variables(platform)["expiresAt"] == value
+
+    def test_naive_datetime_is_local_time(self, platform, deployments):
+        local = datetime(2026, 12, 31, 9, 0, 0)
+        deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "x", expires_at=local)
+        sent = datetime.fromisoformat(_variables(platform)["expiresAt"].replace("Z", "+00:00"))
+        assert sent == local.astimezone(timezone.utc)
 
     def test_model_of_another_template_is_refused(self, platform, deployments):
         platform.models["model-1"]["definitionId"] = "other-template"
@@ -440,6 +455,15 @@ class TestWait:
     def test_timeout(self, platform, deployments):
         with pytest.raises(TimeoutError, match="last status: STARTING"):
             self._wait(deployments, ["STARTING"] * 10, timeout=20, poll_interval=10)
+
+    @pytest.mark.parametrize("until", ["READY", ModelDeploymentStatus.READY, ["READY"]])
+    def test_until_takes_one_status_or_a_name(self, platform, deployments, until):
+        result, _ = self._wait(deployments, ["STARTING", "READY"], until=until, poll_interval=1)
+        assert result.status == ModelDeploymentStatus.READY
+
+    def test_unknown_until_is_refused(self, deployments):
+        with pytest.raises(BadParameterError, match="until must be"):
+            deployments.wait_for_model_deployment(DATASET, "d1", until="RUNNING")
 
     @pytest.mark.parametrize("kwargs", [{"timeout": 0}, {"poll_interval": 0}])
     def test_bad_arguments(self, deployments, kwargs):
