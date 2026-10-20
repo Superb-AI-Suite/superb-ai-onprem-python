@@ -167,6 +167,16 @@ class TestDataset:
         assert query is Queries.DELETE_DATASET_VLM_SETTINGS
         assert variables == {"datasetId": "dataset-1", "expectedUpdatedAt": "2026-10-20T00:00:00.000Z"}
 
+    def test_reading_keeps_unknown_enum_values(self):
+        """A newer platform may add an answer type or shape; reading must not fail."""
+        settings = copy.deepcopy(SETTINGS)
+        settings["questions"][1]["answerType"] = "FUTURE_TYPE"
+        settings["questions"][0]["evidenceClasses"][0]["shape"] = "POLYGON"
+        record = DatasetVLMSettings.model_validate({**RECORD, "settings": settings})
+        assert record.settings.questions[1].answer_type == "FUTURE_TYPE"
+        assert record.settings.questions[0].evidence_classes[0].shape == "POLYGON"
+        assert record.settings.questions[0].answer_type is VLMAnswerType.SINGLE_CHOICE
+
     def test_reading_keeps_unknown_keys(self):
         """A newer platform may add keys; reading must not break."""
         settings = copy.deepcopy(SETTINGS)
@@ -265,6 +275,11 @@ class TestClientChecks:
         (_mutate(["questions", 0, "evidenceClasses", 0, "color"], "red"), "#RRGGBB"),
         (_mutate(["questions", 0, "addedAt"], "2026-10-20"), "ISO 8601 UTC timestamp"),
         (_mutate(["questions"], "q"), "settings.questions must be an array"),
+        # Unhashable or huge values give a validation error, not TypeError / OverflowError.
+        (_mutate(["questions", 0, "answerType"], ["TEXT"]), "unknown answerType"),
+        (_mutate(["questions", 0, "answerType"], {"a": 1}), "unknown answerType"),
+        (_mutate(["questions", 0, "evidenceClasses", 0, "shape"], ["BOX"]), "unknown shape"),
+        (_mutate(["questions", 1, "numberRange"], {"max": 10 ** 400}), "must be a finite number"),
         ([], "settings must be an object"),
     ])
     def test_refused_before_sending(self, settings, message):

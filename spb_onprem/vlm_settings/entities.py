@@ -66,7 +66,8 @@ class VLMEvidenceClass(_QuestionSetModel):
 
     id: str = Field(..., description="ULID")
     name: str
-    shape: VLMEvidenceShape
+    # An unknown value from a newer platform stays a str instead of failing.
+    shape: Union[VLMEvidenceShape, str] = Field(..., union_mode="left_to_right")
     color: Optional[str] = Field(None, description="#RRGGBB, for the labeling screen; can change")
     added_at: Optional[str] = Field(None, alias="addedAt", description="ISO 8601 UTC")
     deleted_at: Optional[str] = Field(None, alias="deletedAt", description="ISO 8601 UTC")
@@ -77,7 +78,8 @@ class VLMQuestion(_QuestionSetModel):
 
     id: str = Field(..., description="ULID")
     text: str
-    answer_type: VLMAnswerType = Field(..., alias="answerType")
+    # An unknown value from a newer platform stays a str instead of failing.
+    answer_type: Union[VLMAnswerType, str] = Field(..., alias="answerType", union_mode="left_to_right")
     options: Optional[List[VLMAnswerOption]] = Field(None, description="Only for choice questions")
     number_range: Optional[VLMNumberRange] = Field(None, alias="numberRange", description="Only for NUMBER")
     reasoning_guide: Optional[str] = Field(

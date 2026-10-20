@@ -44,6 +44,21 @@ def _non_empty(value: Any) -> bool:
     return isinstance(value, str) and value.strip() != ""
 
 
+def _one_of(value: Any, allowed: frozenset) -> bool:
+    """True for a string in ``allowed``; False for anything else (also lists and dicts)."""
+    return isinstance(value, str) and value in allowed
+
+
+def _finite_number(value: Any) -> bool:
+    """A JSON number the platform reads as finite (an int too large for a float is not)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    try:
+        return math.isfinite(float(value))
+    except OverflowError:
+        return False
+
+
 def collect_vlm_settings_violations(settings: Any) -> List[str]:
     """Problems the platform would refuse, found before sending.
 
@@ -102,7 +117,7 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
                 if key in names:
                     violations.append(f'{at}: name "{name}" is duplicated.')
                 names.add(key)
-            if item.get("shape") not in EVIDENCE_SHAPES:
+            if not _one_of(item.get("shape"), EVIDENCE_SHAPES):
                 violations.append(f'{at}: unknown shape "{item.get("shape")}".')
             color = item.get("color")
             if "color" in item and not (isinstance(color, str) and HEX_COLOR_PATTERN.match(color)):
@@ -120,10 +135,10 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
         if not _non_empty(question.get("text")):
             violations.append(f"{label}: text must be a non-empty string.")
         answer_type = question.get("answerType")
-        if answer_type not in ANSWER_TYPES:
+        if not _one_of(answer_type, ANSWER_TYPES):
             violations.append(f'{label}: unknown answerType "{answer_type}".')
         options = question.get("options")
-        if answer_type in CHOICE_ANSWER_TYPES:
+        if _one_of(answer_type, CHOICE_ANSWER_TYPES):
             if not isinstance(options, list) or not options:
                 violations.append(f"{label}: choice questions need at least one option.")
         elif isinstance(options, list) and options:
@@ -160,7 +175,7 @@ def collect_vlm_settings_violations(settings: Any) -> List[str]:
                     value = number_range.get(bound)
                     if value is None:
                         continue
-                    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+                    if not _finite_number(value):
                         violations.append(f"{label}: numberRange.{bound} must be a finite number.")
                     else:
                         bounds[bound] = value
