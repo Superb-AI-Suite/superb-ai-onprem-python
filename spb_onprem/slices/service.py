@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import (
@@ -17,8 +17,10 @@ from .queries import (
 )
 from spb_onprem.activities.deletion import (
     DeletionActivityType,
+    deletion_filter,
     require_id,
     start_deletion_activity,
+    warn_deprecated,
 )
 from spb_onprem.activities.entities import ActivityHistory
 
@@ -192,23 +194,67 @@ class SliceService(BaseService):
         slice_dict = response.get("updateSlice", {})
         return Slice.model_validate(slice_dict)
 
+    def delete_slices(
+        self,
+        dataset_id: str,
+        slice_ids: Optional[List[str]] = None,
+        slice_filter: Optional[Union[SlicesFilter, dict]] = None,
+    ) -> ActivityHistory:
+        """Start deleting slices.
+
+        Starts one ``DELETE_SLICE`` activity for every slice that ``slice_ids``
+        or ``slice_filter`` selects (pass exactly one). The activity deletes
+        each slice's annotation files, then the slice; the data stay in the
+        dataset. To block until it ends, use
+        ``ActivityService.wait_for_activity``.
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
+        Args:
+            dataset_id (str): The dataset ID.
+            slice_ids (Optional[List[str]]): The slice IDs.
+            slice_filter (Optional[SlicesFilter | dict]): A SlicesFilter
+                (``{"must": ..., "not": ...}``). A dict is sent as it is, in
+                the GraphQL field names. A filter without a condition is refused.
+
+        Raises:
+            BadParameterError: If dataset_id is missing.
+            BadDeletionTargetError: If none or both of slice_ids and
+                slice_filter are given, or they are empty (also a
+                ValueError).
+            UnknownError / NotFoundError: If the server refuses the request at
+                once (for example the request is not allowed).
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        require_id(dataset_id, "dataset_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "slice_filter": deletion_filter(
+                ids=slice_ids,
+                ids_name="slice_ids",
+                filter=slice_filter,
+                filter_name="slice_filter",
+                filter_types=(SlicesFilter,),
+            ),
+        }
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_SLICE, parameters
+        )
+
     def delete_slice(
         self,
         dataset_id: str,
         slice_id: str,
     ) -> ActivityHistory:
-        """Start deleting a slice.
+        """Start deleting one slice. Deprecated: use ``delete_slices``.
 
-        Since 2.0.0 this starts a ``DELETE_SLICE`` activity instead of deleting
-        the slice at once. The activity deletes the slice's annotation files,
-        then the slice; the data stay in the dataset. To block until the
-        activity ends, use ``ActivityService.wait_for_activity``.
-        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
-        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
-
-        Args:
-            dataset_id (str): The ID of the dataset the slice belongs to.
-            slice_id (str): The ID of the slice to delete.
+        It will be removed in the next major version. It warns with
+        DeprecationWarning and calls ``delete_slices(dataset_id, slice_ids=[slice_id])``,
+        so it starts one activity with the filter ``{"must": {"idIn": [slice_id]}}``.
+        Calling it in a loop starts one activity per slice; pass all the IDs to
+        ``delete_slices`` instead.
 
         Raises:
             BadParameterError: If dataset_id or slice_id is missing.
@@ -216,12 +262,7 @@ class SliceService(BaseService):
         Returns:
             ActivityHistory: The started activity.
         """
+        warn_deprecated("delete_slice", "delete_slices", "slice", "slice_ids", "slice_filter")
         require_id(dataset_id, "dataset_id")
         require_id(slice_id, "slice_id")
-        parameters = {
-            "dataset_id": dataset_id,
-            "slice_filter": {"must": {"idIn": [slice_id]}},
-        }
-        return start_deletion_activity(
-            self, dataset_id, DeletionActivityType.DELETE_SLICE, parameters
-        )
+        return self.delete_slices(dataset_id, slice_ids=[slice_id])

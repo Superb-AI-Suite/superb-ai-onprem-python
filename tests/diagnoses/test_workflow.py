@@ -940,15 +940,15 @@ def test_diagnosis_lifecycle_workflow():
         if CLEANUP:
             print("\n[Step 17] Deleting the test diagnosis...")
             try:
-                delete_result = diagnosis_service.delete_diagnosis(
+                delete_result = diagnosis_service.delete_diagnoses(
                     dataset_id=DATASET_ID,
-                    diagnosis_id=created_diagnosis_id
+                    diagnosis_ids=[created_diagnosis_id]
                 )
                 
                 print(f"✅ Diagnosis deletion activity started")
                 print(f"   Activity history: {delete_result.id} ({delete_result.status})")
 
-                # Since 2.0.0 delete_diagnosis starts a DELETE_DIAGNOSIS activity.
+                # Since 2.0.0 delete_diagnoses starts a DELETE_DIAGNOSIS activity.
                 assert isinstance(delete_result, ActivityHistory)
                 finished = ActivityService().wait_for_activity(
                     delete_result.id, dataset_id=DATASET_ID, timeout=600, poll_interval=5
@@ -1023,9 +1023,9 @@ def test_diagnosis_lifecycle_workflow():
             if created_diagnosis_id:
                 try:
                     print(f"   Attempting to delete diagnosis: {created_diagnosis_id}")
-                    diagnosis_service.delete_diagnosis(
+                    diagnosis_service.delete_diagnoses(
                         dataset_id=DATASET_ID,
-                        diagnosis_id=created_diagnosis_id
+                        diagnosis_ids=[created_diagnosis_id]
                     )
                     print(f"   ✅ Cleanup successful - diagnosis deleted")
                 except Exception as cleanup_error:

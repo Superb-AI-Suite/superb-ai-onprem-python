@@ -19,7 +19,12 @@ from spb_onprem.activities.entities import (
 )
 from spb_onprem.activities.queries import Queries as ActivityQueries
 from spb_onprem.base_service import BaseService
-from spb_onprem.exceptions import BadParameterError, NotFoundError, UnknownError
+from spb_onprem.data.params import DataFilterOptions, DataListFilter
+from spb_onprem.diagnoses.params import DiagnosisFilter, DiagnosisFilterOptions
+from spb_onprem.exceptions import BadDeletionTargetError, BadParameterError, NotFoundError, UnknownError
+from spb_onprem.models.params import ModelFilter, ModelFilterOptions
+from spb_onprem.reports.params.analytics_reports import AnalyticsReportsFilter, AnalyticsReportsFilterOptions
+from spb_onprem.slices.params import SlicesFilter, SlicesFilterOptions
 
 
 def _history(status="PENDING", history_id="history-1"):
@@ -32,107 +37,200 @@ def _service(cls):
     return service
 
 
+# (service, plural, singular, ids arg, filter arg, singular id arg, parameter key, job type, filter model)
 ENTITY_CASES = [
-    (ModelService, "delete_model", "model_id", "DELETE_MODEL"),
-    (DiagnosisService, "delete_diagnosis", "diagnosis_id", "DELETE_DIAGNOSIS"),
-    (ReportService, "delete_analytics_report", "report_id", "DELETE_ANALYTICS_REPORT"),
+    (ModelService, "delete_models", "delete_model", "model_ids", "model_filter", "model_id",
+     "model_filter", "DELETE_MODEL", ModelFilter(must_filter=ModelFilterOptions(name_contains="old"))),
+    (DiagnosisService, "delete_diagnoses", "delete_diagnosis", "diagnosis_ids", "diagnosis_filter",
+     "diagnosis_id", "diagnosis_filter", "DELETE_DIAGNOSIS",
+     DiagnosisFilter(must=DiagnosisFilterOptions(name_contains="old"))),
+    (ReportService, "delete_analytics_reports", "delete_analytics_report", "report_ids", "report_filter",
+     "report_id", "analytics_report_filter", "DELETE_ANALYTICS_REPORT",
+     AnalyticsReportsFilter(must_filter=AnalyticsReportsFilterOptions(title_contains="old"))),
+    (SliceService, "delete_slices", "delete_slice", "slice_ids", "slice_filter", "slice_id",
+     "slice_filter", "DELETE_SLICE", SlicesFilter(must_filter=SlicesFilterOptions(name_contains="old"))),
 ]
+IDS = ["01ARZ3NDEKTSV4RRFFQ69G5FAV", "01ARZ3NDEKTSV4RRFFQ69G5FAW"]
 
 
+def _sent(service):
+    service.request_gql.assert_called_once()
+    query, variables = service.request_gql.call_args[0]
+    assert query is ActivityQueries.START_ACTIVITY
+    return variables
+
+
+@pytest.mark.parametrize(
+    "cls,plural,singular,ids_arg,filter_arg,id_arg,param_key,job_type,model_filter", ENTITY_CASES
+)
 class TestEntityDeletion:
-    @pytest.mark.parametrize("cls,method,id_key,job_type", ENTITY_CASES)
-    def test_starts_activity_with_id_only(self, cls, method, id_key, job_type):
+    def test_ids_start_one_activity(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                    param_key, job_type, model_filter):
         service = _service(cls)
 
-        result = getattr(service, method)(dataset_id="dataset-1", **{id_key: "entity-1"})
+        result = getattr(service, plural)(dataset_id="dataset-1", **{ids_arg: IDS})
 
         assert isinstance(result, ActivityHistory)
         assert result.id == "history-1"
-        assert result
-        service.request_gql.assert_called_once_with(
-            ActivityQueries.START_ACTIVITY,
-            {
-                "datasetId": "dataset-1",
-                "jobType": job_type,
-                # The job definition only allows the entity id; dataset_id comes from datasetId.
-                "parameters": {id_key: "entity-1"},
-            },
-        )
+        assert _sent(service) == {
+            "datasetId": "dataset-1",
+            "jobType": job_type,
+            "parameters": {"dataset_id": "dataset-1", param_key: {"must": {"idIn": IDS}}},
+        }
 
-    @pytest.mark.parametrize("cls,method,id_key,job_type", ENTITY_CASES)
-    def test_positional_call_still_works(self, cls, method, id_key, job_type):
+    def test_positional_ids(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                            param_key, job_type, model_filter):
         service = _service(cls)
 
-        getattr(service, method)("dataset-1", "entity-1")
+        getattr(service, plural)("dataset-1", IDS)
 
-        assert service.request_gql.call_args[0][1]["parameters"] == {id_key: "entity-1"}
+        assert _sent(service)["parameters"][param_key] == {"must": {"idIn": IDS}}
 
-    @pytest.mark.parametrize("cls,method,id_key,job_type", ENTITY_CASES)
-    @pytest.mark.parametrize("missing", ["dataset_id", "entity"])
-    @pytest.mark.parametrize("value", [None, ""])
-    def test_missing_ids_are_refused(self, cls, method, id_key, job_type, missing, value):
+    def test_filter_model_is_sent_in_camel_case(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                                param_key, job_type, model_filter):
         service = _service(cls)
-        kwargs = {"dataset_id": "dataset-1", id_key: "entity-1"}
-        kwargs["dataset_id" if missing == "dataset_id" else id_key] = value
 
-        with pytest.raises(BadParameterError, match="is required"):
-            getattr(service, method)(**kwargs)
+        getattr(service, plural)(dataset_id="dataset-1", **{filter_arg: model_filter})
+
+        sent = _sent(service)["parameters"][param_key]
+        assert list(sent) == ["must"]
+        assert len(sent["must"]) == 1
+        assert list(sent["must"].values()) == ["old"]
+        assert next(iter(sent["must"])).endswith("Contains")  # nameContains / titleContains
+
+    def test_dict_filter_is_sent_as_is(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                       param_key, job_type, model_filter):
+        service = _service(cls)
+        raw = {"must": {"idIn": IDS}, "not": {"nameContains": "keep"}}
+
+        getattr(service, plural)(dataset_id="dataset-1", **{filter_arg: raw})
+
+        sent = _sent(service)["parameters"][param_key]
+        assert sent == raw and sent is not raw
+
+    @pytest.mark.parametrize("targets", [
+        {},
+        {"ids": IDS, "filter": {"must": {"idIn": IDS}}},
+        {"ids": []},
+        {"ids": ["a", ""]},
+        {"ids": "01ARZ3NDEKTSV4RRFFQ69G5FAV"},
+        {"filter": {}},
+        {"filter": {"must": None}},
+        {"filter": {"must": {"idIn": []}}},
+        {"filter": {"must": {"idIn": []}, "not": {"nameContains": "x"}}},
+        {"filter": {"must": {}}},
+        {"filter": "must"},
+    ])
+    def test_bad_targets_are_refused(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                     param_key, job_type, model_filter, targets):
+        service = _service(cls)
+        kwargs = {}
+        if "ids" in targets:
+            kwargs[ids_arg] = targets["ids"]
+        if "filter" in targets:
+            kwargs[filter_arg] = targets["filter"]
+
+        with pytest.raises(BadDeletionTargetError):
+            getattr(service, plural)(dataset_id="dataset-1", **kwargs)
+        with pytest.raises(ValueError):
+            getattr(service, plural)(dataset_id="dataset-1", **kwargs)
         service.request_gql.assert_not_called()
 
-    @pytest.mark.parametrize("cls,method,id_key,job_type", ENTITY_CASES)
-    def test_awaiting_approval_is_returned(self, cls, method, id_key, job_type):
+    def test_wrong_filter_model_is_refused(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                           param_key, job_type, model_filter):
+        service = _service(cls)
+        wrong = DataListFilter(must_filter=DataFilterOptions(key_contains="x"))
+
+        with pytest.raises(BadDeletionTargetError, match=filter_arg):
+            getattr(service, plural)(dataset_id="dataset-1", **{filter_arg: wrong})
+        service.request_gql.assert_not_called()
+
+    @pytest.mark.parametrize("value", [None, ""])
+    def test_missing_dataset_id(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                param_key, job_type, model_filter, value):
+        service = _service(cls)
+
+        with pytest.raises(BadParameterError, match="dataset_id is required"):
+            getattr(service, plural)(dataset_id=value, **{ids_arg: IDS})
+        service.request_gql.assert_not_called()
+
+    def test_awaiting_approval_is_returned(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                           param_key, job_type, model_filter):
         service = _service(cls)
         service.request_gql.return_value = _history("AWAITING_APPROVAL")
 
-        result = getattr(service, method)(dataset_id="dataset-1", **{id_key: "entity-1"})
+        result = getattr(service, plural)(dataset_id="dataset-1", **{ids_arg: IDS})
 
         assert result.status == ActivityStatus.AWAITING_APPROVAL
 
-    def test_server_refusal_is_raised(self):
-        service = _service(ModelService)
-        service.request_gql.side_effect = UnknownError("GraphQL errors: [CONFLICT] has a deployment")
+    # Deprecated singular functions --------------------------------------------
+    def test_singular_starts_one_filter_activity(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                                 param_key, job_type, model_filter):
+        """The singular function calls startJob once, with an idIn filter of that one id."""
+        service = _service(cls)
 
-        with pytest.raises(UnknownError, match="CONFLICT"):
-            service.delete_model(dataset_id="dataset-1", model_id="model-1")
-
-
-class TestSliceDeletion:
-    def test_delete_slice_starts_activity(self):
-        service = _service(SliceService)
-
-        result = service.delete_slice(dataset_id="dataset-1", slice_id="slice-1")
+        with pytest.warns(DeprecationWarning) as caught:
+            result = getattr(service, singular)(dataset_id="dataset-1", **{id_arg: "one-id"})
 
         assert isinstance(result, ActivityHistory)
-        service.request_gql.assert_called_once_with(
-            ActivityQueries.START_ACTIVITY,
-            {
-                "datasetId": "dataset-1",
-                "jobType": "DELETE_SLICE",
-                "parameters": {
-                    "dataset_id": "dataset-1",
-                    "slice_filter": {"must": {"idIn": ["slice-1"]}},
-                },
-            },
-        )
+        assert _sent(service) == {
+            "datasetId": "dataset-1",
+            "jobType": job_type,
+            "parameters": {"dataset_id": "dataset-1", param_key: {"must": {"idIn": ["one-id"]}}},
+        }
+        message = str(caught[0].message)
+        assert f"{singular} is deprecated" in message
+        assert "next major version" in message
+        assert "in a loop" in message
+        assert f"{plural}({ids_arg}=[...])" in message
+        assert filter_arg in message
+        # The warning points at the caller, not at the SDK.
+        assert caught[0].filename == __file__
 
-    def test_no_sub_dag_id_is_sent(self):
-        service = _service(SliceService)
+    def test_singular_positional(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                 param_key, job_type, model_filter):
+        service = _service(cls)
 
-        service.delete_slice("dataset-1", "slice-1")
+        with pytest.warns(DeprecationWarning):
+            getattr(service, singular)("dataset-1", "one-id")
 
-        assert "sub_dag_id" not in service.request_gql.call_args[0][1]["parameters"]
+        assert _sent(service)["parameters"][param_key] == {"must": {"idIn": ["one-id"]}}
 
-    @pytest.mark.parametrize("kwargs", [
-        {"dataset_id": None, "slice_id": "slice-1"},
-        {"dataset_id": "dataset-1", "slice_id": None},
-        {"dataset_id": "dataset-1", "slice_id": ""},
-    ])
-    def test_missing_ids_are_refused(self, kwargs):
-        service = _service(SliceService)
+    @pytest.mark.parametrize("missing", ["dataset_id", "entity"])
+    @pytest.mark.parametrize("value", [None, ""])
+    def test_singular_missing_ids(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                  param_key, job_type, model_filter, missing, value):
+        service = _service(cls)
+        kwargs = {"dataset_id": "dataset-1", id_arg: "one-id"}
+        kwargs["dataset_id" if missing == "dataset_id" else id_arg] = value
 
-        with pytest.raises(BadParameterError, match="is required"):
-            service.delete_slice(**kwargs)
+        with pytest.warns(DeprecationWarning):
+            with pytest.raises(BadParameterError, match="is required"):
+                getattr(service, singular)(**kwargs)
         service.request_gql.assert_not_called()
+
+
+def test_no_sub_dag_id_is_sent():
+    service = _service(SliceService)
+
+    service.delete_slices("dataset-1", slice_ids=IDS)
+
+    assert "sub_dag_id" not in _sent(service)["parameters"]
+
+
+def test_server_refusal_is_raised():
+    service = _service(ModelService)
+    service.request_gql.side_effect = UnknownError("GraphQL errors: [CONFLICT] has a deployment")
+
+    with pytest.raises(UnknownError, match="CONFLICT"):
+        service.delete_models(dataset_id="dataset-1", model_ids=IDS)
+
+
+def test_analytics_report_filter_has_id_in():
+    dumped = AnalyticsReportsFilter(
+        must_filter=AnalyticsReportsFilterOptions(id_in=IDS)
+    ).model_dump(by_alias=True, exclude_unset=True)
+    assert dumped == {"must": {"idIn": IDS}}
 
 
 class TestDeleteContent:

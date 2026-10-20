@@ -975,15 +975,15 @@ def test_model_lifecycle_workflow():
         if CLEANUP:
             print("\n[Step 16] Deleting the test model...")
             try:
-                delete_result = model_service.delete_model(
+                delete_result = model_service.delete_models(
                     dataset_id=DATASET_ID,
-                    model_id=created_model_id
+                    model_ids=[created_model_id]
                 )
                 
                 print(f"✅ Model deletion activity started")
                 print(f"   Activity history: {delete_result.id} ({delete_result.status})")
 
-                # Since 2.0.0 delete_model starts a DELETE_MODEL activity.
+                # Since 2.0.0 delete_models starts a DELETE_MODEL activity.
                 assert isinstance(delete_result, ActivityHistory)
                 finished = ActivityService().wait_for_activity(
                     delete_result.id, dataset_id=DATASET_ID, timeout=600, poll_interval=5
@@ -1059,9 +1059,9 @@ def test_model_lifecycle_workflow():
             if created_model_id:
                 try:
                     print(f"   Attempting to delete model: {created_model_id}")
-                    model_service.delete_model(
+                    model_service.delete_models(
                         dataset_id=DATASET_ID,
-                        model_id=created_model_id
+                        model_ids=[created_model_id]
                     )
                     print(f"   ✅ Cleanup successful - model deleted")
                 except Exception as cleanup_error:
@@ -1170,7 +1170,7 @@ def test_model_filter_and_pagination_workflow():
         # Cleanup any created models
         for model_id in created_model_ids:
             try:
-                model_service.delete_model(DATASET_ID, model_id)
+                model_service.delete_models(DATASET_ID, model_ids=[model_id])
             except:
                 pass
         pytest.fail(str(e))
@@ -1275,9 +1275,9 @@ def test_model_filter_and_pagination_workflow():
         cleanup_count = 0
         for model_id in created_model_ids:
             try:
-                model_service.delete_model(
+                model_service.delete_models(
                     dataset_id=DATASET_ID,
-                    model_id=model_id
+                    model_ids=[model_id]
                 )
                 cleanup_count += 1
                 print(f"   ✅ Deleted model: {model_id}")
@@ -1305,7 +1305,7 @@ def test_model_filter_and_pagination_workflow():
         print(f"⚠️  Attempting cleanup...")
         for model_id in created_model_ids:
             try:
-                model_service.delete_model(DATASET_ID, model_id)
+                model_service.delete_models(DATASET_ID, model_ids=[model_id])
             except:
                 pass
         pytest.fail(str(e))

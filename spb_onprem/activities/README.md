@@ -135,13 +135,18 @@ takes data out of a slice). Each returns the started `ActivityHistory`.
 
 | Function | Activity type | Parameters sent |
 | --- | --- | --- |
-| `ModelService.delete_model` | `DELETE_MODEL` | `model_id` |
-| `DiagnosisService.delete_diagnosis` | `DELETE_DIAGNOSIS` | `diagnosis_id` |
-| `ReportService.delete_analytics_report` | `DELETE_ANALYTICS_REPORT` | `report_id` |
-| `DatasetService.delete_dataset` | `DELETE_DATASET` | `dataset_id` |
+| `ModelService.delete_models` | `DELETE_MODEL` | `dataset_id`, `model_filter` |
+| `DiagnosisService.delete_diagnoses` | `DELETE_DIAGNOSIS` | `dataset_id`, `diagnosis_filter` |
+| `ReportService.delete_analytics_reports` | `DELETE_ANALYTICS_REPORT` | `dataset_id`, `analytics_report_filter` |
+| `SliceService.delete_slices` | `DELETE_SLICE` | `dataset_id`, `slice_filter` |
 | `DataService.delete_data` | `DELETE_DATA` | `dataset_id`, `data_filter` |
-| `SliceService.delete_slice` | `DELETE_SLICE` | `dataset_id`, `slice_filter` |
 | `DataService.remove_data_from_slice` | `REMOVE_DATA_FROM_SLICE` | `dataset_id`, `slice_id`, `data_filter` |
+| `DatasetService.delete_dataset` | `DELETE_DATASET` | `dataset_id` |
+
+IDs are sent as the filter `{"must": {"idIn": [...]}}`. A filter model is sent with
+its camelCase aliases (`{"must": {...}, "not": {...}}`). The deprecated singular
+functions (`delete_model`, `delete_diagnosis`, `delete_analytics_report`,
+`delete_slice`) call the plural one with one ID.
 
 An admin of the dataset (Owner, WorkspaceAdmin or DATASET-ADMIN) starts it at
 once; another user submits it as `AWAITING_APPROVAL`. `ContentService.delete_content`

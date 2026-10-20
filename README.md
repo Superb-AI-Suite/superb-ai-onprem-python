@@ -128,25 +128,41 @@ Ready for more? Check out our [comprehensive documentation](#-documentation) bel
 
 ## 🗑️ Deleting (changed in 2.0.0)
 
-`delete_model`, `delete_diagnosis`, `delete_analytics_report`, `delete_dataset`,
-`delete_data`, `delete_slice` and `remove_data_from_slice` no longer delete rows
-at once. They start the matching activity (`DELETE_MODEL`, `DELETE_DIAGNOSIS`,
-`DELETE_ANALYTICS_REPORT`, `DELETE_DATASET`, `DELETE_DATA`, `DELETE_SLICE`,
-`REMOVE_DATA_FROM_SLICE`) and return its `ActivityHistory` instead of `bool` (or
-`Data` for `remove_data_from_slice`). The delete activities also delete the files
-in storage; `REMOVE_DATA_FROM_SLICE` only takes data out of a slice and deletes no files.
+Deleting no longer removes rows at once. Each call starts **one** activity
+(`DELETE_MODEL`, `DELETE_DIAGNOSIS`, `DELETE_ANALYTICS_REPORT`, `DELETE_SLICE`,
+`DELETE_DATA`, `REMOVE_DATA_FROM_SLICE`, `DELETE_DATASET`) and returns its
+`ActivityHistory` instead of `bool` (or `Data` for `remove_data_from_slice`). The
+delete activities also delete the files in storage; `REMOVE_DATA_FROM_SLICE` only
+takes data out of a slice and deletes no files.
+
+| Function | Targets (exactly one) |
+| --- | --- |
+| `ModelService.delete_models(dataset_id, ...)` | `model_ids=[...]` or `model_filter=ModelFilter(...)` |
+| `DiagnosisService.delete_diagnoses(dataset_id, ...)` | `diagnosis_ids=[...]` or `diagnosis_filter=DiagnosisFilter(...)` |
+| `ReportService.delete_analytics_reports(dataset_id, ...)` | `report_ids=[...]` or `report_filter=AnalyticsReportsFilter(...)` |
+| `SliceService.delete_slices(dataset_id, ...)` | `slice_ids=[...]` or `slice_filter=SlicesFilter(...)` |
+| `DataService.delete_data(dataset_id, ...)` | `data_id`, `data_ids=[...]` or `data_filter=DataListFilter(...)` |
+| `DataService.remove_data_from_slice(dataset_id, ..., slice_id=...)` | `data_id`, `data_ids=[...]` or `data_filter=...` |
+| `DatasetService.delete_dataset(dataset_id)` | the dataset |
+
+Empty lists and filters without a condition (`{}`, `{"must": {}}`, `must: null`,
+`must.idIn: []`) are refused with `BadDeletionTargetError` (a `ValueError`).
+
+**Deprecated:** `delete_model`, `delete_diagnosis`, `delete_analytics_report` and
+`delete_slice` still work but warn with `DeprecationWarning` and will be removed in the
+next major version. Each call starts one activity, so calling them in a loop starts one
+activity per target; pass all the IDs to the plural function instead.
 
 - The history is always truthy, so `if service.delete_x(...)` keeps running, but `bool(...)` no
   longer tells whether anything was deleted (and `== True` is False). Use
   `ActivityService().wait_for_activity(history.id)` and check its `status`.
-- Deleting a model, diagnosis or analytics report that does not exist raises `NotFoundError`
-  (before: returned `False`).
+- The deletion functions never return `False` any more. Errors from the server's
+  request-time checks (`CONFLICT` for running targets or models with deployments,
+  `NOT_FOUND`, `BAD_REQUEST`) are raised as `UnknownError` / `NotFoundError`.
 - `ActivityStatus.CANCELLED` is now an alias of `CANCELED`; its value is `"CANCELED"`, so
   comparing a status with the string `"CANCELLED"` is False.
 - Progress and errors show in the Activity log. A non-admin of the dataset submits the
   activity as `AWAITING_APPROVAL`; an admin (Owner, WorkspaceAdmin, DATASET-ADMIN) starts it at once.
-- `delete_data` and `remove_data_from_slice` also take `data_ids=[...]` or `data_filter=...`
-  (exactly one target; empty lists and filters are refused) and start one activity for all.
 - To block until the deletion ends, call `ActivityService().wait_for_activity(history.id)`.
 - `ContentService.delete_content` is unchanged (a content is a file, not an entity), but it
   raises when storage fails instead of returning `False`.

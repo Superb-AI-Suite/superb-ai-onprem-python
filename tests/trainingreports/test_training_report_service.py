@@ -410,6 +410,6 @@ def test_training_report_service_real_smoke():
         if created_model_here and model_id:
             try:
                 _print_step("Cleanup model", {"dataset_id": dataset_id, "model_id": model_id})
-                model_service_for_cleanup.delete_model(dataset_id=dataset_id, model_id=model_id)
+                model_service_for_cleanup.delete_models(dataset_id=dataset_id, model_ids=[model_id])
             except Exception as e:
                 _print_step("Cleanup model failed", str(e))

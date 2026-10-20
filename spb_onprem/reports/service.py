@@ -1,10 +1,12 @@
-from typing import Optional, Union, Any
+from typing import Any, List, Optional, Union
 from spb_onprem.base_service import BaseService
 from spb_onprem.exceptions import BadParameterError
 from spb_onprem.activities.deletion import (
     DeletionActivityType,
+    deletion_filter,
     require_id,
     start_deletion_activity,
+    warn_deprecated,
 )
 from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.base_types import Undefined, UndefinedType
@@ -179,40 +181,81 @@ class ReportService(BaseService):
         )
         return AnalyticsReport.model_validate(response)
     
-    def delete_analytics_report(
+    def delete_analytics_reports(
         self,
         dataset_id: str,
-        report_id: str,
+        report_ids: Optional[List[str]] = None,
+        report_filter: Optional[Union[AnalyticsReportsFilter, dict]] = None,
     ) -> ActivityHistory:
-        """Start deleting an analytics report.
+        """Start deleting analytics reports.
 
-        Since 2.0.0 this starts a ``DELETE_ANALYTICS_REPORT`` activity instead
-        of deleting the report at once. The activity deletes the report, its
-        items and their files. The server refuses a report that is still being
-        made. To block until the activity ends, use
+        Starts one ``DELETE_ANALYTICS_REPORT`` activity for every analytics
+        report that ``report_ids`` or ``report_filter`` selects (pass exactly
+        one). The activity deletes each report, its items and their files.
+        Selecting by ID needs a server whose analytics report filter has
+        ``idIn``. To block until it ends, use
         ``ActivityService.wait_for_activity``.
         A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
         DATASET-ADMIN) submits it as AWAITING_APPROVAL.
 
         Args:
-            dataset_id (str): The dataset ID
-            report_id (str): The ID of the report to delete
+            dataset_id (str): The dataset ID.
+            report_ids (Optional[List[str]]): The analytics report IDs.
+            report_filter (Optional[AnalyticsReportsFilter | dict]): An AnalyticsReportsFilter
+                (``{"must": ..., "not": ...}``). A dict is sent as it is, in
+                the GraphQL field names. A filter without a condition is refused.
 
         Raises:
-            BadParameterError: If dataset_id or report_id is missing.
-            NotFoundError: If the report does not exist (before 2.0.0 this
-                returned False).
-            UnknownError: If the server refuses the request, e.g. the report
-                is still being made.
+            BadParameterError: If dataset_id is missing.
+            BadDeletionTargetError: If none or both of report_ids and
+                report_filter are given, or they are empty (also a
+                ValueError).
+            UnknownError / NotFoundError: If the server refuses the request at
+                once (for example a selected report is still being made).
 
         Returns:
             ActivityHistory: The started activity.
         """
         require_id(dataset_id, "dataset_id")
-        require_id(report_id, "report_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "analytics_report_filter": deletion_filter(
+                ids=report_ids,
+                ids_name="report_ids",
+                filter=report_filter,
+                filter_name="report_filter",
+                filter_types=(AnalyticsReportsFilter,),
+            ),
+        }
         return start_deletion_activity(
-            self, dataset_id, DeletionActivityType.DELETE_ANALYTICS_REPORT, {"report_id": report_id}
+            self, dataset_id, DeletionActivityType.DELETE_ANALYTICS_REPORT, parameters
         )
+
+    def delete_analytics_report(
+        self,
+        dataset_id: str,
+        report_id: str,
+    ) -> ActivityHistory:
+        """Start deleting one analytics report. Deprecated: use ``delete_analytics_reports``.
+
+        It will be removed in the next major version. It warns with
+        DeprecationWarning and calls ``delete_analytics_reports(dataset_id, report_ids=[report_id])``,
+        so it starts one activity with the filter ``{"must": {"idIn": [report_id]}}``.
+        Calling it in a loop starts one activity per analytics report; pass all the IDs to
+        ``delete_analytics_reports`` instead.
+
+        Raises:
+            BadParameterError: If dataset_id or report_id is missing.
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        warn_deprecated(
+            "delete_analytics_report", "delete_analytics_reports", "analytics report", "report_ids", "report_filter"
+        )
+        require_id(dataset_id, "dataset_id")
+        require_id(report_id, "report_id")
+        return self.delete_analytics_reports(dataset_id, report_ids=[report_id])
     
     def create_analytics_report_item(
         self,

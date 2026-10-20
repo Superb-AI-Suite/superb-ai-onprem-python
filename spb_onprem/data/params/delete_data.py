@@ -1,10 +1,6 @@
-import copy
 from typing import Any, List, Mapping, Optional, Union
 
-from pydantic import BaseModel
-
-from spb_onprem.activities.deletion import has_condition
-from spb_onprem.exceptions import BadDeletionTargetError
+from spb_onprem.activities.deletion import deletion_filter
 
 from .data_list import DataFilter, DataListFilter
 
@@ -50,43 +46,12 @@ def deletion_data_filter(
     Returns:
         dict: The filter, as the GraphQL ``DataFilter`` input.
     """
-    given = [
-        name for name, value in (
-            ("data_id", data_id),
-            ("data_ids", data_ids),
-            ("data_filter", data_filter),
-        )
-        if value is not None
-    ]
-    if len(given) != 1:
-        raise BadDeletionTargetError(
-            "Pass exactly one of data_id, data_ids or data_filter"
-            + (f" (got {', '.join(given)})." if given else ".")
-        )
-
-    if data_id is not None:
-        if not isinstance(data_id, str) or not data_id.strip():
-            raise BadDeletionTargetError("data_id must be a non-empty string.")
-        return {"must": {"idIn": [data_id]}}
-
-    if data_ids is not None:
-        if isinstance(data_ids, (str, bytes)):
-            raise BadDeletionTargetError("data_ids must be a list of IDs, not a string.")
-        ids = list(data_ids)
-        if not ids:
-            raise BadDeletionTargetError("data_ids must not be empty.")
-        if any(not isinstance(item, str) or not item.strip() for item in ids):
-            raise BadDeletionTargetError("data_ids must contain non-empty strings only.")
-        return {"must": {"idIn": ids}}
-
-    if isinstance(data_filter, BaseModel):
-        serialized = data_filter.model_dump(mode="json", by_alias=True, exclude_unset=True)
-    elif isinstance(data_filter, Mapping):
-        serialized = copy.deepcopy(dict(data_filter))
-    else:
-        raise BadDeletionTargetError("data_filter must be a DataListFilter or a dict.")
-    if not has_condition(serialized):
-        raise BadDeletionTargetError(
-            "data_filter has no condition. An empty filter would select the whole dataset."
-        )
-    return serialized
+    return deletion_filter(
+        one_id=data_id,
+        one_id_name="data_id",
+        ids=data_ids,
+        ids_name="data_ids",
+        filter=data_filter,
+        filter_name="data_filter",
+        filter_types=(DataListFilter, DataFilter),
+    )
