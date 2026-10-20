@@ -48,7 +48,10 @@ class InferService(BaseService):
                 json_data=payload,
                 headers={
                     "Content-Type": "application/json"
-                }
+                },
+                # Deprecated service: keep sending the user header to the model
+                # endpoint as before.
+                auth=True,
             )
             return response
         except Exception as e:

@@ -355,6 +355,7 @@ class ModelService(BaseService):
         # Upload the JSON data
         self.request(
             method="PUT",
+            auth=False,  # presigned storage URL: no platform credentials
             url=upload_url,
             headers={'Content-Type': 'application/json'},
             json_data=data,

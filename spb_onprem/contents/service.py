@@ -73,6 +73,7 @@ class ContentService(BaseService):
         
         self.request(
             method="PUT",
+            auth=False,  # presigned storage URL: no platform credentials
             url=upload_url,
             headers={
                 'Content-Type': mimetypes.guess_type(file_path)[0]
@@ -106,6 +107,7 @@ class ContentService(BaseService):
         upload_url = response['uploadURL']
         self.request(
             method="PUT",
+            auth=False,  # presigned storage URL: no platform credentials
             url=upload_url,
             headers={
                 'Content-Type': 'application/json'
@@ -148,6 +150,7 @@ class ContentService(BaseService):
         # Upload the file data using the PUT request
         self.request(
             method="PUT",
+            auth=False,  # presigned storage URL: no platform credentials
             url=upload_url,
             headers={
                 'Content-Type': content_type

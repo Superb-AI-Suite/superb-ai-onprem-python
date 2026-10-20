@@ -1,4 +1,5 @@
 from typing import Optional, Dict, Any, ClassVar
+from urllib.parse import urlsplit
 import json
 import os
 import random
@@ -218,6 +219,18 @@ class BaseService():
             # Close the session after use
             session.close()
 
+    @staticmethod
+    def _origin(url: str):
+        """(scheme, host, port) of a URL, with the default port filled in."""
+        parts = urlsplit(url)
+        scheme = (parts.scheme or "").lower()
+        port = parts.port or {"http": 80, "https": 443}.get(scheme)
+        return scheme, (parts.hostname or "").lower(), port
+
+    def is_platform_url(self, url: str) -> bool:
+        """True when ``url`` is on the platform API host (same scheme, host and port)."""
+        return self._origin(url) == self._origin(self._auth_user.host)
+
     def request(
         self,
         method: str,
@@ -226,17 +239,31 @@ class BaseService():
         params: Optional[dict] = None,
         data: Optional[dict] = None,
         json_data: Optional[dict] = None,
-        timeout: int = 30
+        timeout: int = 30,
+        auth: Optional[bool] = None,
     ):
+        """Send an HTTP request.
+
+        The platform credentials (``Authorization`` or the system user header)
+        are added only for the platform API host. A presigned storage URL
+        (upload or download) carries its own signature, so it gets no
+        platform credentials: they must not reach the storage host, and a
+        strict S3 refuses a request with a second authorization.
+
+        Args:
+            auth (Optional[bool]): None (default) adds the credentials only when
+                ``url`` is on the platform host. False never adds them (presigned
+                URLs). True always adds them.
+        """
+        merged_headers = dict(headers or {})
+        if auth is True or (auth is None and self.is_platform_url(url)):
+            merged_headers.update(self._auth_user.auth_headers)
         session = self.requests_retry_session()
         try:
             response = session.request(
                 method=method.upper(),
                 url=url,
-                headers={
-                    **headers,
-                    **self._auth_user.auth_headers
-                },
+                headers=merged_headers,
                 params=params,
                 data=data,
                 json=json_data,
