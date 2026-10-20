@@ -130,7 +130,8 @@ history = ActivityHistory(
 ## 🗑️ Deletion Activities (2.0.0)
 
 The delete functions start an activity instead of deleting rows at once, so the
-files in storage are deleted too. Each returns the started `ActivityHistory`.
+files in storage are deleted too (`remove_data_from_slice` deletes no files; it only
+takes data out of a slice). Each returns the started `ActivityHistory`.
 
 | Function | Activity type | Parameters sent |
 | --- | --- | --- |

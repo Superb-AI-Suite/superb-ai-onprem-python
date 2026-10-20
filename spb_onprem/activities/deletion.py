@@ -3,8 +3,15 @@
 Since 2.0.0 the SDK delete functions (``delete_model``, ``delete_diagnosis``,
 ``delete_analytics_report``, ``delete_dataset``, ``delete_data``,
 ``delete_slice`` and ``remove_data_from_slice``) do not delete rows directly.
-They start the matching activity with ``startJob``. The activity deletes the
-rows and the files in storage, and its progress shows in the Activity log.
+They start the matching activity with ``startJob``. Its progress shows in the
+Activity log.
+
+- DELETE_DATA: annotation, slice annotation, thumbnail and scene files, then the data rows.
+- DELETE_SLICE: the slice's annotation files, then the slice row.
+- DELETE_DATASET: model, diagnosis, analytics report, slice and data files, then the rows.
+- DELETE_MODEL / DELETE_DIAGNOSIS / DELETE_ANALYTICS_REPORT: the files the entity and
+  its items reference, then the item rows and the entity row.
+- REMOVE_DATA_FROM_SLICE: takes the data out of the slice; it deletes no files.
 
 The functions return the started ``ActivityHistory``. To block until it ends,
 call ``ActivityService.wait_for_activity(history.id)``.

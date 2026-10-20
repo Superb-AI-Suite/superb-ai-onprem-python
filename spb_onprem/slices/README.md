@@ -77,6 +77,7 @@ data_service.add_data_to_slice(
 
 # Remove data from slice (using DataService).
 # Since 2.0.0 this starts one REMOVE_DATA_FROM_SLICE activity for all the data.
+# It deletes no files; slice annotations go when the slice or the dataset is deleted.
 data_service.remove_data_from_slice(
     dataset_id="dataset_123",
     slice_id="slice_456",

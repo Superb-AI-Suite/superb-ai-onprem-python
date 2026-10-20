@@ -200,8 +200,8 @@ class SliceService(BaseService):
         """Start deleting a slice.
 
         Since 2.0.0 this starts a ``DELETE_SLICE`` activity instead of deleting
-        the slice at once. The activity deletes the slice and the slice
-        annotation files; the data stay in the dataset. To block until the
+        the slice at once. The activity deletes the slice's annotation files,
+        then the slice; the data stay in the dataset. To block until the
         activity ends, use ``ActivityService.wait_for_activity``.
         A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
         DATASET-ADMIN) submits it as AWAITING_APPROVAL.

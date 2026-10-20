@@ -132,8 +132,9 @@ Ready for more? Check out our [comprehensive documentation](#-documentation) bel
 `delete_data`, `delete_slice` and `remove_data_from_slice` no longer delete rows
 at once. They start the matching activity (`DELETE_MODEL`, `DELETE_DIAGNOSIS`,
 `DELETE_ANALYTICS_REPORT`, `DELETE_DATASET`, `DELETE_DATA`, `DELETE_SLICE`,
-`REMOVE_DATA_FROM_SLICE`), which also deletes the files in storage, and return
-its `ActivityHistory` instead of `bool` (or `Data` for `remove_data_from_slice`).
+`REMOVE_DATA_FROM_SLICE`) and return its `ActivityHistory` instead of `bool` (or
+`Data` for `remove_data_from_slice`). The delete activities also delete the files
+in storage; `REMOVE_DATA_FROM_SLICE` only takes data out of a slice and deletes no files.
 
 - The history is truthy, so `if service.delete_x(...)` keeps working; `== True` does not.
 - Progress and errors show in the Activity log. A non-admin of the dataset submits the

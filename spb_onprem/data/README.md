@@ -24,7 +24,7 @@ DataService is the core service for managing individual data items within datase
 ### 3. 🔧 Slice Operations
 #### 3.1 Data-Slice Membership
 - **add_data_to_slice()** - Add data entry to a specific slice
-- **remove_data_from_slice()** - Start a REMOVE_DATA_FROM_SLICE activity (one id, `data_ids` or `data_filter`; since 2.0.0)
+- **remove_data_from_slice()** - Start a REMOVE_DATA_FROM_SLICE activity that takes data out of a slice, no files deleted (one id, `data_ids` or `data_filter`; since 2.0.0)
 
 #### 3.2 Slice Data Management
 - **update_data_slice()** - Update data entry metadata within a slice

@@ -297,8 +297,10 @@ class DataService(BaseService):
         """Start removing data from a slice.
 
         Since 2.0.0 this starts a ``REMOVE_DATA_FROM_SLICE`` activity instead of
-        removing the data at once. The activity also deletes the slice
-        annotation files of the removed data. Pass exactly one of ``data_id``,
+        removing the data at once. The activity only takes the data out of the
+        slice and deletes no files; the slice annotation records stay until the
+        slice (DELETE_SLICE) or the dataset (DELETE_DATASET) is deleted. Pass
+        exactly one of ``data_id``,
         ``data_ids`` or ``data_filter``; one call starts one activity for all
         of them. To block until it ends, use ``ActivityService.wait_for_activity``.
         A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
