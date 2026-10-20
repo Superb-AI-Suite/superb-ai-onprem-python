@@ -28,6 +28,10 @@ DataService().overwrite_slice_annotation_version_content(
 )
 ```
 
+The platform does not check that the content exists: a mistyped ID would create a new object
+under it. The `update_*` functions therefore check first (`content_exists`, one HEAD request) and
+refuse a missing content; pass `check_exists=False` to skip it.
+
 `get_update_url(content_id, content_type)` returns the presigned PUT URL (from
 `generateContentUpdateURL`) if you upload yourself: send the same `Content-Type`, and do not log
 the URL (its query is a credential). The SDK sends no platform credentials to it.

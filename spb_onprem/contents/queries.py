@@ -47,6 +47,16 @@ class Queries:
         "variables": get_update_url_params
     }
 
+    GET_HEAD_URL = {
+        "name": "generateContentHeadURL",
+        "query": '''
+            mutation GenerateContentHeadURL($id: ID!) {
+                generateContentHeadURL(id: $id)
+            }
+        ''',
+        "variables": get_download_url_params
+    }
+
     GET_DOWNLOAD_URL = {
         "name": "generateContentDownloadURL",
         "query": '''

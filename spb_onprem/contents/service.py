@@ -6,7 +6,7 @@ from io import BytesIO
 from typing import Optional, Tuple, Union
 
 from spb_onprem.base_service import BaseService
-from spb_onprem.exceptions import BadParameterError
+from spb_onprem.exceptions import BadParameterError, BadRequestError
 from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
@@ -167,6 +167,9 @@ class ContentService(BaseService):
         '''
         Gets a presigned URL to overwrite an existing content (generateContentUpdateURL).
 
+        The platform does not check that the content exists: a PUT to a
+        mistyped ID creates a new object. ``content_exists`` checks first.
+
         The web editor saves an annotation this way: the content keeps its ID,
         so nothing points at a new content and no old content is left behind.
 
@@ -183,22 +186,58 @@ class ContentService(BaseService):
             variables=Queries.GET_UPDATE_URL["variables"](content_id, content_type),
         )
 
+    def content_exists(self, content_id: str) -> bool:
+        '''
+        Whether a (single-file) content exists in storage.
+
+        Sends a HEAD request to a presigned URL (generateContentHeadURL), without
+        platform credentials.
+
+        Returns:
+            bool: True when the object exists, False when storage answers 404.
+        '''
+        head_url = self.request_gql(
+            query=Queries.GET_HEAD_URL,
+            variables=Queries.GET_HEAD_URL["variables"](content_id),
+        )
+        try:
+            self.request(method="HEAD", url=head_url, headers={}, auth=False)
+        except BadRequestError as error:
+            if "404 Client Error" in str(error):
+                return False
+            raise
+        return True
+
+    def _check_exists(self, content_id: str) -> None:
+        if not self.content_exists(content_id):
+            raise BadParameterError(
+                f"content {content_id} does not exist. Overwriting it would create a new object "
+                "under that ID; pass check_exists=False if that is what you want."
+            )
+
     def update_content_with_data(
         self,
         content_id: str,
         file_data: Union[BytesIO, bytes],
         content_type: str,
+        check_exists: bool = True,
     ) -> str:
         '''
         Overwrites an existing content with new data, keeping its ID.
+
+        The platform does not check that the content exists: a mistyped ID
+        would create a new object under it. So by default the SDK checks first
+        (``content_exists``, one extra request) and refuses a missing content.
 
         Args:
             content_id (str): The ID of the content to overwrite.
             file_data (BytesIO | bytes): The new data.
             content_type (str): The MIME type of the data (e.g. "application/json").
+            check_exists (bool): Check that the content exists first. Defaults to True.
 
         Raises:
-            BadParameterError: If content_id or content_type is missing.
+            BadParameterError: If content_id or content_type is missing, or the
+                content does not exist (with ``check_exists``).
 
         Returns:
             str: The content ID (unchanged).
@@ -212,6 +251,8 @@ class ContentService(BaseService):
             body = bytes(file_data)
         else:
             raise BadParameterError("file_data must be BytesIO or bytes.")
+        if check_exists:
+            self._check_exists(content_id)
         update_url = self.get_update_url(content_id, content_type)
         self.request(
             method="PUT",
@@ -222,34 +263,42 @@ class ContentService(BaseService):
         )
         return content_id
 
-    def update_content(self, content_id: str, file_path: str) -> str:
+    def update_content(self, content_id: str, file_path: str, check_exists: bool = True) -> str:
         '''
         Overwrites an existing content with a file, keeping its ID.
+
+        The platform does not check that the content exists (a mistyped ID
+        creates a new object); with ``check_exists`` (default) the SDK does.
 
         Args:
             content_id (str): The ID of the content to overwrite.
             file_path (str): The file to upload (its type is guessed from the name).
+            check_exists (bool): Check that the content exists first. Defaults to True.
 
         Returns:
             str: The content ID (unchanged).
         '''
         content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
         with open(file_path, 'rb') as f:
-            return self.update_content_with_data(content_id, f.read(), content_type)
+            return self.update_content_with_data(content_id, f.read(), content_type, check_exists)
 
-    def update_json_content(self, content_id: str, data: Union[dict, list]) -> str:
+    def update_json_content(self, content_id: str, data: Union[dict, list], check_exists: bool = True) -> str:
         '''
         Overwrites an existing content with JSON (e.g. an annotation), keeping its ID.
+
+        The platform does not check that the content exists (a mistyped ID
+        creates a new object); with ``check_exists`` (default) the SDK does.
 
         Args:
             content_id (str): The ID of the content to overwrite.
             data (dict | list): The JSON data.
+            check_exists (bool): Check that the content exists first. Defaults to True.
 
         Returns:
             str: The content ID (unchanged).
         '''
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
-        return self.update_content_with_data(content_id, body, "application/json")
+        return self.update_content_with_data(content_id, body, "application/json", check_exists)
 
     def create_folder_content(self) -> str:
         '''
