@@ -88,3 +88,17 @@ class TestDatasetService:
         variables = self.dataset_service.request_gql.call_args[0][1]
         assert variables["datasetId"] == dataset_id
         assert variables["parameters"] == {"dataset_id": dataset_id}
+
+
+class TestUpdateDataset:
+    def test_sends_the_declared_id_variable(self):
+        """The mutation declares $updateDatasetId; sending `id` gave HTTP 400 (variable not provided)."""
+        service = DatasetService()
+        service.request_gql = Mock(return_value={"id": "dataset-1", "name": "same"})
+
+        service.update_dataset(dataset_id="dataset-1", name="same")
+
+        query, variables = service.request_gql.call_args[0]
+        assert query is Queries.UPDATE_DATASET
+        assert "$updateDatasetId: ID!" in query["query"]
+        assert variables == {"updateDatasetId": "dataset-1", "name": "same"}

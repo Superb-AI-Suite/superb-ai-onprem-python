@@ -18,7 +18,7 @@ def update_dataset_params(
     """Update parameters for dataset modification.
     
     Args:
-        id: ID of the dataset to update
+        dataset_id: ID of the dataset to update
         name: Optional new name for the dataset
         description: Optional new description for the dataset
         
@@ -28,8 +28,9 @@ def update_dataset_params(
     if dataset_id is None:
         raise BadParameterError("Dataset ID is required")
 
+    # The mutation declares $updateDatasetId (passed to updateDataset(id: ...)).
     params = {
-        "id": dataset_id,
+        "updateDatasetId": dataset_id,
     }
 
     if name is not Undefined:
