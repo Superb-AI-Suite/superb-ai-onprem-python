@@ -12,7 +12,11 @@ import mimetypes
 import os
 from dataclasses import dataclass, field
 from email.message import Message
+from email.utils import collapse_rfc2231_value
 from typing import Any, Iterator, List, Optional, Sequence, Tuple, Union
+
+from urllib3.fields import RequestField
+from urllib3.filepost import encode_multipart_formdata
 
 from spb_onprem.exceptions import BadParameterError, BadResponseError
 
@@ -30,6 +34,24 @@ FILE_PART_NAMES = ("image", "video", "file")
 MAX_REQUEST_BYTES = 1024 * 1024 * 1024
 
 PathLike = Union[str, "os.PathLike[str]"]
+
+#: requests sends a 32-character boundary (urllib3 choose_boundary).
+_BOUNDARY_LENGTH = 32
+
+
+def _has_control_character(value: str) -> bool:
+    return any(ch in value for ch in ("\r", "\n", "\x00"))
+
+
+def _framing_bytes(parts: Sequence[Tuple[str, Optional[str], str]]) -> int:
+    """Bytes of the multipart frame (boundaries and part headers), as requests encodes it."""
+    fields = []
+    for name, filename, content_type in parts:
+        request_field = RequestField(name=name, data=b"", filename=filename)
+        request_field.make_multipart(content_type=content_type)
+        fields.append(request_field)
+    body, _ = encode_multipart_formdata(fields, boundary="0" * _BOUNDARY_LENGTH)
+    return len(body)
 
 
 @dataclass
@@ -51,6 +73,12 @@ class DeploymentInvokeFile:
             raise BadParameterError("A DeploymentInvokeFile needs exactly one of data or path.")
         if not isinstance(self.filename, str) or not self.filename.strip():
             raise BadParameterError("A DeploymentInvokeFile needs a filename.")
+        if _has_control_character(self.filename):
+            raise BadParameterError("A DeploymentInvokeFile filename must not contain CR, LF or NUL.")
+        if self.content_type is not None and (
+            not isinstance(self.content_type, str) or _has_control_character(self.content_type)
+        ):
+            raise BadParameterError("A DeploymentInvokeFile content_type must be a string without CR, LF or NUL.")
         if self.data is not None and not isinstance(self.data, (bytes, bytearray)):
             raise BadParameterError("DeploymentInvokeFile.data must be bytes.")
         if self.content_type is None:
@@ -145,20 +173,29 @@ class DeploymentInvokeRequest:
             raise BadParameterError("An invoke request needs at least one part.")
 
     def multipart_files(self) -> List[Tuple[str, Tuple[Optional[str], bytes, str]]]:
-        """The parts in contract order, as the ``files`` argument of ``requests``."""
+        """The parts in contract order, as the ``files`` argument of ``requests``.
+
+        The whole encoded size (bodies plus the multipart frame) is checked
+        against the 1 GiB limit before any file is read.
+        """
         parts = []
         for value in self.text:
             parts.append(("text", (None, value.encode("utf-8"), "text/plain; charset=utf-8")))
         for value in self.json:
             text = value if isinstance(value, str) else jsonlib.dumps(value, ensure_ascii=False, allow_nan=False)
             parts.append(("json", (None, text.encode("utf-8"), "application/json")))
-        total = sum(len(body) for _, (_, body, _) in parts)
-        for name in FILE_PART_NAMES:
-            for item in getattr(self, name):
-                total += item.size()
-                if total > MAX_REQUEST_BYTES:
-                    raise BadParameterError("An invoke request can be at most 1 GiB.")
-                parts.append((name, (item.filename, item.read(), item.content_type)))
+        files = [(name, item) for name in FILE_PART_NAMES for item in getattr(self, name)]
+        total = sum(len(body) for _, (_, body, _) in parts) + sum(item.size() for _, item in files)
+        total += _framing_bytes(
+            [(name, filename, content_type) for name, (filename, _, content_type) in parts]
+            + [(name, item.filename, item.content_type) for name, item in files]
+        )
+        if total > MAX_REQUEST_BYTES:
+            raise BadParameterError(
+                f"An invoke request can be at most 1 GiB as sent (this one is {total} bytes with its multipart frame)."
+            )
+        for name, item in files:
+            parts.append((name, (item.filename, item.read(), item.content_type)))
         return parts
 
 
@@ -251,6 +288,8 @@ def parse_multipart(content_type: str, body: bytes) -> List[DeploymentInvokePart
     """
     header = _header_message([("content-type", content_type or "")])
     boundary = header.get_param("boundary")
+    if isinstance(boundary, tuple):  # RFC 2231 boundary*=...: not used by the relay
+        raise BadResponseError(f"Unsupported multipart boundary in {content_type!r}.")
     if header.get_content_type() != "multipart/form-data" or not boundary:
         raise BadResponseError(f"Expected a multipart/form-data response, got {content_type!r}.")
     boundary = boundary.encode("latin-1")
@@ -280,6 +319,8 @@ def parse_multipart(content_type: str, body: bytes) -> List[DeploymentInvokePart
             headers.append((name.strip(), value.strip()))
         message = _header_message(headers)
         name = message.get_param("name", header="content-disposition")
+        if isinstance(name, tuple):  # RFC 2231 name*=...
+            name = collapse_rfc2231_value(name)
         if not name:
             raise BadResponseError("Malformed multipart response (part without a name).")
         parts.append(DeploymentInvokePart(

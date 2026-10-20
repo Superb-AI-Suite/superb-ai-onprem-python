@@ -62,11 +62,15 @@ def _service(system=False):
     return service
 
 
+DATASET_ID = "01J" + "0" * 20 + "DAT"
+DEPLOYMENT_ID = "01J" + "0" * 20 + "DPX"
+
+
 def _call(response, request=None, **kwargs):
     service = _service()
     with patch("spb_onprem.model_deployments.service.requests.post", return_value=response) as post:
         result = service.invoke_model_deployment(
-            "dataset 1", "01JDEPLOY", request or DeploymentInvokeRequest(text="hi"), **kwargs
+            DATASET_ID, DEPLOYMENT_ID, request or DeploymentInvokeRequest(text="hi"), **kwargs
         )
     return result, post
 
@@ -146,6 +150,43 @@ class TestRequest:
         with pytest.raises(BadParameterError, match="1 GiB"):
             request.multipart_files()
 
+    def test_size_limit_counts_the_multipart_frame(self, monkeypatch):
+        """The limit is on what is sent: bodies plus boundaries and part headers."""
+        import requests as requests_lib
+
+        request = DeploymentInvokeRequest(text="hi", json={"a": 1},
+                                          image=DeploymentInvokeFile.from_bytes(b"x" * 10, "a.png"))
+        sent = len(requests_lib.Request("POST", "http://x.test/", files=request.multipart_files()).prepare().body)
+        monkeypatch.setattr(invoke_module, "MAX_REQUEST_BYTES", sent)
+        request.multipart_files()  # exactly at the limit
+        monkeypatch.setattr(invoke_module, "MAX_REQUEST_BYTES", sent - 1)
+        with pytest.raises(BadParameterError, match=f"{sent} bytes"):
+            request.multipart_files()
+
+    def test_size_limit_applies_to_text_and_json_only(self, monkeypatch):
+        monkeypatch.setattr(invoke_module, "MAX_REQUEST_BYTES", 100)
+        with pytest.raises(BadParameterError, match="1 GiB"):
+            DeploymentInvokeRequest(text="x" * 50, json={"k": "y" * 30}).multipart_files()
+
+    def test_files_are_not_read_when_too_large(self, monkeypatch, tmp_path):
+        path = tmp_path / "big.bin"
+        path.write_bytes(b"x" * 20)
+        monkeypatch.setattr(invoke_module, "MAX_REQUEST_BYTES", 10)
+        request = DeploymentInvokeRequest(file=DeploymentInvokeFile.from_path(path))
+        with patch.object(DeploymentInvokeFile, "read", side_effect=AssertionError("read")):
+            with pytest.raises(BadParameterError, match="1 GiB"):
+                request.multipart_files()
+
+    @pytest.mark.parametrize("kwargs", [
+        {"filename": "a\r\nX-Injected: 1.png"},
+        {"filename": "a\x00.png"},
+        {"filename": "a.png", "content_type": "image/png\r\nX-Injected: 1"},
+        {"filename": "a.png", "content_type": "image/png\n"},
+    ])
+    def test_control_characters_are_refused(self, kwargs):
+        with pytest.raises(BadParameterError, match="CR, LF or NUL"):
+            DeploymentInvokeFile(data=b"x", **kwargs)
+
 
 class TestCall:
     def test_success(self):
@@ -159,7 +200,7 @@ class TestCall:
 
         post.assert_called_once()  # never retried
         args, kwargs = post.call_args
-        assert args[0] == f"{HOST}/graphql/model-deployments/dataset%201/01JDEPLOY/invoke"
+        assert args[0] == f"{HOST}/graphql/model-deployments/{DATASET_ID}/{DEPLOYMENT_ID}/invoke"
         assert kwargs["headers"] == {"Authorization": "Basic dGVzdC1rZXk6dGVzdC1zZWNyZXQ="}
         assert kwargs["allow_redirects"] is False
         assert kwargs["timeout"] == DEFAULT_INVOKE_TIMEOUT
@@ -238,7 +279,7 @@ class TestCall:
         with patch("spb_onprem.model_deployments.service.requests.post",
                    side_effect=requests.exceptions.ConnectionError("refused")) as post:
             with pytest.raises(BadResponseError, match="ConnectionError") as raised:
-                service.invoke_model_deployment("d", "x", DeploymentInvokeRequest(text="hi"))
+                service.invoke_model_deployment(DATASET_ID, DEPLOYMENT_ID, DeploymentInvokeRequest(text="hi"))
         post.assert_called_once()
         # Same rule as BaseService.request: no exception chain.
         assert raised.value.__cause__ is None and raised.value.__suppress_context__
@@ -255,6 +296,23 @@ class TestCall:
         with pytest.raises(BadResponseError, match=match):
             _call(_response(200, body, content_type))
 
+    @pytest.mark.parametrize("dataset_id,deployment_id", [
+        ("dataset 1", DEPLOYMENT_ID),
+        (DATASET_ID, "01JDEPLOY"),
+        (DATASET_ID, DEPLOYMENT_ID.lower()),
+        (DATASET_ID, "../" + DEPLOYMENT_ID[3:]),
+        (None, DEPLOYMENT_ID),
+    ])
+    def test_ids_must_be_platform_ids(self, dataset_id, deployment_id):
+        with patch("spb_onprem.model_deployments.service.requests.post") as post:
+            with pytest.raises(BadParameterError, match="26-character platform ID"):
+                _service().invoke_model_deployment(dataset_id, deployment_id, DeploymentInvokeRequest(text="hi"))
+        post.assert_not_called()
+
+    def test_rfc2231_boundary_is_a_bad_response(self):
+        with pytest.raises(BadResponseError, match="Unsupported multipart boundary"):
+            _call(_response(200, b"--x--\r\n", "multipart/form-data; boundary*=utf-8''abc"))
+
     def test_request_type_is_checked(self):
         with pytest.raises(BadParameterError):
             _service().invoke_model_deployment("d", "x", {"text": ["hi"]})
@@ -265,7 +323,7 @@ class TestCall:
         with patch("spb_onprem.model_deployments.service.requests.post",
                    return_value=_response(401, body.encode(), "application/json")) as post:
             with pytest.raises(DeploymentInvokeError, match="access key"):
-                service.invoke_model_deployment("d", "x", DeploymentInvokeRequest(text="hi"))
+                service.invoke_model_deployment(DATASET_ID, DEPLOYMENT_ID, DeploymentInvokeRequest(text="hi"))
         assert post.call_args[1]["headers"] == {"x-user-email": "system@example.test"}
 
 

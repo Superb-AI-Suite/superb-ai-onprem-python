@@ -59,7 +59,8 @@ for video in result.videos:  # image / video / file parts keep their file name a
 - The call goes through the platform (`POST {host}/graphql/model-deployments/{dataset}/{deployment}/invoke`)
   with your access key. The system SDK (no config file) cannot call it.
 - It is never retried: a server handles one request at a time, and a retry can run the model twice.
-  A request is at most 1 GiB; the request and the response are held in memory.
+  A request is at most 1 GiB as sent (bodies plus the multipart frame); the request and the
+  response are held in memory: plan for about 2× the request size and 3–4× the response size.
 - Time: the platform waits up to the deployment's `invoke_timeout_seconds` for the response headers
   (`504 TIMEOUT`), and cuts a response that sends nothing for 60 seconds.
 
