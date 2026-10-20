@@ -7,7 +7,9 @@ from spb_onprem import (
     AnalyticsReportStatus,
     AnalyticsReportsFilter,
     AnalyticsReportsFilterOptions,
-    ContentService
+    ContentService,
+    ActivityService,
+    ActivityStatus,
 )
 
 
@@ -520,8 +522,14 @@ def test_analytics_report_workflow():
         dataset_id=dataset_id,
         report_id=created_report.id
     )
+    print(f"✅ Report deletion activity started: {delete_result.id} ({delete_result.status})")
+
+    # Since 2.0.0 delete_analytics_report starts a DELETE_ANALYTICS_REPORT activity.
+    finished = ActivityService().wait_for_activity(
+        delete_result.id, dataset_id=dataset_id, timeout=600, poll_interval=5
+    )
+    assert finished.status == ActivityStatus.SUCCESS, f"Deletion activity ended as {finished.status}"
     print(f"✅ Deleted report: {created_report.id}")
-    print(f"   Delete result: {delete_result}")
     
     # Step 13: Verify deletion by trying to list again
     print("\n[Step 13] Verifying report deletion...")

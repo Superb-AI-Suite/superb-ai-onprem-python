@@ -38,3 +38,11 @@ class BadResponseError(ResponseError):
 
 class UnknownError(BaseSDKError):
     pass
+
+
+class BadDeletionTargetError(BadParameterError, ValueError):
+    """The targets of a deletion are missing, ambiguous or empty.
+
+    It is a ValueError too, so either can be caught.
+    """
+    pass

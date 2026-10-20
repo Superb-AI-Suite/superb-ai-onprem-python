@@ -86,6 +86,23 @@ class BaseService():
             BaseService._retry_session = session
         return BaseService._retry_session
 
+    @staticmethod
+    def _graphql_error_code(error: Dict[str, Any]) -> Optional[str]:
+        """The error code: top-level ``code`` first, then ``extensions.code``."""
+        code = error.get('code')
+        if code:
+            return code
+        extensions = error.get('extensions')
+        if isinstance(extensions, dict):
+            return extensions.get('code')
+        return None
+
+    @classmethod
+    def _graphql_error_message(cls, error: Dict[str, Any]) -> str:
+        message = error.get('message', 'Unknown error')
+        code = cls._graphql_error_code(error)
+        return f"[{code}] {message}" if code else message
+
     def request_gql(self, query: Any, variables: Dict[str, Any]):
         """Request Graphql query to the server."""
         debug_gql = os.environ.get("SDK_DEBUG_GQL") == "1"
@@ -151,10 +168,16 @@ class BaseService():
             # Check for GraphQL errors
             if 'errors' in result and result['errors']:
                 _print_debug("response_graphql_errors", result.get("errors"))
-                for error in result['errors']:
-                    if error['code'] == 'NOT_FOUND':
-                        raise NotFoundError(error['message'])
-                error_messages = [error.get('message', 'Unknown error') for error in result['errors']]
+                errors = [
+                    error if isinstance(error, dict) else {"message": str(error)}
+                    for error in result['errors']
+                ]
+                for error in errors:
+                    if self._graphql_error_code(error) == 'NOT_FOUND':
+                        raise NotFoundError(error.get('message', 'Not found'))
+                error_messages = [
+                    self._graphql_error_message(error) for error in errors
+                ]
                 raise UnknownError(f"GraphQL errors: {', '.join(error_messages)}")
             
             # Validate response structure

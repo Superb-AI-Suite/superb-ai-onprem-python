@@ -3,7 +3,8 @@ import time
 
 import pytest
 
-from spb_onprem import ModelService, DatasetService, ContentService, SliceService
+from spb_onprem import ModelService, DatasetService, ContentService, SliceService, ActivityService
+from spb_onprem.activities.entities import ActivityHistory, ActivityStatus
 from spb_onprem.models.enums import ModelTaskType, ModelStatus
 from spb_onprem.models.entities import TrainingAnnotations
 from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
@@ -979,10 +980,15 @@ def test_model_lifecycle_workflow():
                     model_id=created_model_id
                 )
                 
-                print(f"✅ Model deletion executed successfully")
-                print(f"   Delete Result: {delete_result}")
-                
-                assert delete_result == True, "Delete operation should return True"
+                print(f"✅ Model deletion activity started")
+                print(f"   Activity history: {delete_result.id} ({delete_result.status})")
+
+                # Since 2.0.0 delete_model starts a DELETE_MODEL activity.
+                assert isinstance(delete_result, ActivityHistory)
+                finished = ActivityService().wait_for_activity(
+                    delete_result.id, dataset_id=DATASET_ID, timeout=600, poll_interval=5
+                )
+                assert finished.status == ActivityStatus.SUCCESS, f"Deletion activity ended as {finished.status}"
                 
             except Exception as e:
                 print(f"❌ Failed to delete model: {e}")

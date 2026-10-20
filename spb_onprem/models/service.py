@@ -3,6 +3,12 @@ from typing import Optional, List, Tuple, Union
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    require_id,
+    start_deletion_activity,
+)
+from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 from spb_onprem.contents.service import ContentService
 from spb_onprem.charts import ChartDataResult
@@ -174,17 +180,32 @@ class ModelService(BaseService):
         self,
         dataset_id: str,
         model_id: str,
-    ) -> bool:
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        if model_id is None:
-            raise BadParameterError("model_id is required.")
+    ) -> ActivityHistory:
+        """Start deleting a model.
 
-        response = self.request_gql(
-            Queries.DELETE,
-            Queries.DELETE["variables"](dataset_id=dataset_id, model_id=model_id),
+        Since 2.0.0 this starts a ``DELETE_MODEL`` activity instead of deleting
+        the model at once. The activity deletes the model, its training report
+        and their files. Diagnoses made with the model stay. The server refuses
+        a model that has a deployment or is still training. To block until the
+        activity ends, use ``ActivityService.wait_for_activity``.
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
+        Args:
+            dataset_id (str): The dataset ID.
+            model_id (str): The model ID.
+
+        Raises:
+            BadParameterError: If dataset_id or model_id is missing.
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        require_id(dataset_id, "dataset_id")
+        require_id(model_id, "model_id")
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_MODEL, {"model_id": model_id}
         )
-        return bool(response)
 
     def create_training_report_item(
         self,

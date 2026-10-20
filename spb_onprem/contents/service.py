@@ -222,10 +222,19 @@ class ContentService(BaseService):
     ) -> bool:
         '''
         Delete a content by ID.
-        
+
+        A content is a file in storage, not a platform entity, so this deletes
+        it at once (no activity). A key that does not exist counts as deleted.
+        When storage fails, the server returns an error and this raises
+        (``UnknownError``, with the server code such as ``STORAGE_TRANSIENT``
+        or ``STORAGE_PERMANENT`` in the message) instead of returning False.
+
         Args:
             content_id (str): The ID of the content to delete.
-            
+
+        Raises:
+            UnknownError: If the server could not delete the file.
+
         Returns:
             bool: True if deletion was successful.
         '''

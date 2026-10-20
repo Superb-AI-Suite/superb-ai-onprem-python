@@ -1,6 +1,12 @@
 from typing import Optional, Union, Any
 from spb_onprem.base_service import BaseService
 from spb_onprem.exceptions import BadParameterError
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    require_id,
+    start_deletion_activity,
+)
+from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.contents.service import ContentService
 from spb_onprem.charts import ChartDataResult
@@ -177,30 +183,32 @@ class ReportService(BaseService):
         self,
         dataset_id: str,
         report_id: str,
-    ) -> bool:
-        """Delete an analytics report.
-        
+    ) -> ActivityHistory:
+        """Start deleting an analytics report.
+
+        Since 2.0.0 this starts a ``DELETE_ANALYTICS_REPORT`` activity instead
+        of deleting the report at once. The activity deletes the report, its
+        items and their files. The server refuses a report that is still being
+        made. To block until the activity ends, use
+        ``ActivityService.wait_for_activity``.
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
         Args:
             dataset_id (str): The dataset ID
             report_id (str): The ID of the report to delete
-        
-        Returns:
-            bool: True if deletion was successful
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        
-        if report_id is None:
-            raise BadParameterError("report_id is required.")
 
-        response = self.request_gql(
-            Queries.DELETE_ANALYTICS_REPORT,
-            Queries.DELETE_ANALYTICS_REPORT["variables"](
-                dataset_id=dataset_id,
-                report_id=report_id
-            )
+        Raises:
+            BadParameterError: If dataset_id or report_id is missing.
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        require_id(dataset_id, "dataset_id")
+        require_id(report_id, "report_id")
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_ANALYTICS_REPORT, {"report_id": report_id}
         )
-        return response
     
     def create_analytics_report_item(
         self,

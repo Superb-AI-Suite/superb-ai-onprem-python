@@ -67,8 +67,11 @@ updated = service.update_dataset(
     description="New description with more details"
 )
 
-# Delete dataset (use with caution)
-service.delete_dataset(dataset_id="dataset_123")
+# Delete dataset (use with caution).
+# Since 2.0.0 this starts a DELETE_DATASET activity that also deletes the files.
+history = service.delete_dataset(dataset_id="dataset_123")
+# Optional: wait until it ends (from spb_onprem import ActivityService)
+ActivityService().wait_for_activity(history.id, dataset_id="dataset_123")
 ```
 
 ### Dataset Listing

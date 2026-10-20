@@ -27,7 +27,14 @@ from .enums import (
 )
 from .params import (
     DataListFilter,
+    deletion_data_filter,
 )
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    require_id,
+    start_deletion_activity,
+)
+from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.exceptions import BadParameterError
 
 class DataService(BaseService):
@@ -281,25 +288,50 @@ class DataService(BaseService):
     def remove_data_from_slice(
         self,
         dataset_id: str,
-        data_id: str,
-        slice_id: str,
-    ):
-        """Remove a data from a slice.
+        data_id: Optional[str] = None,
+        slice_id: Optional[str] = None,
+        *,
+        data_ids: Optional[List[str]] = None,
+        data_filter: Optional[Union[DataListFilter, dict]] = None,
+    ) -> ActivityHistory:
+        """Start removing data from a slice.
+
+        Since 2.0.0 this starts a ``REMOVE_DATA_FROM_SLICE`` activity instead of
+        removing the data at once. The activity also deletes the slice
+        annotation files of the removed data. Pass exactly one of ``data_id``,
+        ``data_ids`` or ``data_filter``; one call starts one activity for all
+        of them. To block until it ends, use ``ActivityService.wait_for_activity``.
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
 
         Args:
             dataset_id (str): The dataset id.
-            data_id (str): The data id.
-            slice_id (str): The slice id.
+            data_id (Optional[str]): One data id.
+            slice_id (str): The slice id. Required.
+            data_ids (Optional[List[str]]): Several data ids.
+            data_filter (Optional[DataListFilter | dict]): The data to remove.
+                It is limited to the slice by the activity.
+
+        Raises:
+            BadParameterError: If dataset_id or slice_id is missing.
+            BadDeletionTargetError: If none or several of data_id, data_ids and
+                data_filter are given, or they are empty (also a ValueError).
 
         Returns:
-            Data: The updated data.
+            ActivityHistory: The started activity.
         """
-        response = self.request_gql(
-            Queries.REMOVE_FROM_SLICE,
-            Queries.REMOVE_FROM_SLICE["variables"](dataset_id=dataset_id, data_id=data_id, slice_id=slice_id)
+        require_id(dataset_id, "dataset_id")
+        require_id(slice_id, "slice_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "slice_id": slice_id,
+            "data_filter": deletion_data_filter(
+                data_id=data_id, data_ids=data_ids, data_filter=data_filter
+            ),
+        }
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.REMOVE_DATA_FROM_SLICE, parameters
         )
-        data = Data.model_validate(response)
-        return data
     
     def add_data_to_slice(
         self,
@@ -327,30 +359,47 @@ class DataService(BaseService):
     def delete_data(
         self,
         dataset_id: str,
-        data_id: str,
-    ) -> bool:
-        """Delete a data.
+        data_id: Optional[str] = None,
+        *,
+        data_ids: Optional[List[str]] = None,
+        data_filter: Optional[Union[DataListFilter, dict]] = None,
+    ) -> ActivityHistory:
+        """Start deleting data.
+
+        Since 2.0.0 this starts a ``DELETE_DATA`` activity instead of deleting
+        the data at once. The activity deletes the data with their files
+        (annotations, slice annotations, thumbnails and scene contents). Pass
+        exactly one of ``data_id``, ``data_ids`` or ``data_filter``; one call
+        starts one activity for all of them. To block until it ends, use
+        ``ActivityService.wait_for_activity``. A caller who is not an admin of
+        the dataset (Owner, WorkspaceAdmin or DATASET-ADMIN) submits it as
+        AWAITING_APPROVAL.
 
         Args:
             dataset_id (str): The dataset id.
-            data_id (str): The data id.
+            data_id (Optional[str]): One data id.
+            data_ids (Optional[List[str]]): Several data ids.
+            data_filter (Optional[DataListFilter | dict]): The data to delete.
+                It must have a condition; an empty filter is refused.
+
+        Raises:
+            BadParameterError: If dataset_id is missing.
+            BadDeletionTargetError: If none or several of data_id, data_ids and
+                data_filter are given, or they are empty (also a ValueError).
 
         Returns:
-            bool: True if deletion was successful.
-        
-        Raises:
-            BadParameterError: If required parameters are missing.
+            ActivityHistory: The started activity.
         """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        if data_id is None:
-            raise BadParameterError("data_id is required.")
-
-        response = self.request_gql(
-            Queries.DELETE,
-            Queries.DELETE["variables"](dataset_id=dataset_id, data_id=data_id)
+        require_id(dataset_id, "dataset_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "data_filter": deletion_data_filter(
+                data_id=data_id, data_ids=data_ids, data_filter=data_filter
+            ),
+        }
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_DATA, parameters
         )
-        return response
 
     def update_annotation(
         self,

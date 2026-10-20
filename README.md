@@ -126,6 +126,27 @@ else:
 
 Ready for more? Check out our [comprehensive documentation](#-documentation) below!
 
+## 🗑️ Deleting (changed in 2.0.0)
+
+`delete_model`, `delete_diagnosis`, `delete_analytics_report`, `delete_dataset`,
+`delete_data`, `delete_slice` and `remove_data_from_slice` no longer delete rows
+at once. They start the matching activity (`DELETE_MODEL`, `DELETE_DIAGNOSIS`,
+`DELETE_ANALYTICS_REPORT`, `DELETE_DATASET`, `DELETE_DATA`, `DELETE_SLICE`,
+`REMOVE_DATA_FROM_SLICE`), which also deletes the files in storage, and return
+its `ActivityHistory` instead of `bool` (or `Data` for `remove_data_from_slice`).
+
+- The history is truthy, so `if service.delete_x(...)` keeps working; `== True` does not.
+- Progress and errors show in the Activity log. A non-admin of the dataset submits the
+  activity as `AWAITING_APPROVAL`; an admin (Owner, WorkspaceAdmin, DATASET-ADMIN) starts it at once.
+- `delete_data` and `remove_data_from_slice` also take `data_ids=[...]` or `data_filter=...`
+  (exactly one target; empty lists and filters are refused) and start one activity for all.
+- To block until the deletion ends, call `ActivityService().wait_for_activity(history.id)`.
+- `ContentService.delete_content` is unchanged (a content is a file, not an entity), but it
+  raises when storage fails instead of returning `False`.
+
+The server must have the deletion activities (job definitions and base DAGs).
+See the "Deletion Activities" section of [Activities](spb_onprem/activities/README.md).
+
 ## 📚 Module Documentation
 
 ### 🏗️ Core Modules

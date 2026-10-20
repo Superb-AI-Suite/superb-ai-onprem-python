@@ -75,7 +75,8 @@ data_service.add_data_to_slice(
     data_ids=["data_001", "data_002", "data_003"]
 )
 
-# Remove data from slice (using DataService)
+# Remove data from slice (using DataService).
+# Since 2.0.0 this starts one REMOVE_DATA_FROM_SLICE activity for all the data.
 data_service.remove_data_from_slice(
     dataset_id="dataset_123",
     slice_id="slice_456",
@@ -109,7 +110,8 @@ slices, cursor, total = slice_service.get_slices(
     length=10
 )
 
-# Delete slice (data remains in dataset)
+# Delete slice (data remains in dataset).
+# Since 2.0.0 this starts a DELETE_SLICE activity and returns its ActivityHistory.
 slice_service.delete_slice(
     dataset_id="dataset_123",
     slice_id="slice_456"

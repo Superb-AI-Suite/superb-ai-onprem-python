@@ -13,7 +13,7 @@ DiagnosisService는 데이터셋 내 diagnosis(진단) 및 report item 관리를
 - **get_diagnoses()** - 필터/정렬/페이지네이션 목록 조회
 - **create_diagnosis()** - diagnosis 생성
 - **update_diagnosis()** - diagnosis 수정
-- **delete_diagnosis()** - diagnosis 삭제
+- **delete_diagnosis()** - diagnosis 삭제 activity(DELETE_DIAGNOSIS) 시작, 리포트 아이템·파일까지 삭제 (2.0.0부터)
 
 ### DiagnosisReportItem
 - **create_diagnosis_report_item()** - 리포트 아이템 생성

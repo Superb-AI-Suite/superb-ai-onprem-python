@@ -1,6 +1,12 @@
 from typing import Optional, Union
 from spb_onprem.base_service import BaseService
 from spb_onprem.exceptions import BadParameterError
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    require_id,
+    start_deletion_activity,
+)
+from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.base_types import Undefined, UndefinedType
 from .queries import Queries
 from .entities import Dataset
@@ -140,20 +146,27 @@ class DatasetService(BaseService):
         )
         return Dataset.model_validate(response)
     
-    def delete_dataset(self, dataset_id: str) -> bool:
-        """Delete the dataset.
-        
+    def delete_dataset(self, dataset_id: str) -> ActivityHistory:
+        """Start deleting the dataset.
+
+        Since 2.0.0 this starts a ``DELETE_DATASET`` activity instead of
+        deleting the dataset at once. The activity deletes the files of the
+        dataset's data, slices, models, diagnoses and analytics reports, then
+        the dataset. The server refuses a dataset that has a deployment. To
+        block until the activity ends, use ``ActivityService.wait_for_activity``.
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
         Args:
             dataset_id (str): The ID of the dataset to delete.
-        
-        Returns:
-            bool: True if deletion was successful.
-        """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
 
-        response = self.request_gql(
-            Queries.DELETE_DATASET,
-            Queries.DELETE_DATASET["variables"](dataset_id=dataset_id)
+        Raises:
+            BadParameterError: If dataset_id is missing.
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        require_id(dataset_id, "dataset_id")
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_DATASET, {"dataset_id": dataset_id}
         )
-        return response

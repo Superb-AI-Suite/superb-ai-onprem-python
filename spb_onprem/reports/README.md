@@ -420,7 +420,7 @@ report = report_service.get_analytics_report(
     report_id="report_456"
 )
 
-# Report 삭제
+# Report 삭제 (2.0.0부터 DELETE_ANALYTICS_REPORT activity를 시작하고 ActivityHistory를 돌려줌)
 report_service.delete_analytics_report(
     dataset_id="dataset_123",
     report_id="report_456"

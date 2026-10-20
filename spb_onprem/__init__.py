@@ -8,6 +8,7 @@ from .datasets.service import DatasetService
 from .data.service import DataService
 from .slices.service import SliceService
 from .activities.service import ActivityService
+from .activities.deletion import DeletionActivityType
 from .contents.service import ContentService
 from .models.service import ModelService
 from .reports.service import ReportService
@@ -134,6 +135,7 @@ __all__ = (
     "DataService",
     "SliceService",
     "ActivityService",
+    "DeletionActivityType",
     "ContentService",
     "ModelService",
     "ReportService",

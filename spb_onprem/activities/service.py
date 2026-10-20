@@ -1,6 +1,8 @@
+import time
 from typing import Optional, Union, List, Tuple
 
 from spb_onprem.base_service import BaseService
+from spb_onprem.exceptions import BadParameterError
 from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
@@ -11,6 +13,7 @@ from .entities import (
     ActivitySchema,
     ActivityHistory,
     ActivityStatus,
+    TERMINAL_ACTIVITY_STATUSES,
     TaskDetail,
     TaskLogChunk,
     TaskLogDownload,
@@ -154,6 +157,61 @@ class ActivityService(BaseService):
             )
         )
         return ActivityHistory.model_validate(response)
+
+    def wait_for_activity(
+        self,
+        activity_history_id: str,
+        dataset_id: Optional[str] = None,
+        timeout: float = 600.0,
+        poll_interval: float = 5.0,
+    ) -> ActivityHistory:
+        """Wait until an activity history ends.
+
+        Polls ``get_activity_history`` until the status is SUCCESS, FAILED,
+        CANCELED or REJECTED and returns that history. It does not raise for
+        FAILED, CANCELED or REJECTED; check ``status`` (and ``meta``) yourself.
+        AWAITING_APPROVAL is not an end state: the wait goes on until an admin
+        approves or rejects the activity, or the timeout passes.
+
+        Args:
+            activity_history_id (str): The activity history ID, e.g. the ``id``
+                of what a delete function returned.
+            dataset_id (Optional[str]): The dataset of the activity, if known.
+            timeout (float): Seconds to wait in total. Defaults to 600.
+            poll_interval (float): Seconds between two polls. Defaults to 5.
+
+        Raises:
+            BadParameterError: If activity_history_id is missing.
+            ValueError: If timeout or poll_interval is not positive.
+            TimeoutError: If the activity has not ended within ``timeout``. The
+                message has the last status seen.
+
+        Returns:
+            ActivityHistory: The ended activity history.
+        """
+        if not activity_history_id:
+            raise BadParameterError("activity_history_id is required.")
+        if timeout <= 0:
+            raise ValueError("timeout must be positive.")
+        if poll_interval <= 0:
+            raise ValueError("poll_interval must be positive.")
+
+        deadline = time.monotonic() + timeout
+        while True:
+            history = self.get_activity_history(
+                dataset_id=dataset_id,
+                activity_history_id=activity_history_id,
+            )
+            if history.status in TERMINAL_ACTIVITY_STATUSES:
+                return history
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                status = history.status.value if history.status else None
+                raise TimeoutError(
+                    f"Activity history {activity_history_id} did not end within "
+                    f"{timeout:g}s (last status: {status})."
+                )
+            time.sleep(min(poll_interval, remaining))
 
     def get_activity_history_task_monitoring(
         self,

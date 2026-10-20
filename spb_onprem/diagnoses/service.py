@@ -3,6 +3,12 @@ from typing import Optional, List, Tuple, Union
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    require_id,
+    start_deletion_activity,
+)
+from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.contents.service import ContentService
 from spb_onprem.charts import ChartDataResult
 
@@ -258,8 +264,16 @@ class DiagnosisService(BaseService):
         self,
         dataset_id: str,
         diagnosis_id: str,
-    ) -> bool:
-        """diagnosis 삭제.
+    ) -> ActivityHistory:
+        """Start deleting a diagnosis.
+
+        Since 2.0.0 this starts a ``DELETE_DIAGNOSIS`` activity instead of
+        deleting the diagnosis at once. The activity deletes the diagnosis, its
+        report items and their files. The server refuses a diagnosis that is
+        still running. To block until the activity ends, use
+        ``ActivityService.wait_for_activity``.
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
 
         Args:
             dataset_id (str): Dataset ID.
@@ -269,21 +283,13 @@ class DiagnosisService(BaseService):
             BadParameterError: dataset_id 또는 diagnosis_id 미제공 시.
 
         Returns:
-            bool: 삭제 성공 여부.
+            ActivityHistory: The started activity.
         """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        if diagnosis_id is None:
-            raise BadParameterError("diagnosis_id is required.")
-
-        response = self.request_gql(
-            Queries.DELETE,
-            Queries.DELETE["variables"](
-                dataset_id=dataset_id,
-                diagnosis_id=diagnosis_id,
-            ),
+        require_id(dataset_id, "dataset_id")
+        require_id(diagnosis_id, "diagnosis_id")
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_DIAGNOSIS, {"diagnosis_id": diagnosis_id}
         )
-        return bool(response)
 
     def create_diagnosis_report_item(
         self,

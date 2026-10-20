@@ -15,6 +15,12 @@ from .params import (
 from .queries import (
     Queries,
 )
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    require_id,
+    start_deletion_activity,
+)
+from spb_onprem.activities.entities import ActivityHistory
 
 
 class SliceService(BaseService):
@@ -190,21 +196,32 @@ class SliceService(BaseService):
         self,
         dataset_id: str,
         slice_id: str,
-    ) -> bool:
-        """Delete a slice.
-        
+    ) -> ActivityHistory:
+        """Start deleting a slice.
+
+        Since 2.0.0 this starts a ``DELETE_SLICE`` activity instead of deleting
+        the slice at once. The activity deletes the slice and the slice
+        annotation files; the data stay in the dataset. To block until the
+        activity ends, use ``ActivityService.wait_for_activity``.
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
         Args:
             dataset_id (str): The ID of the dataset the slice belongs to.
             slice_id (str): The ID of the slice to delete.
-        
+
+        Raises:
+            BadParameterError: If dataset_id or slice_id is missing.
+
         Returns:
-            bool: True if the slice was deleted, False otherwise.
+            ActivityHistory: The started activity.
         """
-        response = self.request_gql(
-            Queries.DELETE_SLICE,
-            Queries.DELETE_SLICE["variables"](
-                dataset_id=dataset_id,
-                slice_id=slice_id,
-            )
+        require_id(dataset_id, "dataset_id")
+        require_id(slice_id, "slice_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "slice_filter": {"must": {"idIn": [slice_id]}},
+        }
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_SLICE, parameters
         )
-        return response
