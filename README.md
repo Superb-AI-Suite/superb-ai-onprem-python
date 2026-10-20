@@ -136,7 +136,13 @@ at once. They start the matching activity (`DELETE_MODEL`, `DELETE_DIAGNOSIS`,
 `Data` for `remove_data_from_slice`). The delete activities also delete the files
 in storage; `REMOVE_DATA_FROM_SLICE` only takes data out of a slice and deletes no files.
 
-- The history is truthy, so `if service.delete_x(...)` keeps working; `== True` does not.
+- The history is always truthy, so `if service.delete_x(...)` keeps running, but `bool(...)` no
+  longer tells whether anything was deleted (and `== True` is False). Use
+  `ActivityService().wait_for_activity(history.id)` and check its `status`.
+- Deleting a model, diagnosis or analytics report that does not exist raises `NotFoundError`
+  (before: returned `False`).
+- `ActivityStatus.CANCELLED` is now an alias of `CANCELED`; its value is `"CANCELED"`, so
+  comparing a status with the string `"CANCELLED"` is False.
 - Progress and errors show in the Activity log. A non-admin of the dataset submits the
   activity as `AWAITING_APPROVAL`; an admin (Owner, WorkspaceAdmin, DATASET-ADMIN) starts it at once.
 - `delete_data` and `remove_data_from_slice` also take `data_ids=[...]` or `data_filter=...`

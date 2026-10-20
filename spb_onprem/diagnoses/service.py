@@ -281,6 +281,10 @@ class DiagnosisService(BaseService):
 
         Raises:
             BadParameterError: dataset_id 또는 diagnosis_id 미제공 시.
+            NotFoundError: If the diagnosis does not exist (before 2.0.0 this
+                returned False).
+            UnknownError: If the server refuses the request, e.g. the
+                diagnosis is still running.
 
         Returns:
             ActivityHistory: The started activity.

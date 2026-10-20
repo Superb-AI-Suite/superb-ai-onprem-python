@@ -197,6 +197,10 @@ class ModelService(BaseService):
 
         Raises:
             BadParameterError: If dataset_id or model_id is missing.
+            NotFoundError: If the model does not exist (before 2.0.0 this
+                returned False).
+            UnknownError: If the server refuses the request, e.g. the model
+                has a deployment or is still training.
 
         Returns:
             ActivityHistory: The started activity.

@@ -200,6 +200,10 @@ class ReportService(BaseService):
 
         Raises:
             BadParameterError: If dataset_id or report_id is missing.
+            NotFoundError: If the report does not exist (before 2.0.0 this
+                returned False).
+            UnknownError: If the server refuses the request, e.g. the report
+                is still being made.
 
         Returns:
             ActivityHistory: The started activity.
