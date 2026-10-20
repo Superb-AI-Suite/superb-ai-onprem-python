@@ -159,3 +159,47 @@ def test_platform_url_is_judged_like_requests():
     assert service.is_platform_url("http://127.0.0.1:8/x")
     assert service.is_platform_url("http://127.0.0.1:8/x?y=1")
     assert not service.is_platform_url("http://127.0.0.1:9/x")
+
+
+class _DropHandler(BaseHTTPRequestHandler):
+    """Closes the connection without an answer, so urllib3 retries with a WARNING."""
+
+    def handle_one_request(self):
+        self.server.received.append(self.rfile.readline())
+        self.close_connection = True
+
+    def log_message(self, *args):
+        pass
+
+
+def test_urllib3_retry_warnings_hide_the_signature(fast_retries):
+    """With logging set up (as in Airflow), urllib3's own WARNING lines must not show the signature."""
+    import io
+
+    from spb_onprem.base_service import URLLIB3_URL_LOGGERS
+
+    for name in URLLIB3_URL_LOGGERS:
+        assert sum(getattr(f, "spb_redact_url_query", False) for f in logging.getLogger(name).filters) == 1
+
+    root = logging.getLogger()
+    saved_handlers, saved_level = root.handlers[:], root.level
+    stream = io.StringIO()
+    logging.basicConfig(stream=stream, level=logging.WARNING, force=True,
+                        format="%(levelname)s %(name)s %(message)s")
+    server = _Server(_DropHandler)
+    try:
+        url = f"http://127.0.0.1:{server.port}/bucket/key?{SIGNATURE}&X-Amz-Date=20261020"
+        with pytest.raises(BadRequestError):
+            _service("https://platform.example.test", system=False).request("PUT", url, data=b"x", auth=False)
+    finally:
+        server.close()
+        for handler in root.handlers[:]:
+            root.removeHandler(handler)
+        for handler in saved_handlers:
+            root.addHandler(handler)
+        root.setLevel(saved_level)
+
+    output = stream.getvalue()
+    assert "WARNING urllib3.connectionpool Retrying" in output
+    assert "/bucket/key?<redacted>" in output
+    assert SIGNATURE not in output and "0123456789abcdef" not in output

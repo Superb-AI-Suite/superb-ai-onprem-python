@@ -1,6 +1,7 @@
 from typing import Optional, Dict, Any, ClassVar
 from urllib.parse import urlsplit
 import json
+import logging
 import os
 import random
 import re
@@ -69,6 +70,47 @@ def _prepared_url(url: str) -> Optional[str]:
 
 def redact_headers(headers) -> Dict[str, Any]:
     return {k: ("<redacted>" if str(k).lower() in SENSITIVE_HEADERS else v) for k, v in dict(headers).items()}
+
+
+class _RedactUrlQueryFilter(logging.Filter):
+    """Hides URL query strings (presigned signatures) in urllib3 log records.
+
+    urllib3 logs the request path with its query, also at WARNING when it
+    retries ("Retrying (...) after connection broken by '...':
+    /bucket/key?X-Amz-Signature=..."). Only the query part is replaced; the
+    rest of the record is unchanged.
+    """
+
+    #: Marks the filter, so it is added once even if this module is loaded again.
+    spb_redact_url_query = True
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            message = record.getMessage()
+        except Exception:  # noqa: BLE001 - never break logging
+            return True
+        if "?" in message:
+            redacted = redact_url_queries(message)
+            if redacted != message:
+                record.msg = redacted
+                record.args = ()
+        return True
+
+
+#: urllib3 loggers that write request URLs: the connection pool (WARNING on
+#: retries, DEBUG per request) and the retry counter (DEBUG).
+URLLIB3_URL_LOGGERS = ("urllib3.connectionpool", "urllib3.util.retry")
+
+
+def install_urllib3_log_redaction() -> None:
+    """Add the query-hiding filter to the urllib3 loggers once (done on import)."""
+    for name in URLLIB3_URL_LOGGERS:
+        logger = logging.getLogger(name)
+        if not any(getattr(item, "spb_redact_url_query", False) for item in logger.filters):
+            logger.addFilter(_RedactUrlQueryFilter())
+
+
+install_urllib3_log_redaction()
 
 
 class _PlatformSession(requests.Session):
@@ -298,7 +340,11 @@ class BaseService():
             # Log detailed error information for debugging
             if hasattr(e, 'response') and e.response is not None:
                 error_details = f"HTTP {e.response.status_code} Error"
-                response_text = e.response.text[:1000] if e.response.text else "No response body"
+                # The body can echo a URL (e.g. a presigned uploadURL); hide its query.
+                response_text = (
+                    redact_url_queries(e.response.text[:1000], self.endpoint)
+                    if e.response.text else "No response body"
+                )
                 print(f"GraphQL Request Failed - {error_details}: {response_text}")
                 import logging
                 logger = logging.getLogger(__name__)
@@ -337,7 +383,10 @@ class BaseService():
         prepared = _prepared_url(url)
         if prepared is None:
             raise BadRequestParameterError(f"Invalid URL: {redact_url_queries(url, url)}")
-        parts = parse_url(prepared)
+        try:
+            parts = parse_url(prepared)
+        except Exception:  # noqa: BLE001 - urllib3 LocationParseError and the like
+            raise BadRequestParameterError(f"Invalid URL: {redact_url_queries(url, url)}") from None
         scheme = (parts.scheme or "").lower()
         port = parts.port or {"http": 80, "https": 443}.get(scheme)
         return scheme, (parts.host or "").lower(), port

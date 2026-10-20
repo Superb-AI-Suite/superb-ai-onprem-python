@@ -97,3 +97,45 @@ def test_debug_output_hides_presigned_signatures(capsys, monkeypatch):
     assert "storage.example.test/bucket/key?<redacted>" in out
     assert SIGNATURE not in out
     assert result["uploadURL"] == upload_url  # only the printout is redacted
+
+
+def test_http_error_body_hides_presigned_signatures(capsys, caplog):
+    """The error body (up to 1000 characters) is printed and logged; a URL in it must not show its query."""
+    service = _service()
+    error = _http_error(service.endpoint, {"Authorization": SECRET})
+    error.response._content = f'{{"uploadURL": "https://storage.example.test/k?{SIGNATURE}"}}'.encode()
+    session = Mock()
+    session.post.return_value.raise_for_status.side_effect = error
+    session.post.return_value.status_code = 403
+    session.post.return_value.elapsed = None
+
+    with caplog.at_level(logging.DEBUG, logger="spb_onprem"), \
+            patch.object(BaseService, "requests_retry_session", return_value=session):
+        with pytest.raises(BadResponseError):
+            service.request_gql({"name": "x", "query": "query { x }"}, {})
+
+    output = _everything(capsys, caplog)
+    assert "storage.example.test/k?<redacted>" in output
+    assert SIGNATURE not in output
+
+
+@pytest.mark.parametrize("url", ["http://a.test:99999/x", "http://a.test:abc/x", "http://a\\@b.test/x", "http://a.test/\x00"])
+def test_is_platform_url_raises_sdk_errors(url):
+    from spb_onprem.exceptions import BadRequestParameterError
+
+    with pytest.raises(BadRequestParameterError):
+        _service().is_platform_url(url)
+
+
+def test_is_platform_url_location_parse_error(monkeypatch):
+    from urllib3.exceptions import LocationParseError
+
+    from spb_onprem import base_service
+    from spb_onprem.exceptions import BadRequestParameterError
+
+    def broken(_url):
+        raise LocationParseError("bad")
+
+    monkeypatch.setattr(base_service, "parse_url", broken)
+    with pytest.raises(BadRequestParameterError):
+        _service().is_platform_url("https://platform.example.test/x")
