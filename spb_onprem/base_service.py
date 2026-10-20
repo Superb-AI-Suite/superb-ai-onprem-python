@@ -7,7 +7,7 @@ import re
 
 import requests
 from requests.adapters import HTTPAdapter
-from urllib3.util import Retry
+from urllib3.util import Retry, parse_url
 
 from spb_onprem.users.entities import AuthUser
 from spb_onprem.exceptions import (
@@ -25,11 +25,65 @@ from spb_onprem.exceptions import (
 )
 
 _URL_QUERY = re.compile(r"(https?://[^\s?#'\"]+)\?[^\s#'\"]*")
+# A query-like part in any form, also a relative one such as urllib3's
+# "Max retries exceeded with url: /bucket/key?X-Amz-Signature=...".
+_ANY_QUERY = re.compile(r"\?[^\s#'\"<>]*=[^\s#'\"<>]*")
+
+#: Request headers never written to logs (lower case).
+SENSITIVE_HEADERS = frozenset({"authorization", "proxy-authorization", "cookie", "x-api-key", "x-user-email"})
 
 
-def redact_url_queries(text: str) -> str:
-    """Hide URL query strings, such as the signature of a presigned storage URL."""
-    return _URL_QUERY.sub(r"\1?<redacted>", text)
+def redact_url_queries(text: str, *urls: Optional[str]) -> str:
+    """Hide URL query strings, such as the signature of a presigned storage URL.
+
+    The query of each given URL is replaced wherever it appears, whatever the
+    form of the message (absolute URL, relative path, encoded). Then any
+    remaining ``?key=value`` part is hidden too.
+    """
+    text = str(text)
+    for url in urls:
+        if not url:
+            continue
+        for candidate in {url, _prepared_url(url)}:
+            if not candidate:
+                continue
+            try:
+                query = urlsplit(candidate).query
+            except ValueError:
+                query = candidate.partition("?")[2]
+            if query:
+                text = text.replace(query, "<redacted>")
+    text = _URL_QUERY.sub(r"\1?<redacted>", text)
+    return _ANY_QUERY.sub("?<redacted>", text)
+
+
+def _prepared_url(url: str) -> Optional[str]:
+    """The URL as requests sends it, or None if requests cannot parse it."""
+    try:
+        prepared = requests.models.PreparedRequest()
+        prepared.prepare_url(url, None)
+        return prepared.url
+    except Exception:  # noqa: BLE001 - only used to find text to hide
+        return None
+
+
+def redact_headers(headers) -> Dict[str, Any]:
+    return {k: ("<redacted>" if str(k).lower() in SENSITIVE_HEADERS else v) for k, v in dict(headers).items()}
+
+
+class _PlatformSession(requests.Session):
+    """A session that drops the system user header when a redirect leaves the host.
+
+    requests already drops ``Authorization`` then (``should_strip_auth``); the
+    system SDK sends ``x-user-email`` instead, which requests would forward.
+    """
+
+    def rebuild_auth(self, prepared_request, response):
+        if "x-user-email" in prepared_request.headers and self.should_strip_auth(
+            response.request.url, prepared_request.url
+        ):
+            del prepared_request.headers["x-user-email"]
+        super().rebuild_auth(prepared_request, response)
 
 
 #: SDK exception per platform error code. Other codes raise GraphQLError (an UnknownError).
@@ -80,7 +134,7 @@ class BaseService():
         ]
     ) -> requests.Session:
         if BaseService._retry_session is None:
-            session = session or requests.Session()
+            session = session or _PlatformSession()
             # urllib3 < 1.26에서는 method_whitelist, >= 1.26에서는 allowed_methods 사용
             try:
                 retry = RetryWithJitter(
@@ -154,7 +208,8 @@ class BaseService():
             print(f"\n=== SDK_DEBUG_GQL: {title} ===")
             if obj is None:
                 return
-            text = _safe_dump(obj)
+            # A response can hold presigned URLs (uploadURL); their query is a credential.
+            text = redact_url_queries(_safe_dump(obj))
             if debug_max_chars > 0 and len(text) > debug_max_chars:
                 text = text[:debug_max_chars] + "...<truncated>"
             print(text)
@@ -252,14 +307,12 @@ class BaseService():
                 logger.error(f"Request URL: {e.response.url}")
                 # Never log credentials: redact Authorization and other sensitive headers.
                 if e.response.request is not None:
-                    redacted = {
-                        k: ("<redacted>" if k.lower() in ("authorization", "proxy-authorization", "cookie", "x-api-key") else v)
-                        for k, v in dict(e.response.request.headers).items()
-                    }
+                    redacted = redact_headers(e.response.request.headers)
                 else:
                     redacted = "N/A"
                 logger.error(f"Request headers: {redacted}")
-            raise BadResponseError(f"HTTP request failed: {str(e)}") from e
+            # No exception chain: the cause's traceback could show what the message hides.
+            raise BadResponseError(f"HTTP request failed: {redact_url_queries(str(e), self.endpoint)}") from None
         except BaseSDKError as e:
             raise e
         except Exception as e:
@@ -270,14 +323,31 @@ class BaseService():
 
     @staticmethod
     def _origin(url: str):
-        """(scheme, host, port) of a URL, with the default port filled in."""
-        parts = urlsplit(url)
+        """(scheme, host, port) that requests actually connects to, default port filled in.
+
+        Parsed the way requests does (PreparedRequest + urllib3), not with
+        urlsplit, which reads some URLs differently (``http://a:1\\@b:2/``).
+
+        Raises:
+            BadRequestParameterError: If the URL has a backslash or a control
+                character, or requests cannot parse it.
+        """
+        if not isinstance(url, str) or "\\" in url or any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in url):
+            raise BadRequestParameterError("Invalid URL: it must not contain a backslash or a control character.")
+        prepared = _prepared_url(url)
+        if prepared is None:
+            raise BadRequestParameterError(f"Invalid URL: {redact_url_queries(url, url)}")
+        parts = parse_url(prepared)
         scheme = (parts.scheme or "").lower()
         port = parts.port or {"http": 80, "https": 443}.get(scheme)
-        return scheme, (parts.hostname or "").lower(), port
+        return scheme, (parts.host or "").lower(), port
 
     def is_platform_url(self, url: str) -> bool:
-        """True when ``url`` is on the platform API host (same scheme, host and port)."""
+        """True when ``url`` is on the platform API host (same scheme, host and port).
+
+        Raises:
+            BadRequestParameterError: If the URL is not valid (see ``_origin``).
+        """
         return self._origin(url) == self._origin(self._auth_user.host)
 
     def request(
@@ -304,11 +374,11 @@ class BaseService():
                 ``url`` is on the platform host. False never adds them (presigned
                 URLs). True always adds them.
         """
-        merged_headers = dict(headers or {})
-        if auth is True or (auth is None and self.is_platform_url(url)):
-            merged_headers.update(self._auth_user.auth_headers)
         session = self.requests_retry_session()
         try:
+            merged_headers = dict(headers or {})
+            if auth is True or (auth is None and self.is_platform_url(url)):
+                merged_headers.update(self._auth_user.auth_headers)
             response = session.request(
                 method=method.upper(),
                 url=url,
@@ -321,14 +391,21 @@ class BaseService():
             response.raise_for_status()
             return response
 
+        except BaseSDKError:
+            raise
         except requests.exceptions.RequestException as e:
             # The message can hold the URL; a presigned URL's query is a credential.
-            message = redact_url_queries(str(e))
+            # No exception chain: the cause's traceback would show the whole URL.
+            message = redact_url_queries(str(e), url)
             print(f"An error occurred during the HTTP request: {message}")
-            raise BadRequestError(f"HTTP request failed: {message}") from e
+            raise BadRequestError(f"HTTP request failed: {message}") from None
         except ValueError as e:
-            raise BadRequestParameterError("Failed to parse the HTTP response as JSON.") from e
+            raise BadRequestParameterError(
+                f"Invalid request or response: {redact_url_queries(str(e), url)}"
+            ) from None
         except Exception as e:
-            raise RequestError(f"An error occurred while processing the HTTP response: {str(e)}") from e
+            raise RequestError(
+                f"An error occurred while processing the HTTP response: {redact_url_queries(str(e), url)}"
+            ) from None
         finally:
             session.close()
