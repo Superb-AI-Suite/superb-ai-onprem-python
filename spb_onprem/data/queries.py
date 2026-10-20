@@ -472,7 +472,6 @@ class Queries():
                     dataId: $data_id,
                     sliceId: $slice_id,
                     meta: $meta,
-                    content
                 ) {{
                     {Schemas.DATA}
                 }}
