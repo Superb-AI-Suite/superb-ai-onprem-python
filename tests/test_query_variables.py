@@ -45,6 +45,10 @@ OVERRIDES = {
     ("data", "UPDATE_WITH_EXPECTED_CAPTION"): {"meta": [DataMeta(key="k", type=DataMetaTypes.STRING, value="v")]},
     ("models", "CREATE"): {"contents": {"weights": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}},
     ("models", "UPDATE"): {"contents": {"weights": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}},
+    ("vlm_settings", "CREATE_DATASET_VLM_SETTINGS"): {"settings": {"questions": []}},
+    ("vlm_settings", "UPDATE_DATASET_VLM_SETTINGS"): {"settings": {"questions": []}},
+    ("vlm_settings", "CREATE_SLICE_VLM_SETTINGS"): {"settings": {"questions": []}},
+    ("vlm_settings", "UPDATE_SLICE_VLM_SETTINGS"): {"settings": {"questions": []}},
 }
 
 #: Sent but not declared, on purpose or harmless. The server's jobs/job/updateJob take no

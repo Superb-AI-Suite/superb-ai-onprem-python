@@ -9,6 +9,19 @@ from .data.service import DataService
 from .slices.service import SliceService
 from .activities.service import ActivityService
 from .activities.deletion import DeletionActivityType
+from .vlm_settings import (
+    VLMSettingsService,
+    DatasetVLMSettings,
+    SliceVLMSettings,
+    VLMQuestionSet,
+    VLMQuestion,
+    VLMAnswerOption,
+    VLMNumberRange,
+    VLMEvidenceClass,
+    VLMAnswerType,
+    VLMEvidenceShape,
+    VLMSettingsValidationError,
+)
 from .contents.service import ContentService
 from .models.service import ModelService
 from .reports.service import ReportService
@@ -136,6 +149,17 @@ __all__ = (
     "SliceService",
     "ActivityService",
     "DeletionActivityType",
+    "VLMSettingsService",
+    "DatasetVLMSettings",
+    "SliceVLMSettings",
+    "VLMQuestionSet",
+    "VLMQuestion",
+    "VLMAnswerOption",
+    "VLMNumberRange",
+    "VLMEvidenceClass",
+    "VLMAnswerType",
+    "VLMEvidenceShape",
+    "VLMSettingsValidationError",
     "ContentService",
     "ModelService",
     "ReportService",

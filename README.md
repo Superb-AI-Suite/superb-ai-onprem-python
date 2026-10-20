@@ -185,6 +185,7 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 | **🤖 Models** | ML model management | Track models, training configs, performance metrics | [🤖 Model Guide](spb_onprem/models/README.md) |
 | **📈 Reports** | Analytics & visualization | Create reports, charts, dashboards | [📈 Report Guide](spb_onprem/reports/README.md) |
 | **📊 Charts** | Chart data factory | Generate training metrics visualizations (9 chart types) | [📊 Chart Guide](spb_onprem/charts/README.md) |
+| **❓ VLM Settings** | VLM question sets | Dataset and slice question sets, optimistic locking | [❓ VLM Settings Guide](spb_onprem/vlm_settings/README.md) |
 
 ### 🎯 Getting Started Paths
 
