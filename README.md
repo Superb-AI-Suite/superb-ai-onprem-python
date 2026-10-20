@@ -144,6 +144,7 @@ takes data out of a slice and deletes no files.
 | `DataService.delete_data(dataset_id, ...)` | `data_id`, `data_ids=[...]` or `data_filter=DataListFilter(...)` |
 | `DataService.remove_data_from_slice(dataset_id, ..., slice_id=...)` | `data_id`, `data_ids=[...]` or `data_filter=...` |
 | `DatasetService.delete_dataset(dataset_id)` | the dataset |
+| `ModelDeploymentService.delete_model_deployments(dataset_id, ...)` (new, `DELETE_MODEL_DEPLOYMENT`) | `deployment_ids=[...]` or `deployment_filter=ModelDeploymentFilter(...)` |
 
 Empty lists and filters without a condition (`{}`, `{"must": {}}`, `must: null`,
 `must.idIn: []`) are refused with `BadDeletionTargetError` (a `ValueError`).
@@ -189,6 +190,7 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 | **📈 Reports** | Analytics & visualization | Create reports, charts, dashboards | [📈 Report Guide](spb_onprem/reports/README.md) |
 | **📊 Charts** | Chart data factory | Generate training metrics visualizations (9 chart types) | [📊 Chart Guide](spb_onprem/charts/README.md) |
 | **❓ VLM Settings** | VLM question sets | Dataset and slice question sets, optimistic locking | [❓ VLM Settings Guide](spb_onprem/vlm_settings/README.md) |
+| **🚀 Model Deployments** | Serve models on GPUs | Deploy, wait, invoke, stop, start, delete; deployment templates | [🚀 Model Deployment Guide](spb_onprem/model_deployments/README.md) |
 
 ### 🎯 Getting Started Paths
 

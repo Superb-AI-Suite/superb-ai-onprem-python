@@ -33,6 +33,9 @@ class Model(CustomBaseModel):
     status: Optional[ModelStatus] = None
     task_type: Optional[ModelTaskType] = Field(None, alias="taskType")
     custom_dag_id: Optional[str] = Field(None, alias="customDagId")
+    # Deployment template the model is linked to. Model queries do not select it (older
+    # platforms lack it); ModelDeployDefinitionService.unbind_model_deploy_definition does.
+    definition_id: Optional[str] = Field(None, alias="definitionId")
 
     total_data_count: Optional[int] = Field(None, alias="totalDataCount")
     train_data_count: Optional[int] = Field(None, alias="trainDataCount")

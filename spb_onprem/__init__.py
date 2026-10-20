@@ -23,6 +23,22 @@ from .vlm_settings import (
     VLMSettingsValidationError,
     VLMSettingsChangeError,
 )
+from .model_deployments import (
+    ModelDeploymentService,
+    ModelDeployDefinitionService,
+    ModelDeployment,
+    ModelDeploymentRuntime,
+    ModelDeploymentStatus,
+    ModelDeploymentFilter,
+    ModelDeploymentFilterOptions,
+    ModelDeploymentOrderBy,
+    ModelDeployDefinition,
+    ModelDeployDefinitionInput,
+    DeploymentInvokeRequest,
+    DeploymentInvokeFile,
+    DeploymentInvokeResult,
+    DeploymentInvokeError,
+)
 from .contents.service import ContentService
 from .models.service import ModelService
 from .reports.service import ReportService
@@ -162,6 +178,20 @@ __all__ = (
     "VLMEvidenceShape",
     "VLMSettingsValidationError",
     "VLMSettingsChangeError",
+    "ModelDeploymentService",
+    "ModelDeployDefinitionService",
+    "ModelDeployment",
+    "ModelDeploymentRuntime",
+    "ModelDeploymentStatus",
+    "ModelDeploymentFilter",
+    "ModelDeploymentFilterOptions",
+    "ModelDeploymentOrderBy",
+    "ModelDeployDefinition",
+    "ModelDeployDefinitionInput",
+    "DeploymentInvokeRequest",
+    "DeploymentInvokeFile",
+    "DeploymentInvokeResult",
+    "DeploymentInvokeError",
     "ContentService",
     "ModelService",
     "ReportService",
