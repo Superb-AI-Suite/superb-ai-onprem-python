@@ -323,7 +323,7 @@ class TestActivityStatus:
     def test_deletion_activity_types(self):
         assert {item.value for item in DeletionActivityType} == {
             "DELETE_MODEL", "DELETE_DIAGNOSIS", "DELETE_ANALYTICS_REPORT", "DELETE_DATASET",
-            "DELETE_DATA", "DELETE_SLICE", "REMOVE_DATA_FROM_SLICE",
+            "DELETE_DATA", "DELETE_SLICE", "REMOVE_DATA_FROM_SLICE", "DELETE_MODEL_DEPLOYMENT",
         }
 
 
