@@ -201,13 +201,21 @@ class TestLifecycle:
         timedelta(0), timedelta(seconds=-1), 5, "",
         "2026-12-31T09:00:00",          # no offset: refused
         "next tuesday",
+        "2026-12-31",                   # date only
+        "2026-12-31T09:00:00Z\n",       # trailing newline
     ])
     def test_bad_expiry_is_refused_before_sending(self, platform, deployments, bad):
         with pytest.raises(BadParameterError):
             deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "x", expires_at=bad)
         assert platform.requests == []
 
-    @pytest.mark.parametrize("value", ["2026-12-31T09:00:00Z", "2026-12-31T18:00:00+09:00", "2026-12-31T09:00:00.000Z"])
+    @pytest.mark.parametrize("value", [
+        "2026-12-31T09:00:00Z", "2026-12-31T18:00:00+09:00", "2026-12-31T09:00:00.000Z",
+        # Valid ISO 8601 that Python 3.8-3.10 fromisoformat rejects: only the offset is checked.
+        "2026-12-31T09:00:00.5Z", "2026-12-31T18:00:00+0900", "2026-12-31T18:00:00+09", "20261231T090000Z",
+        datetime(2026, 12, 31, 18, tzinfo=timezone(timedelta(hours=9))).isoformat(),
+        datetime(2026, 12, 31, 9, 0, 0, 123456, tzinfo=timezone.utc).isoformat(),
+    ])
     def test_expiry_string_with_offset_is_sent_as_is(self, platform, deployments, value):
         deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "x", expires_at=value)
         assert _variables(platform)["expiresAt"] == value

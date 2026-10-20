@@ -299,8 +299,9 @@ class TestCall:
     @pytest.mark.parametrize("dataset_id,deployment_id", [
         ("dataset 1", DEPLOYMENT_ID),
         (DATASET_ID, "01JDEPLOY"),
-        (DATASET_ID, DEPLOYMENT_ID.lower()),
         (DATASET_ID, "../" + DEPLOYMENT_ID[3:]),
+        (DATASET_ID, DEPLOYMENT_ID + "\n"),          # fullmatch: no trailing newline
+        (DATASET_ID, DEPLOYMENT_ID[:-1] + "-"),
         (None, DEPLOYMENT_ID),
     ])
     def test_ids_must_be_platform_ids(self, dataset_id, deployment_id):
@@ -308,6 +309,14 @@ class TestCall:
             with pytest.raises(BadParameterError, match="26-character platform ID"):
                 _service().invoke_model_deployment(dataset_id, deployment_id, DeploymentInvokeRequest(text="hi"))
         post.assert_not_called()
+
+    def test_lower_case_ids_pass_like_on_the_platform(self):
+        """Same rule as zenith and cremant: 26 letters or digits, lower case allowed."""
+        lower = DEPLOYMENT_ID.lower()
+        with patch("spb_onprem.model_deployments.service.requests.post",
+                   return_value=_response(200, b"--b--\r\n", "multipart/form-data; boundary=b")) as post:
+            _service().invoke_model_deployment(DATASET_ID, lower, DeploymentInvokeRequest(text="hi"))
+        assert post.call_args[0][0].endswith(f"/{DATASET_ID}/{lower}/invoke")
 
     def test_rfc2231_boundary_is_a_bad_response(self):
         with pytest.raises(BadResponseError, match="Unsupported multipart boundary"):

@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, List, Mapping, Optional, Union
 
@@ -9,6 +10,14 @@ from .filters import ModelDeploymentFilter, ModelDeploymentOrderBy, filter_varia
 
 #: An absolute time, or how long from now.
 ExpiresAt = Union[datetime, timedelta, str]
+
+#: An ISO 8601 date and time that ends with a UTC offset or Z, basic or extended format:
+#: 2026-10-20T09:00:00Z, 2026-10-20T09:00:00.5Z, ...+09:00, ...+0900, ...+09, 20261020T090000Z.
+#: Only the offset is the point; the platform parses the rest.
+_ISO_WITH_OFFSET = re.compile(
+    r"\d{4}-?\d{2}-?\d{2}[Tt ]\d{2}(?::?\d{2}(?::?\d{2}(?:[.,]\d+)?)?)?"
+    r"(?:[Zz]|[+-]\d{2}(?::?\d{2})?)"
+)
 
 #: The platform returns at most this many deployments per page.
 MAX_PAGE_LENGTH = 100
@@ -31,14 +40,12 @@ def datetime_variable(value: Optional[ExpiresAt], name: str) -> Optional[str]:
     if isinstance(value, datetime):
         return value.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
     if isinstance(value, str) and value.strip():
-        text = value.strip()
-        try:
-            parsed = datetime.fromisoformat(text[:-1] + "+00:00" if text.endswith(("Z", "z")) else text)
-        except ValueError:
-            raise BadParameterError(f"{name} must be an ISO 8601 time (got {value!r}).") from None
-        if parsed.tzinfo is None:
+        # Python 3.8-3.10 fromisoformat is too narrow (".5Z", "+0900", basic format),
+        # so only the presence of an offset is checked here.
+        if not _ISO_WITH_OFFSET.fullmatch(value):  # no surrounding spaces or newlines either
             raise BadParameterError(
-                f"{name} needs a UTC offset or Z (got {value!r}); e.g. 2026-10-20T09:00:00Z."
+                f"{name} must be an ISO 8601 time with a UTC offset or Z (got {value!r}); "
+                "e.g. 2026-10-20T09:00:00Z."
             )
         return value
     raise BadParameterError(f"{name} must be a datetime, a timedelta or an ISO 8601 string.")

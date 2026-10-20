@@ -175,3 +175,23 @@ class TestOverwriteSliceAnnotation:
     def test_missing_ids(self):
         with pytest.raises(BadParameterError, match="version_id is required"):
             DataService().overwrite_slice_annotation_version_content("d1", "data-1", "s1", None, {})
+
+
+@pytest.mark.parametrize("bad", [None, "", "   "])
+def test_blank_content_id_sends_nothing(bad):
+    service = _contents()
+    with patch.object(BaseService, "requests_retry_session", return_value=_Session()) as session:
+        with pytest.raises(BadParameterError, match="content_id is required"):
+            service.content_exists(bad)
+        with pytest.raises(BadParameterError, match="content_id is required"):
+            service.update_json_content(bad, {})
+    service.request_gql.assert_not_called()
+    session.assert_not_called()
+
+
+@pytest.mark.parametrize("bad", [None, "", "   "])
+def test_download_url_needs_a_content_id(bad):
+    service = _contents()
+    with pytest.raises(BadParameterError, match="content_id is required"):
+        service.get_download_url(bad)
+    service.request_gql.assert_not_called()

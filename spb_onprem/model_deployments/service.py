@@ -39,8 +39,9 @@ from .queries import Queries
 DEFAULT_INVOKE_TIMEOUT = (30.0, 3660.0)
 
 
-#: Platform IDs are ULIDs (26 characters, Crockford base32).
-PLATFORM_ID = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
+#: Platform IDs: 26 letters or digits, the same rule as zenith and cremant ([0-9A-Za-z]{26}).
+#: Matched with fullmatch, so a trailing newline does not pass.
+PLATFORM_ID = re.compile(r"[0-9A-Za-z]{26}")
 
 class ModelDeploymentService(BaseService):
     """Create, watch, call, stop, start and delete model deployments.
@@ -408,7 +409,7 @@ class ModelDeploymentService(BaseService):
         if not isinstance(request, DeploymentInvokeRequest):
             raise BadParameterError("request must be a DeploymentInvokeRequest.")
         for name, value in (("dataset_id", dataset_id), ("deployment_id", deployment_id)):
-            if not isinstance(value, str) or not PLATFORM_ID.match(value):
+            if not isinstance(value, str) or not PLATFORM_ID.fullmatch(value):
                 raise BadParameterError(f"{name} must be a 26-character platform ID (got {value!r}).")
         url = (
             f"{self._auth_user.host.rstrip('/')}/graphql/model-deployments/"

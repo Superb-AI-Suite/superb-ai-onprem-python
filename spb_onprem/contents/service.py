@@ -193,9 +193,14 @@ class ContentService(BaseService):
         Sends a HEAD request to a presigned URL (generateContentHeadURL), without
         platform credentials.
 
+        Raises:
+            BadParameterError: If content_id is missing or blank (nothing is sent).
+
         Returns:
             bool: True when the object exists, False when storage answers 404.
         '''
+        if content_id is None or not isinstance(content_id, str) or not content_id.strip():
+            raise BadParameterError("content_id is required.")
         head_url = self.request_gql(
             query=Queries.GET_HEAD_URL,
             variables=Queries.GET_HEAD_URL["variables"](content_id),
