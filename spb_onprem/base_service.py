@@ -3,6 +3,7 @@ from urllib.parse import urlsplit
 import json
 import os
 import random
+import re
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -19,6 +20,14 @@ from spb_onprem.exceptions import (
     RequestError,
     ResponseError,
 )
+
+_URL_QUERY = re.compile(r"(https?://[^\s?#'\"]+)\?[^\s#'\"]*")
+
+
+def redact_url_queries(text: str) -> str:
+    """Hide URL query strings, such as the signature of a presigned storage URL."""
+    return _URL_QUERY.sub(r"\1?<redacted>", text)
+
 
 class RetryWithJitter(Retry):
     def get_backoff_time(self):
@@ -212,7 +221,7 @@ class BaseService():
                 # Never log credentials: redact Authorization and other sensitive headers.
                 if e.response.request is not None:
                     redacted = {
-                        k: ("<redacted>" if k.lower() in ("authorization", "cookie", "x-api-key") else v)
+                        k: ("<redacted>" if k.lower() in ("authorization", "proxy-authorization", "cookie", "x-api-key") else v)
                         for k, v in dict(e.response.request.headers).items()
                     }
                 else:
@@ -281,9 +290,11 @@ class BaseService():
             return response
 
         except requests.exceptions.RequestException as e:
-            print(f"An error occurred during the HTTP request: {str(e)}")
-            raise BadRequestError(f"HTTP request failed: {str(e)}") from e
-        except ValueError:
+            # The message can hold the URL; a presigned URL's query is a credential.
+            message = redact_url_queries(str(e))
+            print(f"An error occurred during the HTTP request: {message}")
+            raise BadRequestError(f"HTTP request failed: {message}") from e
+        except ValueError as e:
             raise BadRequestParameterError("Failed to parse the HTTP response as JSON.") from e
         except Exception as e:
             raise RequestError(f"An error occurred while processing the HTTP response: {str(e)}") from e
