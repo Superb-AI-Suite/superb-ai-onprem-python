@@ -11,8 +11,11 @@ from urllib3.util import Retry
 
 from spb_onprem.users.entities import AuthUser
 from spb_onprem.exceptions import (
+    ConflictError,
+    ForbiddenError,
+    GraphQLError,
+    InvalidInputError,
     NotFoundError,
-    UnknownError,
     BadResponseError,
     BadRequestError,
     BaseSDKError,
@@ -27,6 +30,14 @@ _URL_QUERY = re.compile(r"(https?://[^\s?#'\"]+)\?[^\s#'\"]*")
 def redact_url_queries(text: str) -> str:
     """Hide URL query strings, such as the signature of a presigned storage URL."""
     return _URL_QUERY.sub(r"\1?<redacted>", text)
+
+
+#: SDK exception per platform error code. Other codes raise GraphQLError (an UnknownError).
+GRAPHQL_ERROR_CLASSES = {
+    'BAD_REQUEST': InvalidInputError,
+    'FORBIDDEN': ForbiddenError,
+    'CONFLICT': ConflictError,
+}
 
 
 class RetryWithJitter(Retry):
@@ -107,6 +118,15 @@ class BaseService():
             return extensions.get('code')
         return None
 
+    @staticmethod
+    def _graphql_error_details(error: Dict[str, Any]) -> Dict[str, Any]:
+        """The error details: top-level ``details`` first, then ``extensions.details``."""
+        details = error.get('details')
+        if not isinstance(details, dict):
+            extensions = error.get('extensions')
+            details = extensions.get('details') if isinstance(extensions, dict) else None
+        return details if isinstance(details, dict) else {}
+
     @classmethod
     def _graphql_error_message(cls, error: Dict[str, Any]) -> str:
         message = error.get('message', 'Unknown error')
@@ -184,11 +204,23 @@ class BaseService():
                 ]
                 for error in errors:
                     if self._graphql_error_code(error) == 'NOT_FOUND':
-                        raise NotFoundError(error.get('message', 'Not found'))
+                        not_found = NotFoundError(error.get('message', 'Not found'))
+                        # e.g. details.resource tells a missing dataset, slice or VLM settings apart.
+                        not_found.code = 'NOT_FOUND'
+                        not_found.details = self._graphql_error_details(error)
+                        raise not_found
                 error_messages = [
                     self._graphql_error_message(error) for error in errors
                 ]
-                raise UnknownError(f"GraphQL errors: {', '.join(error_messages)}")
+                first = errors[0]
+                code = self._graphql_error_code(first)
+                error_class = GRAPHQL_ERROR_CLASSES.get(code, GraphQLError)
+                raise error_class(
+                    f"GraphQL errors: {', '.join(error_messages)}",
+                    code=code,
+                    details=self._graphql_error_details(first),
+                    errors=errors,
+                )
             
             # Validate response structure
             if 'data' not in result:
