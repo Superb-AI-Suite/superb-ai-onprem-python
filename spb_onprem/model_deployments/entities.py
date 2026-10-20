@@ -39,8 +39,8 @@ class ModelDeploymentRuntime(CustomBaseModel):
 class ModelDeployment(CustomBaseModel):
     """A model deployment: a model server that answers ``invoke`` calls.
 
-    ``model_id`` is None for a base model deployment (the template's server
-    loads its own base weights). ``definition_id`` is None when the template
+    ``model_id`` is None for a base model deployment (the definition's server
+    loads its own base weights). ``definition_id`` is None when the definition
     was deleted: the deployment can still be invoked, stopped and deleted, but
     not started again.
     """
@@ -76,10 +76,10 @@ class ModelDeployment(CustomBaseModel):
 
 
 class ModelDeployDefinition(CustomBaseModel):
-    """A deployment template: the server image (and start script) a deployment runs.
+    """A deployment definition: the server image (and start script) a deployment runs.
 
-    ``dataset_id`` is None for a template shared by all datasets (system
-    templates included) and set for a template of one dataset. System templates
+    ``dataset_id`` is None for a definition shared by all datasets (system
+    definitions included) and set for a definition of one dataset. System definitions
     come from the platform and cannot be deleted.
     """
 
@@ -100,7 +100,7 @@ class ModelDeployDefinition(CustomBaseModel):
 
 
 class ModelDeployDefinitionInput(CustomBaseModel):
-    """A new deployment template (``create_model_deploy_definition``).
+    """A new deployment definition (``create_model_deploy_definition``).
 
     Attributes:
         id: 3 to 63 lowercase letters, numbers and hyphens, starting with a
@@ -112,7 +112,7 @@ class ModelDeployDefinitionInput(CustomBaseModel):
         description: Up to 1000 characters.
         start_script: Runs instead of the image's default command (up to
             20000 characters). None runs the default command.
-        dataset_only: True (default) makes the template visible only in the
+        dataset_only: True (default) makes the definition visible only in the
             dataset it is created in; False shares it with all datasets.
     """
 
@@ -126,16 +126,16 @@ class ModelDeployDefinitionInput(CustomBaseModel):
 
 
 class ModelDeployDefinitionUsage(CustomBaseModel):
-    """Deployments and models in all datasets that use a template."""
+    """Deployments and models in all datasets that use a definition."""
 
     deployment_count: Optional[int] = Field(None, alias="deploymentCount")
     model_count: Optional[int] = Field(None, alias="modelCount")
 
 
 class ModelDeployDefinitionDeletion(CustomBaseModel):
-    """Result of deleting a template.
+    """Result of deleting a definition.
 
-    Deployments are kept and lose the template (``detached_deployment_count``):
+    Deployments are kept and lose the definition (``detached_deployment_count``):
     they can still be invoked, stopped and deleted, but not started again.
     Models are unlinked (``unlinked_model_count``).
     """

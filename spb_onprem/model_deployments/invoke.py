@@ -140,7 +140,7 @@ class DeploymentInvokeRequest:
             send a JSON array as ``[[...]]`` or as a str.
         image / video / file: File parts: ``DeploymentInvokeFile`` or a path.
 
-    Which parts a model reads is up to its server (see the template's
+    Which parts a model reads is up to its server (see the definition's
     documentation). At least one part is required.
     """
 

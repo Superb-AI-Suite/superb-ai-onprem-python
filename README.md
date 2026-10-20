@@ -192,7 +192,7 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 | **📈 Reports** | Analytics & visualization | Create reports, charts, dashboards | [📈 Report Guide](spb_onprem/reports/README.md) |
 | **📊 Charts** | Chart data factory | Generate training metrics visualizations (9 chart types) | [📊 Chart Guide](spb_onprem/charts/README.md) |
 | **❓ VLM Settings** | VLM question sets | Dataset and slice question sets, optimistic locking | [❓ VLM Settings Guide](spb_onprem/vlm_settings/README.md) |
-| **🚀 Model Deployments** | Serve models on GPUs | Deploy, wait, invoke, stop, start, delete; deployment templates | [🚀 Model Deployment Guide](spb_onprem/model_deployments/README.md) |
+| **🚀 Model Deployments** | Serve models on GPUs | Deploy, wait, invoke, stop, start, delete; deployment definitions | [🚀 Model Deployment Guide](spb_onprem/model_deployments/README.md) |
 
 ### 🎯 Getting Started Paths
 

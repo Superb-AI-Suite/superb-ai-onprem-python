@@ -1,11 +1,11 @@
-# Model Deployments and Templates
+# Model Deployments and Deployment Definitions
 
 A **model deployment** runs a model server on GPUs and answers calls. It is made from a
-**template** (`ModelDeployDefinition`, the server image to run) and a trained model of the
-dataset, or the template's base model. Deployments belong to **VLM datasets**.
+**deployment definition** (`ModelDeployDefinition`, the server image to run) and a trained model of the
+dataset, or the definition's base model. Deployments belong to **VLM datasets**.
 
 - `ModelDeploymentService`: create, list, wait, call (`invoke`), stop, start again, delete.
-- `ModelDeployDefinitionService`: list, create, delete and pin templates; unlink a model from its template.
+- `ModelDeployDefinitionService`: list, create, delete and pin definitions; unlink a model from its definition.
 
 ## Deploy, wait, call
 
@@ -23,9 +23,9 @@ service = ModelDeploymentService()
 
 deployment = service.create_model_deployment(
     dataset_id="dataset_123",
-    definition_id="cosmos3-reasoner",        # a template visible in the dataset
+    definition_id="cosmos3-reasoner",        # a definition visible in the dataset
     name="reasoner r4",
-    model_id="model_456",                    # None deploys the template's base model
+    model_id="model_456",                    # None deploys the definition's base model
     expires_at=timedelta(hours=8),           # or a datetime / ISO 8601 string; None never expires
     gpu_types=["NVIDIA-A100-SXM4-80GB"],     # None: any GPU
     gpu_count=1,
@@ -53,7 +53,7 @@ for video in result.videos:  # image / video / file parts keep their file name a
 ```
 
 - Parts are named `text`, `json`, `image`, `video` and `file`, and each may repeat. Which parts
-  a model reads is up to its server; see the template's documentation.
+  a model reads is up to its server; see the definition's documentation.
 - Files: `DeploymentInvokeFile.from_path(path)` or `DeploymentInvokeFile.from_bytes(data, "input.png")`.
   The file name matters: servers read the type from the extension.
 - The call goes through the platform (`POST {host}/graphql/model-deployments/{dataset}/{deployment}/invoke`)
@@ -117,17 +117,17 @@ ActivityService().wait_for_activity(history.id, dataset_id="dataset_123")
 - `update_model_deployment(..., name=..., description=..., invoke_timeout_seconds=...)` and
   `set_model_deployment_pinned(...)`.
 
-## Templates
+## Deployment definitions
 
 ```python
 from spb_onprem import ModelDeployDefinitionInput, ModelDeployDefinitionService
 
-templates = ModelDeployDefinitionService()
+definitions = ModelDeployDefinitionService()
 
-for template in templates.get_model_deploy_definitions("dataset_123"):  # system, shared and this dataset's
-    print(template.id, template.is_system, template.dataset_id, template.server_image_name)
+for definition in definitions.get_model_deploy_definitions("dataset_123"):  # system, shared and this dataset's
+    print(definition.id, definition.is_system, definition.dataset_id, definition.server_image_name)
 
-template = templates.create_model_deploy_definition(
+definition = definitions.create_model_deploy_definition(
     "dataset_123",
     ModelDeployDefinitionInput(
         id="my-vlm-server",                      # lowercase letters, numbers, hyphens; cannot change
@@ -138,16 +138,16 @@ template = templates.create_model_deploy_definition(
     ),
 )
 
-usage = templates.get_model_deploy_definition_usage("dataset_123", template.id)
-deleted = templates.delete_model_deploy_definition("dataset_123", template.id)
+usage = definitions.get_model_deploy_definition_usage("dataset_123", definition.id)
+deleted = definitions.delete_model_deploy_definition("dataset_123", definition.id)
 print(deleted.detached_deployment_count, deleted.unlinked_model_count)
 
-model = templates.unbind_model_deploy_definition("dataset_123", "model_456")  # model.definition_id is None
+model = definitions.unbind_model_deploy_definition("dataset_123", "model_456")  # model.definition_id is None
 ```
 
-- Creating, deleting and pinning templates and reading their usage need Owner or WorkspaceAdmin.
-  Templates cannot be edited; delete and create again.
-- Deleting a template keeps its deployments (they lose the template: they can be invoked, stopped
-  and deleted, but not started again) and unlinks its models. System templates cannot be deleted.
-- A model gets linked to a template when it is deployed with `bind_model_to_definition=True`.
+- Creating, deleting and pinning definitions and reading their usage need Owner or WorkspaceAdmin.
+  Definitions cannot be edited; delete and create again.
+- Deleting a definition keeps its deployments (they lose the definition: they can be invoked, stopped
+  and deleted, but not started again) and unlinks its models. System definitions cannot be deleted.
+- A model gets linked to a definition when it is deployed with `bind_model_to_definition=True`.
   `ModelFilterOptions(definition_id_in=[...])` and `definition_id_is_null=True` find models by link.

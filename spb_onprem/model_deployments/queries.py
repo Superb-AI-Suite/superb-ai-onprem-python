@@ -82,7 +82,7 @@ class Schemas:
     '''
 
     # ``definitionId`` is selected only here, so model queries keep working on
-    # platforms without deployment templates.
+    # platforms without deployment definitions.
     MODEL_WITH_DEFINITION = f'''
         {ModelSchemas.MODEL}
         definitionId
@@ -237,7 +237,7 @@ class Queries:
         "variables": set_model_deployment_pinned_params,
     }
 
-    # Templates (model deploy definitions) -------------------------------------
+    # Deployment definitions --------------------------------------------------------
     GET_MODEL_DEPLOY_DEFINITIONS = {
         "name": "modelDeployDefinitions",
         "query": f'''

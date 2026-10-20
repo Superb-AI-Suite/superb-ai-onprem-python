@@ -1,4 +1,4 @@
-"""Model deployments and deployment templates (FDE-133)."""
+"""Model deployments and deployment definitions (FDE-133)."""
 import re
 import time
 from typing import Any, Collection, List, Mapping, Optional, Tuple, Union
@@ -45,8 +45,8 @@ PLATFORM_ID = re.compile(r"^[0-9A-HJKMNP-TV-Z]{26}$")
 class ModelDeploymentService(BaseService):
     """Create, watch, call, stop, start and delete model deployments.
 
-    A deployment runs a template's server image with a trained model (or the
-    template's base model) on GPUs and answers ``invoke_model_deployment``.
+    A deployment runs a definition's server image with a trained model (or the
+    definition's base model) on GPUs and answers ``invoke_model_deployment``.
     Only VLM datasets have deployments.
 
     Lifecycle (the platform runs the activities; their progress shows in the
@@ -68,8 +68,8 @@ class ModelDeploymentService(BaseService):
     dataset (not Collaborator).
 
     Errors from the platform: ``InvalidInputError`` (BAD_REQUEST, for example not
-    a VLM dataset, a model of another template, or starting a deployment whose
-    template was deleted), ``ConflictError`` (the status does not allow it),
+    a VLM dataset, a model of another definition, or starting a deployment whose
+    definition was deleted), ``ConflictError`` (the status does not allow it),
     ``NotFoundError`` and ``ForbiddenError``.
     """
 
@@ -183,18 +183,18 @@ class ModelDeploymentService(BaseService):
         invoke_timeout_seconds: Optional[int] = None,
         bind_model_to_definition: bool = False,
     ) -> ModelDeployment:
-        """Deploy a model with a template. The deployment starts as PENDING.
+        """Deploy a model with a definition. The deployment starts as PENDING.
 
         The platform starts a DEPLOY_MODEL activity that launches the server.
         Use ``wait_for_model_deployment`` to wait until it is READY.
 
         Args:
             dataset_id: A VLM dataset.
-            definition_id: The template (``ModelDeployDefinition.id``) visible
+            definition_id: The definition (``ModelDeployDefinition.id``) visible
                 in this dataset.
             name: 1 to 256 characters.
             model_id: A COMPLETED model of the dataset. None deploys the
-                template's base model (no fine-tuned weights).
+                definition's base model (no fine-tuned weights).
             description: Free text.
             expires_at: When the server is removed: a datetime, an ISO 8601
                 string, or a timedelta from now. None never expires. A naive
@@ -205,9 +205,9 @@ class ModelDeploymentService(BaseService):
             gpu_count: 1 to 8. Defaults to 1.
             invoke_timeout_seconds: 10 to 3600 seconds the invoke relay waits for
                 the server's response headers. Defaults to 600.
-            bind_model_to_definition: For a model without a template only: True
-                links the model to this template; False (default) deploys it
-                once without linking. A model linked to another template is
+            bind_model_to_definition: For a model without a definition only: True
+                links the model to this definition; False (default) deploys it
+                once without linking. A model linked to another definition is
                 refused (InvalidInputError).
         """
         response = self.request_gql(
@@ -277,7 +277,7 @@ class ModelDeploymentService(BaseService):
     ) -> ModelDeployment:
         """Start a STOPPED, FAILED or EXPIRED deployment again as a new generation (PENDING).
 
-        Other statuses: ConflictError. A deployment whose template was deleted
+        Other statuses: ConflictError. A deployment whose definition was deleted
         cannot start again (InvalidInputError); delete it and create a new one.
 
         Args:
@@ -445,25 +445,25 @@ class ModelDeploymentService(BaseService):
 
 
 class ModelDeployDefinitionService(BaseService):
-    """Deployment templates (model deploy definitions).
+    """Deployment definitions (``ModelDeployDefinition``).
 
-    A template names the server image (and start script) a deployment runs.
-    System templates come from the platform. Other templates are shared by
+    A definition names the server image (and start script) a deployment runs.
+    System definitions come from the platform. Other definitions are shared by
     all datasets or belong to one dataset.
 
-    - Creating and deleting a template (shared or dataset-only) needs Owner or
-      WorkspaceAdmin. Templates cannot be edited; delete and create again.
-    - Deleting a template keeps its deployments and models: deployments lose
-      the template (they can still be invoked, stopped and deleted, but not
-      started again) and models are unlinked. System templates cannot be
-      deleted. Deleting a dataset deletes its dataset-only templates.
-    - A model is linked to a template when it is deployed with
+    - Creating and deleting a definition (shared or dataset-only) needs Owner or
+      WorkspaceAdmin. Definitions cannot be edited; delete and create again.
+    - Deleting a definition keeps its deployments and models: deployments lose
+      the definition (they can still be invoked, stopped and deleted, but not
+      started again) and models are unlinked. System definitions cannot be
+      deleted. Deleting a dataset deletes its dataset-only definitions.
+    - A model is linked to a definition when it is deployed with
       ``bind_model_to_definition=True``; ``unbind_model_deploy_definition``
       unlinks it.
     """
 
     def get_model_deploy_definitions(self, dataset_id: str) -> List[ModelDeployDefinition]:
-        """The templates a dataset can use: system, shared and its own. Only VLM datasets have them."""
+        """The definitions a dataset can use: system, shared and its own. Only VLM datasets have them."""
         response = self.request_gql(
             Queries.GET_MODEL_DEPLOY_DEFINITIONS,
             Queries.GET_MODEL_DEPLOY_DEFINITIONS["variables"](dataset_id),
@@ -471,7 +471,7 @@ class ModelDeployDefinitionService(BaseService):
         return [ModelDeployDefinition.model_validate(item) for item in response or []]
 
     def get_model_deploy_definition(self, dataset_id: str, definition_id: str) -> Optional[ModelDeployDefinition]:
-        """A template visible in the dataset, or None."""
+        """A definition visible in the dataset, or None."""
         response = self.request_gql(
             Queries.GET_MODEL_DEPLOY_DEFINITION,
             Queries.GET_MODEL_DEPLOY_DEFINITION["variables"](dataset_id, definition_id),
@@ -479,7 +479,7 @@ class ModelDeployDefinitionService(BaseService):
         return ModelDeployDefinition.model_validate(response) if response else None
 
     def get_model_deploy_definition_usage(self, dataset_id: str, definition_id: str) -> ModelDeployDefinitionUsage:
-        """How many deployments and models in all datasets use a template (Owner or WorkspaceAdmin)."""
+        """How many deployments and models in all datasets use a definition (Owner or WorkspaceAdmin)."""
         response = self.request_gql(
             Queries.GET_MODEL_DEPLOY_DEFINITION_USAGE,
             Queries.GET_MODEL_DEPLOY_DEFINITION_USAGE["variables"](dataset_id, definition_id),
@@ -491,11 +491,11 @@ class ModelDeployDefinitionService(BaseService):
         dataset_id: str,
         definition: Union[ModelDeployDefinitionInput, Mapping[str, Any]],
     ) -> ModelDeployDefinition:
-        """Create a template (Owner or WorkspaceAdmin).
+        """Create a definition (Owner or WorkspaceAdmin).
 
         ``definition.dataset_only`` (default True) keeps it in ``dataset_id``;
         False shares it with all datasets. An ID that is taken (also by a system
-        template) raises ConflictError.
+        definition) raises ConflictError.
         """
         response = self.request_gql(
             Queries.CREATE_MODEL_DEPLOY_DEFINITION,
@@ -504,11 +504,11 @@ class ModelDeployDefinitionService(BaseService):
         return ModelDeployDefinition.model_validate(response)
 
     def delete_model_deploy_definition(self, dataset_id: str, definition_id: str) -> ModelDeployDefinitionDeletion:
-        """Delete a template at once (no activity, no files; Owner or WorkspaceAdmin).
+        """Delete a definition at once (no activity, no files; Owner or WorkspaceAdmin).
 
         Deployments in all datasets that use it are kept and detached, and
         linked models are unlinked; the result has both counts. A system
-        template raises InvalidInputError.
+        definition raises InvalidInputError.
         """
         response = self.request_gql(
             Queries.DELETE_MODEL_DEPLOY_DEFINITION,
@@ -519,7 +519,7 @@ class ModelDeployDefinitionService(BaseService):
     def set_model_deploy_definition_pinned(
         self, dataset_id: str, definition_id: str, is_pinned: bool
     ) -> ModelDeployDefinition:
-        """Pin or unpin a template (system ones too; Owner or WorkspaceAdmin). Pinned ones come first."""
+        """Pin or unpin a definition (system ones too; Owner or WorkspaceAdmin). Pinned ones come first."""
         response = self.request_gql(
             Queries.SET_MODEL_DEPLOY_DEFINITION_PINNED,
             Queries.SET_MODEL_DEPLOY_DEFINITION_PINNED["variables"](dataset_id, definition_id, is_pinned),
@@ -527,9 +527,9 @@ class ModelDeployDefinitionService(BaseService):
         return ModelDeployDefinition.model_validate(response)
 
     def unbind_model_deploy_definition(self, dataset_id: str, model_id: str) -> Model:
-        """Unlink a model from its template (``definition_id`` becomes None). Idempotent.
+        """Unlink a model from its definition (``definition_id`` becomes None). Idempotent.
 
-        Deployments of the model keep their own template.
+        Deployments of the model keep their own definition.
         """
         response = self.request_gql(
             Queries.UNBIND_MODEL_DEPLOY_DEFINITION,

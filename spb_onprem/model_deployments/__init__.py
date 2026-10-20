@@ -1,4 +1,4 @@
-"""Model deployments and deployment templates (model deploy definitions)."""
+"""Model deployments and deployment definitions (``ModelDeployDefinition``)."""
 from .entities import (
     ModelDeployDefinition,
     ModelDeployDefinitionDeletion,
