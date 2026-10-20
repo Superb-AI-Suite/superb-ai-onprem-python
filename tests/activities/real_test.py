@@ -1,3 +1,17 @@
+"""Real-server test: it calls the platform in ~/.spb/onprem-config.
+
+pytest collects *_test.py files, so this file is skipped unless you turn it on:
+    RUN_REAL_SERVER_TESTS=1 pytest tests/activities/real_test.py
+"""
+import os
+
+import pytest
+
+pytestmark = pytest.mark.skipif(
+    os.environ.get("RUN_REAL_SERVER_TESTS") != "1",
+    reason="RUN_REAL_SERVER_TESTS!=1 (calls a real platform)",
+)
+
 from spb_onprem import (
     DatasetService,
     Dataset,
