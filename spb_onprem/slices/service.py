@@ -1,4 +1,5 @@
-from typing import Optional, Union
+import logging
+from typing import List, Optional, Union
 
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import (
@@ -15,6 +16,16 @@ from .params import (
 from .queries import (
     Queries,
 )
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    deletion_filter,
+    require_id,
+    start_deletion_activity,
+    warn_deprecated,
+)
+from spb_onprem.activities.entities import ActivityHistory
+
+logger = logging.getLogger(__name__)
 
 
 class SliceService(BaseService):
@@ -39,30 +50,19 @@ class SliceService(BaseService):
         Returns:
             Slice: The created slice object.
         """
-        # Debug logging: 파라미터 확인
-        print(f"[DEBUG] create_slice called with:")
-        print(f"  dataset_id: {dataset_id} (type: {type(dataset_id)})")
-        print(f"  name: {name} (type: {type(name)})")
-        print(f"  description: {description} (type: {type(description)})")
-
         variables = Queries.CREATE_SLICE["variables"](
             dataset_id=dataset_id,
             slice_name=name,
             slice_description=description
         )
-        print(f"[DEBUG] GraphQL variables: {variables}")
+        logger.debug("create_slice variables: %s", variables)
 
         response = self.request_gql(
             Queries.CREATE_SLICE,
             variables
         )
-        # Debug logging: 실제 GraphQL 응답 확인
-        print(f"[DEBUG] GraphQL create_slice response: {response}")
-        print(f"[DEBUG] Response type: {type(response)}")
-        print(f"[DEBUG] Response keys: {response.keys() if isinstance(response, dict) else 'Not a dict'}")
-
         # response는 이미 createSlice 객체 자체 (request_gql이 data.createSlice를 추출함)
-        print(f"[DEBUG] Using response directly as slice_dict: {response}")
+        logger.debug("create_slice response: %s", response)
         return Slice.model_validate(response)
 
     def get_slices(
@@ -186,25 +186,84 @@ class SliceService(BaseService):
         slice_dict = response.get("updateSlice", {})
         return Slice.model_validate(slice_dict)
 
+    def delete_slices(
+        self,
+        dataset_id: str,
+        slice_ids: Optional[List[str]] = None,
+        slice_filter: Optional[Union[SlicesFilter, dict]] = None,
+    ) -> ActivityHistory:
+        """Start deleting slices.
+
+        Starts one ``DELETE_SLICE`` activity for every slice that ``slice_ids``
+        or ``slice_filter`` selects (pass exactly one). The activity deletes
+        each slice's annotation files, then the slice; the data stay in the
+        dataset. To block until it ends, use
+        ``ActivityService.wait_for_activity``.
+        Targets are found when the activity runs. If none match or they are
+        already deleted, it succeeds without deleting anything. A target that
+        cannot be deleted then (for example a storage error) is not refused at request time; the
+        activity ends FAILED (see its ``status`` and ``meta``).
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
+        Args:
+            dataset_id (str): The dataset ID.
+            slice_ids (Optional[List[str]]): The slice IDs.
+            slice_filter (Optional[SlicesFilter | dict]): A SlicesFilter
+                (``{"must": ..., "not": ...}``). A dict is sent as it is, in
+                the GraphQL field names. A filter without a condition is refused.
+                A filter with only ``not`` selects every target except those.
+
+        Raises:
+            BadParameterError: If dataset_id is missing.
+            BadDeletionTargetError: If none or both of slice_ids and
+                slice_filter are given, or they are empty (also a
+                ValueError).
+            InvalidInputError: If the platform refuses the request. It checks
+                only keys, types and required values then; other filter
+                problems (e.g. an empty ``idIn``) are checked when the activity
+                runs and would fail it, so the SDK refuses those before sending
+                (BadDeletionTargetError).
+            UnknownError: Other request errors (e.g. no role in the dataset).
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        require_id(dataset_id, "dataset_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "slice_filter": deletion_filter(
+                ids=slice_ids,
+                ids_name="slice_ids",
+                filter=slice_filter,
+                filter_name="slice_filter",
+                filter_types=(SlicesFilter,),
+            ),
+        }
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_SLICE, parameters
+        )
+
     def delete_slice(
         self,
         dataset_id: str,
         slice_id: str,
-    ) -> bool:
-        """Delete a slice.
-        
-        Args:
-            dataset_id (str): The ID of the dataset the slice belongs to.
-            slice_id (str): The ID of the slice to delete.
-        
+    ) -> ActivityHistory:
+        """Start deleting one slice. Deprecated: use ``delete_slices``.
+
+        It will be removed in the next major version. It warns with
+        DeprecationWarning and calls ``delete_slices(dataset_id, slice_ids=[slice_id])``,
+        so it starts one activity with the filter ``{"must": {"idIn": [slice_id]}}``.
+        Calling it in a loop starts one activity per slice; pass all the IDs to
+        ``delete_slices`` instead.
+
+        Raises:
+            BadParameterError: If dataset_id or slice_id is missing.
+
         Returns:
-            bool: True if the slice was deleted, False otherwise.
+            ActivityHistory: The started activity.
         """
-        response = self.request_gql(
-            Queries.DELETE_SLICE,
-            Queries.DELETE_SLICE["variables"](
-                dataset_id=dataset_id,
-                slice_id=slice_id,
-            )
-        )
-        return response
+        warn_deprecated("delete_slice", "delete_slices", "slice", "slice_ids", "slice_filter")
+        require_id(dataset_id, "dataset_id")
+        require_id(slice_id, "slice_id")
+        return self.delete_slices(dataset_id, slice_ids=[slice_id])

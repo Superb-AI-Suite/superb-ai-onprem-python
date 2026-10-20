@@ -3,6 +3,14 @@ from typing import Optional, List, Tuple, Union
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    deletion_filter,
+    require_id,
+    start_deletion_activity,
+    warn_deprecated,
+)
+from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 from spb_onprem.contents.service import ContentService
 from spb_onprem.charts import ChartDataResult
@@ -170,21 +178,88 @@ class ModelService(BaseService):
         )
         return Model.model_validate(response)
 
+    def delete_models(
+        self,
+        dataset_id: str,
+        model_ids: Optional[List[str]] = None,
+        model_filter: Optional[Union[ModelFilter, dict]] = None,
+    ) -> ActivityHistory:
+        """Start deleting models.
+
+        Starts one ``DELETE_MODEL`` activity for every model that ``model_ids``
+        or ``model_filter`` selects (pass exactly one). The activity deletes
+        each model, its training report and their files. Diagnoses made with the
+        models stay. To block until it ends, use
+        ``ActivityService.wait_for_activity``.
+        Targets are found when the activity runs. If none match or they are
+        already deleted, it succeeds without deleting anything. A target that
+        cannot be deleted then (still training, or used by a deployment) is not refused at request time; the
+        activity ends FAILED (see its ``status`` and ``meta``).
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
+        Args:
+            dataset_id (str): The dataset ID.
+            model_ids (Optional[List[str]]): The model IDs.
+            model_filter (Optional[ModelFilter | dict]): A ModelFilter
+                (``{"must": ..., "not": ...}``). A dict is sent as it is, in
+                the GraphQL field names. A filter without a condition is refused.
+                A filter with only ``not`` selects every target except those.
+
+        Raises:
+            BadParameterError: If dataset_id is missing.
+            BadDeletionTargetError: If none or both of model_ids and
+                model_filter are given, or they are empty (also a
+                ValueError).
+            InvalidInputError: If the platform refuses the request. It checks
+                only keys, types and required values then; other filter
+                problems (e.g. an empty ``idIn``) are checked when the activity
+                runs and would fail it, so the SDK refuses those before sending
+                (BadDeletionTargetError).
+            UnknownError: Other request errors (e.g. no role in the dataset).
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        require_id(dataset_id, "dataset_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "model_filter": deletion_filter(
+                ids=model_ids,
+                ids_name="model_ids",
+                filter=model_filter,
+                filter_name="model_filter",
+                filter_types=(ModelFilter,),
+                status_values=[status.value for status in ModelStatus],
+            ),
+        }
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_MODEL, parameters
+        )
+
     def delete_model(
         self,
         dataset_id: str,
         model_id: str,
-    ) -> bool:
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        if model_id is None:
-            raise BadParameterError("model_id is required.")
+    ) -> ActivityHistory:
+        """Start deleting one model. Deprecated: use ``delete_models``.
 
-        response = self.request_gql(
-            Queries.DELETE,
-            Queries.DELETE["variables"](dataset_id=dataset_id, model_id=model_id),
-        )
-        return bool(response)
+        It will be removed in the next major version. It warns with
+        DeprecationWarning and calls ``delete_models(dataset_id, model_ids=[model_id])``,
+        so it starts one activity with the filter ``{"must": {"idIn": [model_id]}}``.
+        Calling it in a loop starts one activity per model; pass all the IDs to
+        ``delete_models`` instead.
+
+        Raises:
+            BadParameterError: If dataset_id or model_id is missing.
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        warn_deprecated("delete_model", "delete_models", "model", "model_ids", "model_filter")
+        require_id(dataset_id, "dataset_id")
+        require_id(model_id, "model_id")
+        return self.delete_models(dataset_id, model_ids=[model_id])
 
     def create_training_report_item(
         self,
@@ -288,6 +363,7 @@ class ModelService(BaseService):
         # Upload the JSON data
         self.request(
             method="PUT",
+            auth=False,  # presigned storage URL: no platform credentials
             url=upload_url,
             headers={'Content-Type': 'application/json'},
             json_data=data,

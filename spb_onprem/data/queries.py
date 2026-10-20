@@ -472,7 +472,6 @@ class Queries():
                     dataId: $data_id,
                     sliceId: $slice_id,
                     meta: $meta,
-                    content
                 ) {{
                     {Schemas.DATA}
                 }}
@@ -511,7 +510,7 @@ class Queries():
                 $data_id: ID!,
                 $slice_id: ID!,
                 $version_id: ID!,
-                $channel: String,
+                $channels: [String!],
                 $version: String,
                 $meta: JSONObject,
                 $content_id: ID,
@@ -521,7 +520,7 @@ class Queries():
                     dataId: $data_id,
                     sliceId: $slice_id,
                     id: $version_id,
-                    channel: $channel,
+                    channels: $channels,
                     version: $version,
                     meta: $meta,
                     contentId: $content_id,

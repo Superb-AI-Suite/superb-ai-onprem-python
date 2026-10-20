@@ -126,6 +126,56 @@ else:
 
 Ready for more? Check out our [comprehensive documentation](#-documentation) below!
 
+## 🗑️ Deleting (changed in 2.0.0)
+
+Deleting no longer removes rows at once. Each call starts **one** activity
+(`DELETE_MODEL`, `DELETE_DIAGNOSIS`, `DELETE_ANALYTICS_REPORT`, `DELETE_SLICE`,
+`DELETE_DATA`, `REMOVE_DATA_FROM_SLICE`, `DELETE_DATASET`, `DELETE_MODEL_DEPLOYMENT`) and returns its
+`ActivityHistory` instead of `bool` (or `Data` for `remove_data_from_slice`). The
+delete activities also delete the files in storage; `REMOVE_DATA_FROM_SLICE` only
+takes data out of a slice and deletes no files.
+
+| Function | Targets (exactly one) |
+| --- | --- |
+| `ModelService.delete_models(dataset_id, ...)` | `model_ids=[...]` or `model_filter=ModelFilter(...)` |
+| `DiagnosisService.delete_diagnoses(dataset_id, ...)` | `diagnosis_ids=[...]` or `diagnosis_filter=DiagnosisFilter(...)` |
+| `ReportService.delete_analytics_reports(dataset_id, ...)` | `report_ids=[...]` or `report_filter=AnalyticsReportsFilter(...)` |
+| `SliceService.delete_slices(dataset_id, ...)` | `slice_ids=[...]` or `slice_filter=SlicesFilter(...)` |
+| `DataService.delete_data(dataset_id, ...)` | `data_id`, `data_ids=[...]` or `data_filter=DataListFilter(...)` |
+| `DataService.remove_data_from_slice(dataset_id, ..., slice_id=...)` | `data_id`, `data_ids=[...]` or `data_filter=...` |
+| `DatasetService.delete_dataset(dataset_id)` | the dataset |
+| `ModelDeploymentService.delete_model_deployments(dataset_id, ...)` (new, `DELETE_MODEL_DEPLOYMENT`) | `deployment_ids=[...]` or `deployment_filter=ModelDeploymentFilter(...)` |
+
+Empty lists and filters without a condition (`{}`, `{"must": {}}`, `must: null`,
+`must.idIn: []`) are refused with `BadDeletionTargetError` (a `ValueError`).
+
+**Deprecated:** `delete_model`, `delete_diagnosis`, `delete_analytics_report` and
+`delete_slice` still work but warn with `DeprecationWarning` and will be removed in the
+next major version. Each call starts one activity, so calling them in a loop starts one
+activity per target; pass all the IDs to the plural function instead.
+
+- The history is always truthy, so `if service.delete_x(...)` keeps running, but `bool(...)` no
+  longer tells whether anything was deleted (and `== True` is False). Use
+  `ActivityService().wait_for_activity(history.id)` and check its `status`.
+- The deletion functions never return `False` any more. The SDK refuses malformed targets
+  before sending (`BadDeletionTargetError`: empty lists or filters, an empty `idIn`, a non-list
+  `idIn`, an unknown `statusIn` value, ...). The platform checks only keys, types and required
+  values when the request is made (`InvalidInputError`) and the rest when the activity runs. The targets
+  are found when the activity runs: if none match or they are already deleted, the activity
+  succeeds without deleting anything; a target that cannot be deleted then (still running, a
+  model used by a deployment) is not refused at request time but makes the activity `FAILED`
+  (see its `status` and `meta`).
+- `ActivityStatus.CANCELLED` is now an alias of `CANCELED`; its value is `"CANCELED"`, so
+  comparing a status with the string `"CANCELLED"` is False.
+- Progress and errors show in the Activity log. A non-admin of the dataset submits the
+  activity as `AWAITING_APPROVAL`; an admin (Owner, WorkspaceAdmin, DATASET-ADMIN) starts it at once.
+- To block until the deletion ends, call `ActivityService().wait_for_activity(history.id)`.
+- `ContentService.delete_content` is unchanged (a content is a file, not an entity), but it
+  raises when storage fails instead of returning `False`.
+
+The server must have the deletion activities (job definitions and base DAGs).
+See the "Deletion Activities" section of [Activities](spb_onprem/activities/README.md).
+
 ## 📚 Module Documentation
 
 ### 🏗️ Core Modules
@@ -141,6 +191,8 @@ Comprehensive guides for each SDK module with detailed examples and best practic
 | **🤖 Models** | ML model management | Track models, training configs, performance metrics | [🤖 Model Guide](spb_onprem/models/README.md) |
 | **📈 Reports** | Analytics & visualization | Create reports, charts, dashboards | [📈 Report Guide](spb_onprem/reports/README.md) |
 | **📊 Charts** | Chart data factory | Generate training metrics visualizations (9 chart types) | [📊 Chart Guide](spb_onprem/charts/README.md) |
+| **❓ VLM Settings** | VLM question sets | Dataset and slice question sets, optimistic locking | [❓ VLM Settings Guide](spb_onprem/vlm_settings/README.md) |
+| **🚀 Model Deployments** | Serve models on GPUs | Deploy, wait, invoke, stop, start, delete; deployment definitions | [🚀 Model Deployment Guide](spb_onprem/model_deployments/README.md) |
 
 ### 🎯 Getting Started Paths
 
@@ -222,6 +274,18 @@ except UnknownError as e:
     print(f"An unexpected error occurred: {e}")
 ```
 
+
+## 🔐 Security notes
+
+- Platform credentials (`Authorization`, or `x-user-email` in system mode) are sent only to the
+  platform API host, never to presigned storage URLs, and are dropped when a redirect leaves the host.
+  **Exception:** the deprecated `InferService` sends them to `MODEL_ENDPOINT_URL`, whatever its host.
+- SDK error messages, SDK logs, `SDK_DEBUG_GQL` output and SDK exceptions hide credentials and
+  presigned URL signatures (URL query strings).
+- On import, the SDK adds a filter to the `urllib3.connectionpool` and `urllib3.util.retry` loggers
+  that replaces URL query strings with `<redacted>` in their records, at every level (for example
+  the WARNING urllib3 writes when it retries). Other output that shows raw requests, such as
+  `http.client` debug printing (`HTTPConnection.debuglevel`), is not covered.
 
 ## 🧪 Requirements
 

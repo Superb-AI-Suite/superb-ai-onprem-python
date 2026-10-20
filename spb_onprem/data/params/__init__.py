@@ -44,7 +44,8 @@ from .insert_data_to_slice import (
     insert_data_to_slice_params
 )
 from .delete_data import (
-    delete_data_params
+    delete_data_params,
+    deletion_data_filter,
 )
 from .update_annotation import (
     update_annotation_params
@@ -125,6 +126,7 @@ __all__ = [
     "remove_data_from_slice_params",
     "insert_data_to_slice_params",
     "delete_data_params",
+    "deletion_data_filter",
     "update_annotation_params",
     "insert_annotation_version_params",
     "update_annotation_version_params",

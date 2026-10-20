@@ -4,11 +4,36 @@ from spb_onprem.base_model import CustomBaseModel, Field
 
 
 class ActivityStatus(str, Enum):
+    """Activity history status, as the server's ``JobStatus`` enum spells it."""
+
+    AWAITING_APPROVAL = "AWAITING_APPROVAL"
     PENDING = "PENDING"
     RUNNING = "RUNNING"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
-    CANCELLED = "CANCELLED"
+    CANCELED = "CANCELED"
+    REJECTED = "REJECTED"
+    # Old SDK spelling, kept as an alias of CANCELED.
+    CANCELLED = "CANCELED"
+
+    @classmethod
+    def _missing_(cls, value):
+        if value == "CANCELLED":
+            return cls.CANCELED
+        return None
+
+    @property
+    def is_terminal(self) -> bool:
+        """True when the activity will not change any more."""
+        return self in TERMINAL_ACTIVITY_STATUSES
+
+
+TERMINAL_ACTIVITY_STATUSES = frozenset({
+    ActivityStatus.SUCCESS,
+    ActivityStatus.FAILED,
+    ActivityStatus.CANCELED,
+    ActivityStatus.REJECTED,
+})
 
 
 class ActivityHistory(CustomBaseModel):
@@ -21,7 +46,7 @@ class ActivityHistory(CustomBaseModel):
     id: Optional[str] = Field(None, alias="id", description="액티비티 히스토리 고유 식별자")
     dataset_id: Optional[str] = Field(None, alias="datasetId", description="상위 데이터셋 ID")
     activity_id: Optional[str] = Field(None, alias="jobId", description="실행된 액티비티 ID")
-    status: Optional[ActivityStatus] = Field(None, alias="status", description="실행 상태 (PENDING, RUNNING, SUCCESS, FAILED, CANCELLED)")
+    status: Optional[ActivityStatus] = Field(None, alias="status", description="실행 상태 (AWAITING_APPROVAL, PENDING, RUNNING, SUCCESS, FAILED, CANCELED, REJECTED)")
     
     parameters: Optional[dict] = Field(None, alias="parameters", description="실행 파라미터")
     progress: Optional[dict] = Field(None, alias="progress", description="진행 상황 정보")

@@ -75,7 +75,9 @@ data_service.add_data_to_slice(
     data_ids=["data_001", "data_002", "data_003"]
 )
 
-# Remove data from slice (using DataService)
+# Remove data from slice (using DataService).
+# Since 2.0.0 this starts one REMOVE_DATA_FROM_SLICE activity for all the data.
+# It deletes no files; slice annotations go when the slice or the dataset is deleted.
 data_service.remove_data_from_slice(
     dataset_id="dataset_123",
     slice_id="slice_456",
@@ -109,10 +111,11 @@ slices, cursor, total = slice_service.get_slices(
     length=10
 )
 
-# Delete slice (data remains in dataset)
-slice_service.delete_slice(
+# Delete slices (data remains in dataset).
+# Since 2.0.0 this starts one DELETE_SLICE activity and returns its ActivityHistory.
+slice_service.delete_slices(
     dataset_id="dataset_123",
-    slice_id="slice_456"
+    slice_ids=["slice_456"]
 )
 ```
 
@@ -185,9 +188,10 @@ slices, cursor, total = slice_service.get_slices(
     dataset_id="dataset_123",
     length=50
 )
-for slice_obj in slices:
-    if "temp_" in slice_obj.name and not slice_obj.is_pinned:
-        slice_service.delete_slice(dataset_id="dataset_123", slice_id=slice_obj.id)
+temp_ids = [s.id for s in slices if "temp_" in s.name and not s.is_pinned]
+if temp_ids:
+    # One activity for all of them (do not call a delete function per slice in a loop).
+    slice_service.delete_slices(dataset_id="dataset_123", slice_ids=temp_ids)
 ```
 
 ## 🎯 Common Use Cases

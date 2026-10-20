@@ -3,7 +3,8 @@ import time
 
 import pytest
 
-from spb_onprem import DiagnosisService, DatasetService, ContentService, SliceService
+from spb_onprem import DiagnosisService, DatasetService, ContentService, SliceService, ActivityService
+from spb_onprem.activities.entities import ActivityHistory, ActivityStatus
 from spb_onprem.diagnoses.entities import DiagnosisStatus
 from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
 from spb_onprem.charts import (
@@ -939,15 +940,20 @@ def test_diagnosis_lifecycle_workflow():
         if CLEANUP:
             print("\n[Step 17] Deleting the test diagnosis...")
             try:
-                delete_result = diagnosis_service.delete_diagnosis(
+                delete_result = diagnosis_service.delete_diagnoses(
                     dataset_id=DATASET_ID,
-                    diagnosis_id=created_diagnosis_id
+                    diagnosis_ids=[created_diagnosis_id]
                 )
                 
-                print(f"✅ Diagnosis deletion executed successfully")
-                print(f"   Delete Result: {delete_result}")
-                
-                assert delete_result == True, "Delete operation should return True"
+                print(f"✅ Diagnosis deletion activity started")
+                print(f"   Activity history: {delete_result.id} ({delete_result.status})")
+
+                # Since 2.0.0 delete_diagnoses starts a DELETE_DIAGNOSIS activity.
+                assert isinstance(delete_result, ActivityHistory)
+                finished = ActivityService().wait_for_activity(
+                    delete_result.id, dataset_id=DATASET_ID, timeout=600, poll_interval=5
+                )
+                assert finished.status == ActivityStatus.SUCCESS, f"Deletion activity ended as {finished.status}"
                 
             except Exception as e:
                 print(f"❌ Failed to delete diagnosis: {e}")
@@ -1017,9 +1023,9 @@ def test_diagnosis_lifecycle_workflow():
             if created_diagnosis_id:
                 try:
                     print(f"   Attempting to delete diagnosis: {created_diagnosis_id}")
-                    diagnosis_service.delete_diagnosis(
+                    diagnosis_service.delete_diagnoses(
                         dataset_id=DATASET_ID,
-                        diagnosis_id=created_diagnosis_id
+                        diagnosis_ids=[created_diagnosis_id]
                     )
                     print(f"   ✅ Cleanup successful - diagnosis deleted")
                 except Exception as cleanup_error:

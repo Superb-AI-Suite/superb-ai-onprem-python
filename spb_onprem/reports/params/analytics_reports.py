@@ -16,9 +16,12 @@ class AnalyticsReportsFilterOptions(CustomBaseModel):
     """Options for filtering analytics reports.
     
     Attributes:
+        id_in: Filter reports by ID (needs a server whose analytics report
+            filter has ``idIn``, added with the C17 deletion activities)
         title_contains: Filter reports by title containing this string
         status_in: Filter reports by status (list of status values)
     """
+    id_in: Optional[List[str]] = Field(None, alias="idIn")
     title_contains: Optional[str] = Field(None, alias="titleContains")
     status_in: Optional[List[str]] = Field(None, alias="statusIn")
 

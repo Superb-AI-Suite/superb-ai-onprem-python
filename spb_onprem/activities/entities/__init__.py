@@ -1,5 +1,5 @@
 from .activity import Activity, ActivitySchema, SchemaType
-from .activity_history import ActivityHistory, ActivityStatus
+from .activity_history import ActivityHistory, ActivityStatus, TERMINAL_ACTIVITY_STATUSES
 from .task_monitoring import (
     RenderedTemplateValueType,
     TaskDataAvailability,
@@ -27,6 +27,7 @@ __all__ = (
     "Activity",
     "ActivityHistory",
     "ActivityStatus",
+    "TERMINAL_ACTIVITY_STATUSES",
     "SchemaType",
     "ActivitySchema",
     "RenderedTemplateValueType",

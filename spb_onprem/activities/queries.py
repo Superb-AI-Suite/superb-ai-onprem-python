@@ -389,6 +389,7 @@ class Queries:
                 $jobType: String,
 
                 $datasetId: ID,
+                $sliceId: ID,
                 $parameters: JSONObject,
                 $progress: JSONObject,
                 $meta: JSONObject
@@ -397,6 +398,7 @@ class Queries:
                     id: $id,
                     jobType: $jobType,
                     datasetId: $datasetId,
+                    sliceId: $sliceId,
                     parameters: $parameters,
                     progress: $progress,
                     meta: $meta

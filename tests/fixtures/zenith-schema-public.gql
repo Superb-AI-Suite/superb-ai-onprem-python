@@ -1,0 +1,6025 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type AccessKey {
+  """The Access Key"""
+  accessKeyId: String!
+
+  """The Access Secret"""
+  secretAccessKey: String!
+}
+
+"""The analytics report entity."""
+type AnalyticsReport {
+  """The completed at timestamp for the analytics report."""
+  completedAt: DateTime
+
+  """The created at timestamp for the analytics report item."""
+  createdAt: DateTime
+
+  """The created by user id for the analytics report item."""
+  createdBy: String
+  datasetId: ID!
+
+  """The description for the analytics report."""
+  description: String
+  id: ID!
+
+  """The items of the analytics report."""
+  items: [AnalyticsReportItem!]
+
+  """The meta data for the analytics report."""
+  meta: JSONObject
+
+  """The status of the analytics report."""
+  status: AnalyticsReportStatus
+
+  """The title for the analytics report."""
+  title: String
+
+  """The updated at timestamp for the analytics report item."""
+  updatedAt: DateTime
+
+  """The updated by user id for the analytics report item."""
+  updatedBy: String
+}
+
+"""
+C17: S3 content ids to delete with an analytics report. Ids still referenced elsewhere are left out.
+"""
+type AnalyticsReportContentIdsToDelete {
+  """
+  Content ids of the report items (ULID only, no duplicates). Delete each as a single content and as a folder content.
+  """
+  contentIds: [String!]!
+
+  """Whether the analytics report exists in the dataset."""
+  reportExists: Boolean!
+}
+
+input AnalyticsReportFilter {
+  """The filter options for listing analytics reports."""
+  must: AnalyticsReportListFilterOptions
+
+  """The filter options for excluding analytics reports from the list."""
+  not: AnalyticsReportListFilterOptions
+}
+
+"""The analytics report item entity."""
+type AnalyticsReportItem {
+  """The content data for the analytics report item."""
+  content: ContentBase
+
+  """The created at timestamp for the analytics report item."""
+  createdAt: DateTime
+
+  """The created by user id for the analytics report item."""
+  createdBy: String
+
+  """The description for the analytics report item."""
+  description: String
+  id: ID!
+
+  """The meta data for the analytics report item."""
+  meta: JSONObject
+
+  """The title for the analytics report item."""
+  title: String
+  type: AnalyticsReportItemType!
+
+  """The updated at timestamp for the analytics report item."""
+  updatedAt: DateTime
+
+  """The updated by user id for the analytics report item."""
+  updatedBy: String
+}
+
+"""The type of the analytics report item."""
+enum AnalyticsReportItemType {
+  CONFUSION_MATRIX
+  HEATMAP
+  HISTOGRAM
+  HORIZONTAL_BAR
+  LINE_CHART
+  MARKDOWN
+  MEDIA_COMPARISON
+  METRICS
+  PIE
+  SCATTER_PLOT
+  TABLE
+  VERTICAL_BAR
+}
+
+"""Filter options for listing analytics reports."""
+input AnalyticsReportListFilterOptions {
+  """The IDs of the analytics reports to filter by."""
+  idIn: [ID!]
+  statusIn: [AnalyticsReportStatus!]
+  titleContains: String
+}
+
+enum AnalyticsReportListOrderFields {
+  createdAt
+  title
+  updatedAt
+}
+
+"""Order by options for listing data."""
+input AnalyticsReportOrderBy {
+  """The order direction (ASC or DESC)."""
+  direction: OrderDirection!
+
+  """The field to order by."""
+  field: AnalyticsReportListOrderFields!
+}
+
+type AnalyticsReportPageInfo {
+  analyticsReports: [AnalyticsReport!]
+  next: String
+  totalCount: Int
+}
+
+"""The status of the analytics report."""
+enum AnalyticsReportStatus {
+  COMPLETED
+  FAILED
+  IN_PROGRESS
+  PENDING
+}
+
+"""An annotation is a collection of annotation versions."""
+type Annotation {
+  """The meta data for the selected annotation."""
+  meta: JSONObject
+  versions: [AnnotationVersion!]!
+}
+
+"""An annotations count."""
+type AnnotationCount {
+  """The annotation name."""
+  annotationCount: Int
+
+  """The count."""
+  dataCount: Int
+}
+
+"""Annotation count filters within a data."""
+input AnnotationCountsFilter {
+  """Filter by annotation class counts."""
+  class: [CountFilter!]
+
+  """Filter by annotation group counts."""
+  group: [CountFilter!]
+
+  """Filter by annotation sub-class counts."""
+  subClass: [CountFilter!]
+
+  """Filter by annotation types."""
+  type: [CountFilter!]
+}
+
+input AnnotationInput {
+  """The meta data for The selected annotation."""
+  meta: JSONObject
+
+  """The annotation version to create."""
+  versions: [AnnotationVersionInput!]
+}
+
+"""The annotation stat in data structure."""
+type AnnotationStat {
+  """The class name."""
+  annotationClass: String
+
+  """The count of annotations."""
+  count: Int
+
+  """The class group."""
+  group: String
+
+  """The sub class."""
+  subClass: String
+
+  """The annotation type."""
+  type: String
+}
+
+"""The annotation stats of the data."""
+input AnnotationStatInput {
+  """The annotation class name."""
+  annotationClass: String
+
+  """The count of the annotation."""
+  count: Float
+
+  """The annotation group."""
+  group: String
+
+  """The annotation sub class."""
+  subClass: String
+
+  """The annotation type."""
+  type: String
+}
+
+"""A stats per data."""
+type AnnotationStats {
+  """The annotation count per data."""
+  annotationCounts: [AnnotationCount!]
+
+  """The stats per data."""
+  statsPerData: AnnotationStatsPerData
+}
+
+"""A stat item per image."""
+type AnnotationStatsPerData {
+  """The average of the annotation count all data."""
+  avg: Float
+
+  """Data count has been annotated(over 1). """
+  count: Int
+
+  """The maximum of the annotation count per data."""
+  max: Int
+
+  """The minimum of the annotation count per data."""
+  min: Int
+
+  """The sum of the annotation count all data."""
+  sum: Int
+}
+
+"""A version of an annotation. The first is the latest."""
+type AnnotationVersion {
+  """The channels of the annotation version."""
+  channels: [String!]
+
+  """The file download id for the selected annotation version."""
+  content: ContentBase
+  id: ID!
+
+  """The meta data for the selected annotation version."""
+  meta: JSONObject
+
+  """The version string of the annotation version."""
+  version: String
+}
+
+input AnnotationVersionInput {
+  """The channels of the annotation version."""
+  channels: [String!]
+
+  """The file download id for The selected annotation version."""
+  content: ContentBaseInput
+
+  """The meta data for The selected annotation version."""
+  meta: JSONObject
+
+  """The version string of the annotation version."""
+  version: String
+}
+
+"""The jwt authentication object"""
+type AuthToken {
+  """The Access Token"""
+  accessToken: JWT!
+
+  """The Expiration Date"""
+  expiresIn: PositiveInt!
+
+  """The ID Token"""
+  idToken: JWT!
+
+  """The Refresh Token"""
+  refreshToken: JWT!
+}
+
+"""The auto curation of the selected dataset."""
+type AutoCuration {
+  """The auto curation result content info."""
+  autoCurationResultContent: ContentBase
+
+  """The cluster scatter content file list."""
+  clusterScatterContents: ClusterScatterContents
+
+  """The created time of the auto curation."""
+  createdAt: DateTime
+
+  """The user who created the auto curation."""
+  createdBy: String
+
+  """The data information of the auto curation."""
+  dataInfo: AutoCurationDataInfo
+
+  """The dataset ID of the auto curation."""
+  datasetId: ID
+
+  """The description of the auto curation."""
+  description: String
+
+  """The ID of the auto curation."""
+  id: ID!
+
+  """The meta of the auto curation."""
+  meta: JSONObject
+
+  """The method of the auto curation."""
+  method: String
+
+  """The name of the auto curation."""
+  name: String
+
+  """The slice information of the auto curation."""
+  sliceInfo: AutoCurationSliceInfo
+
+  """The type of the auto curation."""
+  type: AutoCurationTypes
+
+  """The updated time of the auto curation."""
+  updatedAt: DateTime
+
+  """The user who updated the auto curation."""
+  updatedBy: String
+}
+
+"""The data information of the auto curation."""
+type AutoCurationDataInfo {
+  """The number of data in the auto curation."""
+  dataCount: Float
+
+  """The number of sample data in the auto curation."""
+  sampleDataCount: Float
+
+  """The number of test data in the auto curation."""
+  testDataCount: Float
+
+  """The number of train data in the auto curation."""
+  trainDataCount: Float
+
+  """The number of validation data in the auto curation."""
+  validationDataCount: Float
+}
+
+"""The data information of the auto curation."""
+input AutoCurationDataInfoInput {
+  """The number of data in the auto curation."""
+  dataCount: Int
+
+  """The number of sample data in the auto curation."""
+  sampleDataCount: Int
+
+  """The number of test data in the auto curation."""
+  testDataCount: Int
+
+  """The number of train data in the auto curation."""
+  trainDataCount: Int
+
+  """The number of validation data in the auto curation."""
+  validationDataCount: Int
+}
+
+"""The options to filter auto curations by."""
+input AutoCurationFilter {
+  """The options to filter auto curations by."""
+  must: AutoCurationFilterOptions
+
+  """The options to filter auto curations by."""
+  not: AutoCurationFilterOptions
+}
+
+"""The options to filter auto curations by."""
+input AutoCurationFilterOptions {
+  """The IDs of the auto curations to filter by."""
+  idIn: [ID!]
+
+  """The method of the auto curation."""
+  methodIn: [AutoCurationMethodInput!]
+
+  """The name of the auto curation what you find."""
+  nameContains: String
+
+  """The type of the auto curation."""
+  typeIn: [AutoCurationTypes!]
+}
+
+"""The method of the auto curation."""
+input AutoCurationMethodInput {
+  """The method for auto curation when type is sample."""
+  sampleMethod: AutoSampleMethods
+
+  """The method for auto curation when type is split."""
+  splitMethod: AutoSplitMethods
+}
+
+"""The field to order auto curations by."""
+input AutoCurationOrderBy {
+  """The direction to order auto curations by."""
+  direction: OrderDirection!
+
+  """The field to order auto curations by."""
+  field: AutoCurationOrderField!
+}
+
+"""The field to order auto curations by."""
+enum AutoCurationOrderField {
+  createdAt
+  name
+  updatedAt
+}
+
+"""The result of a auto curation query."""
+type AutoCurationPageInfo {
+  """The auto curations."""
+  autoCurations: [AutoCuration!]
+
+  """The cursor for the next page of auto curations."""
+  next: String
+
+  """The total count of auto curations."""
+  totalCount: Float
+}
+
+"""The slice information of the auto curation."""
+type AutoCurationSliceInfo {
+  """The ID of the slice."""
+  id: ID
+
+  """The ID of the test slice."""
+  testSliceId: ID
+
+  """The ID of the train slice."""
+  trainSliceId: ID
+
+  """The ID of the validation slice."""
+  validationSliceId: ID
+}
+
+"""The slice information of the auto curation."""
+input AutoCurationSliceInfoInput {
+  """The ID of the slice."""
+  id: ID
+
+  """The ID of the test slice."""
+  testSliceId: ID
+
+  """The ID of the train slice."""
+  trainSliceId: ID
+
+  """The ID of the validation slice."""
+  validationSliceId: ID
+}
+
+"""The type of the auto curation."""
+enum AutoCurationTypes {
+  sample
+  split
+}
+
+"""The method for auto curation when type is sample."""
+enum AutoSampleMethods {
+  balanced
+  commonDataFocus
+  random
+  rareDataFocus
+}
+
+"""The method for auto curation when type is split."""
+enum AutoSplitMethods {
+  balanced
+  random
+  wow
+}
+
+"""
+One display-language translation of a caption, produced by the caption job.
+"""
+input CaptionDisplayTranslationInput {
+  """
+  Display language code (e.g. ko, ja). English is the original and is ignored.
+  """
+  lang: String!
+
+  """Translated caption text."""
+  text: String!
+}
+
+"""The source of a caption."""
+enum CaptionSource {
+  GROUND_TRUTH
+  VLM_GENERATED
+}
+
+"""
+A caption target: an axis that distinguishes images (target) and the terms to look for on that axis.
+"""
+type CaptionTarget {
+  """An axis that distinguishes images (e.g. lesion type)."""
+  target: String!
+
+  """Terms to look for on this axis. Used verbatim in captions and search."""
+  terms: [String!]!
+}
+
+"""
+A caption target: an axis that distinguishes images (target) and the terms to look for on that axis.
+"""
+input CaptionTargetInput {
+  target: String!
+
+  """Terms to look for on this axis (max 15 per target)."""
+  terms: [String!]!
+}
+
+"""
+English renderings of a non-Latin caption term, generated once per settings version for caption attribute matching and in-job translation hints. Read-only.
+"""
+type CaptionTermAlias {
+  """English renderings the captions are matched against."""
+  aliases: [String!]!
+
+  """The term exactly as written in captionSettings."""
+  term: String!
+}
+
+"""A class distribution item."""
+type ClassDistributionItem {
+  """The annotation type."""
+  annotationType: String
+
+  """The class count."""
+  classCount: Int
+
+  """The class name."""
+  className: String
+
+  """The image count."""
+  imageCount: Int
+}
+
+"""A class distribution response."""
+type ClassDistributionResponse {
+  """The class distribution."""
+  classDistribution: [ClassDistributionItem!]
+}
+
+"""The cluster scatter contents of the auto curation."""
+type ClusterScatterContents {
+  """The annotation cluster contents."""
+  annotationClusterContents: [ContentBase!]
+
+  """The annotation scatter contents."""
+  annotationScatterContents: [ContentBase!]
+
+  """The data cluster contents."""
+  dataClusterContents: [ContentBase!]
+
+  """The data scatter contents."""
+  dataScatterContents: [ContentBase!]
+}
+
+"""The cluster scatter contents."""
+input ClusterScatterContentsInput {
+  """The annotation cluster contents."""
+  annotationClusterContents: [ContentBaseInput!]
+
+  """The annotation scatter contents."""
+  annotationScatterContents: [ContentBaseInput!]
+
+  """The data cluster contents."""
+  dataClusterContents: [ContentBaseInput!]
+
+  """The data scatter contents."""
+  dataScatterContents: [ContentBaseInput!]
+}
+
+"""Response for comment categories query."""
+type CommentCategoriesResponse {
+  """List of comment categories with their counts."""
+  categories: [CommentCategoryInfo!]!
+
+  """Total number of unique categories found."""
+  totalCategories: Float!
+}
+
+"""Comment category information with count."""
+type CommentCategoryInfo {
+  """The category name."""
+  category: String!
+
+  """The number of comments with this category."""
+  count: Float!
+}
+
+"""The status of the comment in new data structure."""
+enum CommentStatus {
+  RESOLVED
+  UNRESOLVED
+}
+
+"""The content."""
+type Content {
+  """The date and time the content was created."""
+  createdAt: DateTime
+
+  """The user who created the content."""
+  createdBy: String
+  id: ID!
+
+  """The key of the content."""
+  key: String
+
+  """The location of the content."""
+  location: JSONObject
+}
+
+"""The base content."""
+type ContentBase {
+  id: ID!
+}
+
+input ContentBaseInput {
+  """The ID of content."""
+  id: ID!
+}
+
+"""Filter for dynamic count fields (e.g., counts.class.person)."""
+input CountFilter {
+  """The key for the count (e.g., "person", "car")."""
+  key: String!
+
+  """The range condition for the count value."""
+  range: NumericRangeFilter
+}
+
+input CreateModelDeployDefinitionInput {
+  datasetOnly: Boolean!
+  description: String
+  id: String!
+  name: String!
+  serverImageName: String!
+  serverImageTag: String
+  startScript: String
+}
+
+"""The custom job entity."""
+type CustomJob {
+  """The description of the custom job."""
+  description: String
+
+  """The documentation markdown of the custom job."""
+  docMD: String
+
+  """The ID of the custom job."""
+  id: ID!
+
+  """The settings of the custom job."""
+  modelDetail: JSONObject
+
+  """The name of the custom job."""
+  name: String
+
+  """The parameters of the custom job."""
+  params: JSONObject
+
+  """The tags of the custom job."""
+  tags: [String!]
+}
+
+"""Data entity with optimized structure for PostgreSQL"""
+type Data {
+  """The annotation of the data."""
+  annotation: Annotation
+
+  """The annotation stats of the data."""
+  annotationStats: [AnnotationStat!]
+
+  """The caption of the data."""
+  caption: String
+
+  """The date and time the data was created."""
+  createdAt: DateTime
+
+  """The user who created the data."""
+  createdBy: String
+
+  """The dataset id of this data."""
+  datasetId: ID
+
+  """
+  The single caption shown and searched for this data, computed by the server. lang: returns the translation when available, falling back to the original.
+  """
+  effectiveCaption(lang: String): String
+  frames: [DataFrame!]!
+  id: ID!
+
+  """The key of the data."""
+  key: String
+
+  """The user meta data for the data."""
+  meta: [DataMeta!]
+
+  """The scenes of the data."""
+  scene: [Scene!]
+  slices: [DataSlice!]!
+
+  """The sub type of the data."""
+  subType: String
+
+  """The thumbnail file of the data."""
+  thumbnail: ContentBase
+
+  """The type of the data."""
+  type: DataType
+
+  """The date and time the data was last updated."""
+  updatedAt: DateTime
+
+  """The user who last updated the data."""
+  updatedBy: String
+}
+
+"""the data annotation meta in data structure."""
+type DataAnnotationMeta {
+  """The number of documents with this annotation metadata."""
+  annotationCount: Int
+
+  """The number of data with this annotation metadata."""
+  dataCount: Int
+
+  """The class group."""
+  group: String
+
+  """The class name."""
+  name: String
+
+  """The sub class."""
+  subClass: String
+
+  """The annotation type."""
+  type: String
+}
+
+input DataFilter {
+  """
+  A list of frame filters applied to the search_frames index. The data must contain frames matching ALL filters in this list.
+  """
+  frames: [FrameFilter!]
+
+  """Filters applied to the data index."""
+  must: DataFilterOptions
+
+  """Filters to exclude data from the data index."""
+  not: DataFilterOptions
+
+  """Filters applied to nested slice documents within the data index."""
+  slice: DataSliceFilter
+}
+
+"""Options to filter data based on its own properties."""
+input DataFilterOptions {
+  """Filter by aggregated annotation counts within the data."""
+  annotationCounts: AnnotationCountsFilter
+  assignedToUser: String
+
+  """
+  Filter by whether the data has an effective caption (true) or none (false).
+  """
+  captionExists: Boolean
+
+  """
+  Natural-language caption search. Only data with captions is matched; the result set is bounded by a server-side policy. Combine with orderBy RELEVANCE for similarity ordering.
+  """
+  captionSemanticQuery: String
+  createdAt: DateTimeRangeFilterOption
+  createdBy: UserFilterOption
+  idIn: [ID!]
+  keyContains: String
+  keyMatches: String
+
+  """Filter by data metadata."""
+  meta: MetaFilter
+  sliceId: String
+  sliceIdAll: [ID!]
+  sliceIdExists: Boolean
+  sliceIdIn: [ID!]
+  subTypeContains: String
+  subTypeMatches: String
+  typeIn: [DataType!]
+  updatedAt: DateTimeRangeFilterOption
+  updatedBy: UserFilterOption
+}
+
+"""The frame details of the data."""
+type DataFrame {
+  """The date and time when this frame was captured"""
+  capturedAt: DateTime
+
+  """The geo location where this frame captured"""
+  geoLocation: GeoLocation
+
+  """The frame id of the data."""
+  id: ID!
+
+  """The index of the frame"""
+  index: Int
+
+  """The meta data of the frame"""
+  meta: JSONObject
+}
+
+input DataFrameInput {
+  capturedAt: DateTime
+  geoLocation: GeoLocationInput
+  index: Int
+  meta: JSONObject
+}
+
+"""The meta data for the data."""
+type DataMeta {
+  """The key of the data meta."""
+  key: String
+
+  """The type of the data meta."""
+  type: DataMetaTypes
+
+  """The value of the data meta."""
+  value: JSON
+}
+
+input DataMetaInput {
+  """The key of the metadata."""
+  key: String!
+
+  """The type of the metadata."""
+  type: DataMetaTypes!
+
+  """The value of the metadata."""
+  value: JSON!
+}
+
+"""The type of the data meta in data structure."""
+enum DataMetaTypes {
+  Boolean
+  DateTime
+  Number
+  String
+}
+
+input DataOrderBy {
+  """The direction to order data by."""
+  direction: OrderDirection!
+
+  """The field to order data by."""
+  field: DataOrderField!
+}
+
+enum DataOrderField {
+  createdAt
+  key
+  relevance
+  sliceStatusChangedAt
+  updatedAt
+}
+
+type DataPageInfo {
+  data: [Data!]
+  next: String
+  selectedFrames: [SelectedFrame!]
+  totalCount: Int
+}
+
+"""The slice details of the data."""
+type DataSlice {
+  """The annotation of the data slice."""
+  annotation: Annotation
+
+  """The annotation stats of the data slice."""
+  annotationStats: [AnnotationStat!]
+
+  """
+  The caption of this (slice, data) pair — a copy taken when the data joined the slice, updated by enhancement runs. lang: returns the translation when available, falling back to the original.
+  """
+  caption(lang: String): String
+
+  """The comments of the data slice."""
+  comments: [DataSliceComment!]
+
+  """The slice id of the data."""
+  id: ID!
+
+  """The labeler id of the data."""
+  labeler: String
+
+  """The round of the data labeling."""
+  labelingRound: Int!
+
+  """The meta data of the data slice."""
+  meta: JSONObject
+
+  """The reviewer id of the data."""
+  reviewer: String
+
+  """The data status from this slice."""
+  status: DataSliceStatus!
+
+  """The date and time the data was changed."""
+  statusChangedAt: DateTime
+
+  """Tags of the data."""
+  tags: [String!]
+}
+
+"""The comment details of the data slice."""
+type DataSliceComment {
+  """The category of the comment."""
+  category: String
+
+  """The comment of the data."""
+  comment: String
+
+  """The date and time the comment was created."""
+  createdAt: DateTime
+
+  """The user who created the comment."""
+  createdBy: String
+
+  """The comment id of the data."""
+  id: ID!
+
+  """The meta data of the data comment."""
+  meta: JSONObject
+
+  """The replies of the data comment."""
+  replies: [DataSliceReply!]
+
+  """The status of the comment."""
+  status: CommentStatus!
+
+  """The date and time the comment was updated."""
+  updatedAt: DateTime
+
+  """The user who updated the comment."""
+  updatedBy: String
+}
+
+input DataSliceCommentFilterOption {
+  category: String
+  commentContains: String
+  createdAt: DateTimeRangeFilterOption
+  createdBy: UserFilterOption
+  exists: Boolean
+  status: CommentStatus
+}
+
+input DataSliceFilter {
+  """The ID of the slice to filter by."""
+  id: ID!
+  must: DataSlicePropertiesFilter
+  not: DataSlicePropertiesFilter
+}
+
+input DataSlicePropertiesFilter {
+  """Filter by aggregated annotation counts within the data slice."""
+  annotationCounts: AnnotationCountsFilter
+  assignedToUser: String
+  comments: DataSliceCommentFilterOption
+  labeler: DataSliceUserFilterOption
+  labelingRound: NumericRangeFilter
+
+  """Filter by data slice metadata."""
+  meta: MetaFilter
+  reviewer: DataSliceUserFilterOption
+  status: DataSliceStatusFilterOption
+  statusChangedAt: DateTimeRangeFilterOption
+  tags: DataSliceTagsFilterOption
+}
+
+"""The reply details of the data slice."""
+type DataSliceReply {
+  """The reply of the data."""
+  comment: String!
+
+  """The date and time the reply was created."""
+  createdAt: DateTime
+
+  """The user who created the reply."""
+  createdBy: String
+
+  """The reply id of the data."""
+  id: ID!
+
+  """The date and time the reply was updated."""
+  updatedAt: DateTime
+
+  """The user who updated the reply."""
+  updatedBy: String
+}
+
+"""The status of the data slice in new data structure."""
+enum DataSliceStatus {
+  COMPLETED
+  LABELING
+  PENDING
+  REJECTED
+  REQUEST_LABELING
+  REVIEWING
+}
+
+input DataSliceStatusFilterOption {
+  equals: DataSliceStatus
+  in: [DataSliceStatus!]
+  notIn: [DataSliceStatus!]
+}
+
+input DataSliceTagsFilterOption {
+  contains: String
+  exists: Boolean
+  hasAll: [String!]
+  hasAny: [String!]
+}
+
+input DataSliceUserFilterOption {
+  equals: String
+  exists: Boolean
+  in: [String!]
+}
+
+"""The type of the data."""
+enum DataType {
+  SUPERB_3D
+  SUPERB_IMAGE
+  SUPERB_VIDEO
+}
+
+"""The dataset."""
+type Dataset {
+  """Structured caption settings used to build caption prompts (SPO-795)."""
+  captionSettings: DatasetCaptionSettings
+
+  """
+  English renderings of non-Latin caption terms for the current captionSettings (null until first computed or when stale). Used by the caption job for translation term checks.
+  """
+  captionTermAliases: [CaptionTermAlias!]
+
+  """The date and time the slice was created."""
+  createdAt: DateTime
+
+  """The user who created the slice."""
+  createdBy: String
+
+  """The main data of the dataset."""
+  data: Data
+
+  """The data count of the dataset."""
+  dataCount: Int
+
+  """The description of the dataset."""
+  description: String
+  id: ID!
+
+  """The name of the dataset."""
+  name: String
+
+  """The slice count of the dataset."""
+  sliceCount: Int
+
+  """
+  Dataset kind. VLM for a VLM dataset; null for a Computer Vision dataset. Set only on creation.
+  """
+  type: DatasetType
+
+  """The date and time the slice was last updated."""
+  updatedAt: DateTime
+
+  """The user who last updated the slice."""
+  updatedBy: String
+}
+
+"""A annotation type and class name."""
+type DatasetAnnotation {
+  """Annotation class name."""
+  name: String
+
+  """Annotation type."""
+  type: String
+}
+
+"""Annotation definitions of datasets."""
+type DatasetAnnotations {
+  """The annotation definitions."""
+  annotations: [DatasetAnnotation!]
+}
+
+"""Structured caption settings used to build caption prompts."""
+type DatasetCaptionSettings {
+  captionTargets: [CaptionTarget!]
+
+  """One-sentence definition of the data (max 100 characters)."""
+  dataDefinition: String
+
+  """Elements common to almost every image; captions will not mention them."""
+  excludedTerms: [String!]
+}
+
+"""Structured caption settings. Every field is optional."""
+input DatasetCaptionSettingsInput {
+  captionTargets: [CaptionTargetInput!]
+  dataDefinition: String
+  excludedTerms: [String!]
+}
+
+"""The options to filter datasets by."""
+input DatasetFilter {
+  """The options to filter datasets by."""
+  must: DatasetFilterOptions
+
+  """The options to exclude datasets by."""
+  not: DatasetFilterOptions
+}
+
+"""The options to filter datasets by."""
+input DatasetFilterOptions {
+  """The IDs of the datasets to filter by."""
+  idIn: [ID!]
+
+  """The name of the dataset what you find."""
+  nameContains: String
+}
+
+"""The field to order datasets by."""
+input DatasetOrderBy {
+  """The direction to order datasets by."""
+  direction: OrderDirection!
+
+  """The field to order datasets by."""
+  field: DatasetOrderField!
+}
+
+"""The field to order datasets by."""
+enum DatasetOrderField {
+  createdAt
+  name
+}
+
+"""The options to order datasets by."""
+type DatasetPageInfo {
+  """The datasets."""
+  datasets: [Dataset!]
+
+  """The cursor to the next page."""
+  next: String
+
+  """The total number of datasets."""
+  totalCount: Float
+}
+
+"""
+Dataset kind. An empty value means a Computer Vision dataset. Set only on creation.
+"""
+enum DatasetType {
+  VLM
+}
+
+"""
+VLM question set of a VLM dataset (questions, answer types, evidence classes, reasoning guide).
+"""
+type DatasetVLMSettings {
+  createdAt: DateTime!
+  createdBy: String
+
+  """The ID of the dataset."""
+  datasetId: ID!
+
+  """
+  The question set. Questions and evidence classes are only added, deleted or restored.
+  """
+  settings: JSONObject!
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+"""Filter for a dynamic date meta field."""
+input DateMetaFilter {
+  """The key of the meta field (e.g., "eventDate")."""
+  key: String!
+
+  """The range condition for the value."""
+  range: DateTimeRangeFilterOption
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+input DateTimeRangeFilterOption {
+  equals: String
+  from: String
+  to: String
+
+  """
+  실행 시점 기준 최근 기간(예: 최근 7일). SELECT_DATA 실행 시 백엔드가 절대 from으로 해석한다. from/to/equals와 동시 사용 불가.
+  """
+  withinLast: RelativeDateOption
+}
+
+"""The diagnosis entity."""
+type Diagnosis {
+  completedAt: DateTime
+  contents: JSONObject
+  createdAt: DateTime
+  createdBy: String
+  datasetId: ID!
+  description: String
+  diagnosisDataCount: Int
+  diagnosisParameters: JSONObject
+  diagnosisReportItems: [DiagnosisReportItem!]
+  discriminatorKey: String
+  discriminatorValues: [String!]
+  id: ID!
+  modelId: ID
+  name: String!
+  scoreKey: String
+  scoreUnit: String
+  scoreValue: Float
+  sourceDataCount: Int
+  sourceSliceId: String
+  status: DiagnosisStatus
+  targetDataCount: Int
+  targetSliceId: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+"""
+C17: S3 content ids to delete with a diagnosis. Ids still referenced elsewhere are left out.
+"""
+type DiagnosisContentIdsToDelete {
+  """
+  Content ids in the diagnosis contents and its diagnosis report items (ULID only, no duplicates). Delete each as a single content and as a folder content.
+  """
+  contentIds: [String!]!
+
+  """Whether the diagnosis exists in the dataset."""
+  diagnosisExists: Boolean!
+}
+
+"""The options to filter diagnoses by."""
+input DiagnosisFilter {
+  """The options to filter diagnoses by."""
+  must: DiagnosisFilterOptions
+
+  """The options to exclude diagnoses by."""
+  not: DiagnosisFilterOptions
+}
+
+"""The options to filter diagnoses by."""
+input DiagnosisFilterOptions {
+  """The user ids who created diagnoses."""
+  createdByIn: [String!]
+
+  """The IDs of the diagnoses to filter by."""
+  idIn: [ID!]
+
+  """The name of the diagnosis contains."""
+  nameContains: String
+
+  """The score keys to filter by."""
+  scoreKeyIn: [String!]
+
+  """The statuses to filter by."""
+  statusIn: [DiagnosisStatus!]
+}
+
+"""The field to order diagnoses by."""
+input DiagnosisOrderBy {
+  """The direction to order diagnoses by."""
+  direction: OrderDirection!
+
+  """The field to order diagnoses by."""
+  field: DiagnosisOrderField!
+}
+
+"""The field to order diagnoses by."""
+enum DiagnosisOrderField {
+  completedAt
+  createdAt
+  name
+  scoreValue
+  updatedAt
+}
+
+"""The result of a diagnoses query."""
+type DiagnosisPageInfo {
+  """The diagnoses."""
+  diagnoses: [Diagnosis!]
+
+  """The cursor to the next page."""
+  next: String
+
+  """The total number of diagnoses."""
+  totalCount: Float
+}
+
+"""The diagnosis report item entity."""
+type DiagnosisReportItem {
+  contentId: ID
+  createdAt: DateTime
+  createdBy: String
+  description: String
+  diagnosisId: ID!
+  discriminatorValue: String
+  id: ID!
+  name: String!
+  type: AnalyticsReportItemType!
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+"""The status of the diagnosis."""
+enum DiagnosisStatus {
+  COMPLETED
+  FAILED
+  IN_PROGRESS
+  PENDING
+}
+
+"""Filter for annotation counts within a specific distance range."""
+input DistanceCountFilter {
+  """The required count of annotations within the specified distance range."""
+  countRange: NumericRangeFilter!
+
+  """The distance range from the ego vehicle (in meters)."""
+  distanceRange: NumericRangeFilter!
+
+  """The key for the class (e.g., "person", "car")."""
+  key: String!
+}
+
+"""
+The GPU quota policy effective for the current subject. Resolved server-side by Themis (subject row first, workspace default as fallback).
+"""
+type EffectiveGpuQuota {
+  """When the effective quota policy row became active. Null when unknown."""
+  activatedAt: DateTime
+
+  """
+  Whether GPU quota checks are enforced at runtime. When false the limits above are informational only and no request is denied on quota. Null when the server does not report it.
+  """
+  enforced: Boolean
+
+  """
+  The revision of the effective quota policy row. A quota revision, not a capability catalog revision. Null when unknown.
+  """
+  policyRevision: Int
+
+  """
+  Where the effective policy came from. WORKSPACE_DEFAULT today; SUBJECT when a per-subject row applies.
+  """
+  scope: GpuQuotaScope!
+
+  """
+  The per-subject aggregate active slice memory limit in GB. Null when unknown; never zero for unknown.
+  """
+  sliceMemLimitGb: Float
+
+  """
+  How the effective quota values were determined: ACTIVATION when fixed at activation time, RUNTIME_OVERRIDE when replaced by a runtime setting. Null when the server does not report it or reports a value outside this contract.
+  """
+  source: GpuQuotaSource
+
+  """
+  The maximum number of concurrent whole-card class requests of the subject. Null when the server does not report it.
+  """
+  wholeCardConcurrencyLimit: Int
+
+  """
+  The maximum card count of a single distributed request. Null when the server does not report it.
+  """
+  wholeCardMaxCards: Int
+
+  """
+  The maximum total number of whole cards the subject may hold at once. Counts cards, not requests, so it is not interchangeable with wholeCardConcurrencyLimit. Null when unlimited or when the server does not report it; never zero for unknown.
+  """
+  wholeCardsPerUserLimit: Int
+}
+
+"""
+A field whose value conforms to the standard internet email address format as specified in HTML Spec: https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address.
+"""
+scalar EmailAddress @specifiedBy(url: "https://html.spec.whatwg.org/multipage/input.html#valid-e-mail-address")
+
+"""A export is a subset of a dataset that can be used to filter data."""
+type Export {
+  """The count of annotations."""
+  annotationCount: Int
+
+  """The date and time the export completed."""
+  completedAt: DateTime
+
+  """The date and time the export was created."""
+  createdAt: DateTime
+
+  """The user who created the export."""
+  createdBy: String
+
+  """The count of data."""
+  dataCount: Int
+
+  """The search filter of the data."""
+  dataFilter: JSONObject
+
+  """The ID of the dataset that this export belongs to."""
+  datasetId: ID!
+
+  """The count of frames."""
+  frameCount: Int
+  id: ID!
+
+  """The location of the export file."""
+  location: String
+
+  """The meta data of the export."""
+  meta: JSONObject
+
+  """The name of the export."""
+  name: String
+
+  """The date and time the export was last updated."""
+  updatedAt: DateTime
+
+  """The user who last updated the export."""
+  updatedBy: String
+}
+
+input ExportFilter {
+  """The options to filter exports by."""
+  must: ExportFilterOptions
+
+  """The options to exclude exports by."""
+  not: ExportFilterOptions
+}
+
+input ExportFilterOptions {
+  """The IDs of the exports to filter by."""
+  idIn: [ID!]
+
+  """The location of the exports to filter by."""
+  location: String
+
+  """The location of the exports to filter by."""
+  locationContains: String
+
+  """The name of the exports to filter by."""
+  name: String
+
+  """The name of the exports to filter by."""
+  nameContains: String
+}
+
+input ExportOrderBy {
+  """The direction to order exports by."""
+  direction: OrderDirection!
+
+  """The field to order exports by."""
+  field: ExportOrderField!
+}
+
+"""The field to order exports by."""
+enum ExportOrderField {
+  completedAt
+  createdAt
+}
+
+type ExportPageInfo {
+  """The exports that match the query."""
+  exports: [Export!]!
+
+  """The cursor to use for pagination."""
+  next: String
+
+  """The total number of exports that match the query."""
+  totalCount: Int!
+}
+
+"""Container for aggregated count filters."""
+input FrameCountsFilter {
+  """Filter by annotation class counts."""
+  class: [CountFilter!]
+
+  """Filter by annotation counts within a dynamic distance range."""
+  distance: [DistanceCountFilter!]
+
+  """Filter by annotation group counts."""
+  group: [CountFilter!]
+
+  """Filter by annotation sub-class counts."""
+  subClass: [CountFilter!]
+
+  """Filter by annotation types."""
+  type: [CountFilter!]
+}
+
+"""
+Specifies filter conditions for a single frame or a data-level summary.
+"""
+input FrameFilter {
+  """Specific frame filter conditions."""
+  conditions: FrameFilterOptions!
+
+  """
+  Filter by the count of frames matching the conditions. Only valid when mode is INDIVIDUAL_FRAMES.
+  """
+  matchingFrameCount: NumericRangeFilter!
+}
+
+"""Frame-specific filter conditions."""
+input FrameFilterOptions {
+  """Filter by frame.chs (channels). Ignored if isDataSummary is true."""
+  channelsIn: [String!]
+
+  """
+  Filter by aggregated annotation counts within the frame or data summary.
+  """
+  counts: FrameCountsFilter
+
+  """Filter by frame.index. Ignored if isDataSummary is true."""
+  index: NumericRangeFilter
+
+  """
+  Filter by frame.location (ego geo location). Ignored if isDataSummary is true.
+  """
+  location: GeoLocationFilter
+
+  """Filter by frame metadata."""
+  meta: MetaFilter
+
+  """Filter by frame.timestamp. Ignored if isDataSummary is true."""
+  timestamp: DateTimeRangeFilterOption
+
+  """
+  Filter by frame.v (version) containing this string. Ignored if isDataSummary is true.
+  """
+  versionContains: String
+}
+
+"""The created content result."""
+type GeneratedContent {
+  """The content that was created."""
+  content: Content!
+
+  """The URL to upload the content."""
+  uploadURL: String!
+}
+
+"""The geo location where this frame captured"""
+type GeoLocation {
+  """Latitude"""
+  lat: Float!
+
+  """Longitude"""
+  lon: Float!
+}
+
+"""Filters by a central geo point and a radius."""
+input GeoLocationFilter {
+  """The latitude of the circle center."""
+  latitude: Float!
+
+  """The longitude of the circle center."""
+  longitude: Float!
+
+  """The radius of the circle in meters."""
+  radiusInMeters: Float!
+}
+
+input GeoLocationInput {
+  lat: Float!
+  lon: Float!
+}
+
+"""The activation phase of an admitted GPU request."""
+enum GpuActivationPhase {
+  DISPATCHING
+  POD_PENDING
+  RESERVED
+  RUNNING
+}
+
+"""
+The GPU workload of one activity: what it declared and where the request stands now. Null when the activity has no GPU workload or it could not be read.
+"""
+type GpuActivityWorkload {
+  """
+  The activation phase of an admitted activity. Null while waiting, after completion, or when unknown.
+  """
+  activationPhase: GpuActivationPhase
+
+  """
+  The GPU resource declared at submission. Null when the declaration is unknown.
+  """
+  declared: GpuDeclaredResource
+
+  """
+  Why the activity failed. Null unless the state is FAILED; GENERIC when the failure carries no classification. The classification may arrive a few seconds after the failure.
+  """
+  failureKind: GpuFailureKind
+
+  """When the GPU runtime observed this activity."""
+  observedAt: DateTime
+
+  """A safe reason code for the current state."""
+  safeReason: String
+
+  """The GPU request state of the activity."""
+  state: GpuRequestState!
+
+  """
+  Why the activity is waiting. Null when it is not waiting or when the server does not report a reason.
+  """
+  waitReason: GpuWaitReason
+}
+
+"""
+The GPU resource declared at submission. Immutable; taken from the submission snapshot.
+"""
+type GpuDeclaredResource {
+  """The declared number of cards."""
+  cardCount: Int!
+
+  """The declared resource mode."""
+  mode: GpuResourceMode!
+
+  """The declared memory in GB for SLICE. Null for whole-card modes."""
+  requestedMemGb: Int
+}
+
+"""
+Why a failed GPU activity failed: unclassified, or the declared resource was exceeded.
+"""
+enum GpuFailureKind {
+  DECLARATION_EXCEEDED
+  GENERIC
+}
+
+"""
+Whether actual memory is a verified NVML v2 split or a legacy v1 combined diagnostic.
+"""
+enum GpuMemoryAccountingMode {
+  V1_COMBINED
+  V2_SPLIT
+}
+
+"""
+The GPU quota limits currently in effect, and how they were determined.
+"""
+type GpuQuotaEffective {
+  """
+  The effective maximum number of concurrent whole-GPU jobs of a subject. Null when the server does not report it.
+  """
+  maxConcurrentWholeGpuJobs: Int
+
+  """
+  The effective maximum number of GPUs a single job may request. Null when the server does not report it.
+  """
+  maxGpusPerJob: Int
+
+  """
+  The effective per-subject aggregate shared (slice) GPU memory limit in GB. Null when the server does not report it.
+  """
+  maxSharedGpuMemoryGb: Int
+
+  """
+  The effective maximum total number of whole cards a single user may hold at once. Counts cards, not jobs. Null when the server does not report it.
+  """
+  maxWholeCardsPerUser: Int
+
+  """The revision of the effective quota policy row. Null when unknown."""
+  policyRevision: Int
+
+  """
+  How the effective values were determined: ACTIVATION when they are the activation-time policy, RUNTIME_OVERRIDE when a runtime setting replaced them. Null when the server does not report it or reports a value outside this contract.
+  """
+  source: GpuQuotaSource
+}
+
+"""
+The server-owned input bounds for GPU quota runtime settings. Null when the server does not report a bound.
+"""
+type GpuQuotaLimits {
+  """
+  The largest accepted maxGpusPerJob. Null when the server does not report it.
+  """
+  maxGpusPerJobMax: Int
+
+  """
+  The largest accepted maxSharedGpuMemoryGb. Null when the server does not report it.
+  """
+  maxSharedGpuMemoryGbMax: Int
+
+  """
+  The largest accepted maxWholeCardsPerUser. Null when the server does not report it, in which case the update mutation applies no upper bound of its own.
+  """
+  maxWholeCardsPerUserMax: Int
+}
+
+"""
+The GPU quota runtime settings of the workspace. Readable and writable by OWNER or WORKSPACE_ADMIN only.
+"""
+type GpuQuotaRuntimeSettings {
+  """The quota limits currently in effect and their source."""
+  effective: GpuQuotaEffective!
+
+  """The server-owned bounds accepted by the update mutation."""
+  limits: GpuQuotaLimits!
+
+  """
+  The stored runtime override for the maximum number of concurrent whole-GPU jobs of a subject. Null means no override.
+  """
+  maxConcurrentWholeGpuJobs: Int
+
+  """
+  The stored runtime override for the maximum number of GPUs a single job may request. Null means no override.
+  """
+  maxGpusPerJob: Int
+
+  """
+  The stored runtime override for the per-subject aggregate shared (slice) GPU memory limit in GB. Null means no override, not zero.
+  """
+  maxSharedGpuMemoryGb: Int
+
+  """
+  The stored runtime override for the maximum total number of whole cards a single user may hold at once. Null means no override (inherit the activation-time value), not zero.
+  """
+  maxWholeCardsPerUser: Int
+
+  """The operator note recorded with the settings. Null when absent."""
+  note: String
+
+  """
+  Whether GPU quota checks are enforced at runtime. When false no request is denied on quota and the limits below are informational only.
+  """
+  quotaEnabled: Boolean!
+
+  """
+  When the settings were last updated. Null when they have never been overridden.
+  """
+  updatedAt: DateTime
+
+  """
+  Who last updated the settings, as reported by the server. Null when unknown.
+  """
+  updatedBy: String
+}
+
+"""
+A full replacement of the GPU quota runtime settings. Omitted limit fields mean "no override", not "leave unchanged".
+"""
+input GpuQuotaRuntimeSettingsInput {
+  """
+  The maximum number of concurrent whole-GPU jobs of a subject. Omit or null to store no override.
+  """
+  maxConcurrentWholeGpuJobs: Int
+
+  """
+  The maximum number of GPUs a single job may request. Omit or null to store no override. Must be at least 1 when given.
+  """
+  maxGpusPerJob: Int
+
+  """
+  The per-subject aggregate shared (slice) GPU memory limit in GB. Omit or null to store no override; zero means a zero limit.
+  """
+  maxSharedGpuMemoryGb: Int
+
+  """
+  The maximum total number of whole cards a single user may hold at once. Counts cards, not jobs. Omit or null to store no override (inherit the activation-time value); zero means no whole card may be held.
+  """
+  maxWholeCardsPerUser: Int
+
+  """An operator note recorded with the settings. Omit or null to clear it."""
+  note: String
+
+  """
+  Whether GPU quota checks are enforced at runtime. When false no request is denied on quota.
+  """
+  quotaEnabled: Boolean!
+}
+
+"""Where the effective GPU quota policy came from."""
+enum GpuQuotaScope {
+  SUBJECT
+  WORKSPACE_DEFAULT
+}
+
+"""
+How the effective GPU quota values were determined: fixed at activation, or replaced by a runtime override.
+"""
+enum GpuQuotaSource {
+  ACTIVATION
+  RUNTIME_OVERRIDE
+}
+
+"""The readiness of the GPU management surface."""
+enum GpuReadinessState {
+  READY
+  UNAVAILABLE
+}
+
+"""The GPU request state of an activity."""
+enum GpuRequestState {
+  CANCELLED
+  FAILED
+  GPU_NOT_REQUIRED
+  GPU_PENDING
+  GRANTED
+  RUNNING
+  SUCCEEDED
+  UNAVAILABLE
+  WAITING_CAPACITY
+  WAITING_QUOTA
+}
+
+"""The GPU resource mode of an option or selection."""
+enum GpuResourceMode {
+  DISTRIBUTED
+  SLICE
+  WHOLE_CARD
+}
+
+"""A selectable GPU resource option."""
+type GpuResourceOption {
+  """The number of cards of the option."""
+  cardCount: Int!
+
+  """Whether this option is the default."""
+  isDefault: Boolean!
+
+  """The resource mode of the option."""
+  mode: GpuResourceMode!
+
+  """The requested memory in GB. Null for whole-card modes."""
+  requestedMemGb: Int
+}
+
+"""The selectable GPU resource options of a workload."""
+type GpuResourceOptions {
+  """The capability revision the options belong to."""
+  capabilityRevision: Int
+
+  """
+  Whether the workload has a single, system-fixed GPU slice that startJob auto-fills when `gpuResource` is omitted — so the UI needs no resource picker and can show an info message (e.g. VLM caption's fixed 22 GiB slice). True only when the catalog is READY and offers exactly one SLICE option; false when there is a choice to make (multiple options or a whole-card option), when no selection is required, or when the catalog is UNAVAILABLE. Explicitly providing `gpuResource` is always honored regardless of this flag.
+  """
+  fixedResource: Boolean!
+
+  """
+  Whether the workload requires a GPU resource selection to start. Server-owned: derived from the managed binding registry, never from user parameters or GPU runtime availability. False when the workload may start without a selection (explicit CPU execution) or when managed GPU execution is disabled on this deployment. Valid even when the catalog is UNAVAILABLE.
+  """
+  gpuRequired: Boolean!
+
+  """The selectable options. Empty when unavailable."""
+  options: [GpuResourceOption!]!
+
+  """The readiness of the option catalog."""
+  readiness: GpuReadinessState!
+
+  """A safe reason code when the catalog is unavailable."""
+  unavailableReason: String
+}
+
+"""The selected GPU resource for a managed job start."""
+input GpuResourceSelectionInput {
+  """The capability revision the selection was made against."""
+  capabilityRevision: Int!
+
+  """The selected card count."""
+  cardCount: Int!
+
+  """The selected resource mode."""
+  mode: GpuResourceMode!
+
+  """The requested memory in GB. Null for whole-card modes."""
+  requestedMemGb: Int
+}
+
+"""
+Why a GPU request is waiting: the subject quota is full, there is no room right now, or cards are being freed for it.
+"""
+enum GpuWaitReason {
+  CAPACITY
+  QUOTA
+  SECURING_CARDS
+}
+
+"""
+The live GPU request projection read from the GPU runtime at query time. Never mutates the stored job history.
+"""
+type GpuWorkloadLiveProjection {
+  """
+  The activation phase of an admitted request. Null while waiting or after completion.
+  """
+  activationPhase: GpuActivationPhase
+
+  """
+  When the runtime observed the batch response that carried this projection.
+  """
+  batchObservedAt: DateTime
+
+  """The card count the runtime holds for the request."""
+  cardCount: Int
+
+  """
+  Why the request failed. Null unless the live state is FAILED; GENERIC when the failure carries no classification.
+  """
+  failureKind: GpuFailureKind
+
+  """The resource mode the runtime holds for the request."""
+  mode: GpuResourceMode
+
+  """When the runtime observed this request."""
+  observedAt: DateTime
+
+  """
+  The approximate core utilization percent of the active container. Null without telemetry.
+  """
+  observedCorePercent: Float
+
+  """
+  The approximate memory percent (used/limit) of the active container. Null without telemetry.
+  """
+  observedMemoryPercent: Float
+
+  """The queue position while waiting."""
+  queuePosition: Int
+
+  """
+  Whether the live projection was available for this exact request identity.
+  """
+  readiness: GpuReadinessState!
+
+  """The requested memory in GB the runtime holds for the request."""
+  requestedMemGb: Int
+
+  """The number of cards the request requires (its card count)."""
+  requiredCards: Int
+
+  """A safe reason code for the current state."""
+  safeReason: String
+
+  """
+  The number of cards secured by an active grant. Null when no reliable active grant exists.
+  """
+  securedCards: Int
+
+  """The safe lifecycle state of the request."""
+  state: GpuRequestState
+
+  """A safe reason code when the live projection is unavailable."""
+  unavailableReason: String
+
+  """
+  Why the request is waiting. Null when it is not waiting or when the runtime does not report a reason.
+  """
+  waitReason: GpuWaitReason
+}
+
+"""The state of the GPU workload request."""
+enum GpuWorkloadState {
+  ADMITTED
+  CANCELLED
+  CANCELLING
+  FAILED
+  FAILED_DECLARATION_EXCEEDED
+  GANG_ACQUIRING
+  QUEUED_CAPACITY
+  QUEUED_QUOTA
+  REJECTED
+  RUNNING
+  SUBMITTED
+  SUCCEEDED
+}
+
+"""The GPU workload summary of a job history."""
+type GpuWorkloadSummary {
+  """
+  The declared card points of the workload (100 = one whole card; 0 for SLICE at submission).
+  """
+  declaredPt: Int! @deprecated(reason: "Card-point unit is not a memory or percent value. Use declaredResource (mode, requestedMemGb, cardCount).")
+
+  """
+  The resource declared at submission. Null when no submission snapshot exists.
+  """
+  declaredResource: GpuDeclaredResource
+
+  """
+  The live projection for the exact stored request identity. Null when the request has no live identity.
+  """
+  live: GpuWorkloadLiveProjection
+
+  """The observation time of the usage values."""
+  observedAt: DateTime
+
+  """The observed GPU core usage percent."""
+  observedCorePercent: Int
+
+  """The observed GPU memory usage percent."""
+  observedMemoryPercent: Int
+
+  """The queue position while waiting for capacity."""
+  queuePosition: Int
+
+  """The stable reason code of the current state."""
+  reasonCode: String!
+
+  """The GPU workload request ID."""
+  requestId: ID!
+
+  """The number of cards the workload requires."""
+  requiredCards: Int
+
+  """The number of cards secured so far."""
+  securedCards: Int
+
+  """The state of the GPU workload request."""
+  state: GpuWorkloadState!
+}
+
+"""The Group(Workspace) Object."""
+type Group {
+  """The name of the Group."""
+  name: String
+}
+
+type Invitation {
+  """The Invitation Code"""
+  invitationCode: String!
+
+  """The Invitation Name"""
+  name: String!
+
+  """The quota of the invitation user"""
+  quota: SafeInt!
+  state: InvitationState!
+
+  """The count of the used invitation code"""
+  usedCount: SafeInt!
+}
+
+"""The Invitation object page response object"""
+type InvitationPageInfo {
+  """The list of the invitation object"""
+  invitations: [Invitation!]!
+
+  """The total number of the invitation"""
+  totalCount: NonNegativeInt!
+}
+
+enum InvitationState {
+  Active
+  Suspended
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
+"""
+A field whose value is a JSON Web Token (JWT): https://jwt.io/introduction.
+"""
+scalar JWT
+
+"""The job."""
+type Job {
+  """The date and time the job was created."""
+  createdAt: DateTime
+
+  """The user who created the job."""
+  createdBy: String
+
+  """The dataset ID of the job."""
+  datasetId: ID
+
+  """The description of the job."""
+  description: String
+
+  """The ID of the job."""
+  id: ID!
+
+  """The meta of the job."""
+  meta: JSONObject
+
+  """The name of the job."""
+  name: String
+
+  """The parameter schema of the job."""
+  parameterSchema: [JobParameterSchema!]
+
+  """The progress schema of the job."""
+  progressSchema: [JobProgressSchema!]
+
+  """The settings of the job."""
+  settings: JSONObject
+
+  """The type of the job."""
+  type: String
+
+  """The date and time the job was last updated."""
+  updatedAt: DateTime
+
+  """The user who last updated the job."""
+  updatedBy: String
+}
+
+"""The filter to apply to jobs."""
+input JobFilter {
+  """The options to filter jobs by."""
+  must: JobFilterOptions
+
+  """The options to filter jobs by."""
+  not: JobFilterOptions
+}
+
+"""The options to filter jobs by."""
+input JobFilterOptions {
+  """The IDs of the datasets the jobs are in."""
+  datasetIdIn: [ID!]
+
+  """The IDs of the jobs."""
+  idIn: [ID!]
+
+  """Whether the job name contains the string."""
+  nameContains: String
+
+  """The types of the jobs."""
+  typeIn: [String!]
+}
+
+"""The job history entity."""
+type JobHistory {
+  """Comment provided when submitting the job."""
+  comment: String
+
+  """The date and time the job history was created."""
+  createdAt: DateTime
+
+  """The user who created the job history."""
+  createdBy: String
+
+  """The dataset ID of the job history."""
+  datasetId: ID
+
+  """
+  The GPU workload summary of the job history. Null when the GPU module is disabled.
+  """
+  gpuWorkload: GpuWorkloadSummary
+
+  """The ID of the job history."""
+  id: ID!
+
+  """The dataset ID of the job history."""
+  jobId: ID
+
+  """The meta of the job history."""
+  meta: JSONObject
+
+  """The parameters of the job history."""
+  parameters: JSON
+
+  """The progress of the job history."""
+  progress: JSON
+
+  """The date and time when the job was reviewed."""
+  reviewedAt: DateTime
+
+  """The user who reviewed (approved/rejected) the job submission."""
+  reviewedBy: String
+
+  """The slice ID of the job history."""
+  sliceId: ID
+
+  """The status of the job history."""
+  status: JobStatus
+
+  """The date and time the job history was last updated."""
+  updatedAt: DateTime
+
+  """The user who last updated the job history."""
+  updatedBy: String
+}
+
+"""The filter of the job history."""
+input JobHistoryFilter {
+  """The options to filter job histories by."""
+  must: JobHistoryFilterOptions
+
+  """The options to filter job histories by."""
+  not: JobHistoryFilterOptions
+}
+
+"""The filter options of the job history."""
+input JobHistoryFilterOptions {
+  """The ID of the dataset."""
+  datasetId: ID
+
+  """The IDs of the datasets the job histories are in."""
+  datasetIdIn: [ID!]
+
+  """The IDs of the job histories."""
+  idIn: [ID!]
+
+  """The IDs of the jobs."""
+  jobIdIn: [ID!]
+
+  """The emails of the requested by."""
+  requestedByIn: [String!]
+
+  """The emails of the reviewed by."""
+  reviewedByIn: [String!]
+
+  """The IDs of the slices."""
+  sliceIdIn: [ID!]
+
+  """The statuses of the job histories."""
+  statusIn: [JobStatus!]
+
+  """Whether the job history uses a GPU workload."""
+  usesGpu: Boolean
+}
+
+"""The order by options of the job history."""
+input JobHistoryOrderBy {
+  """The direction to order job histories by."""
+  direction: OrderDirection!
+
+  """The field to order job histories by."""
+  field: JobHistoryOrderField!
+}
+
+"""The field to order job histories by."""
+enum JobHistoryOrderField {
+  createdAt
+  datasetId
+  id
+  jobId
+  status
+}
+
+"""the Job Histories"""
+type JobHistoryPageInfo {
+  """The job histories."""
+  jobHistories: [JobHistory!]
+
+  """The next page token."""
+  next: String
+
+  """The previous page token."""
+  totalCount: Int
+}
+
+input JobHistoryTaskDetailInput {
+  jobHistoryId: ID!
+  runType: TaskMonitoringRunType
+  taskId: String!
+  taskRunIndex: Int
+}
+
+input JobHistoryTaskLogDownloadInput {
+  attempt: Int
+  jobHistoryId: ID!
+  runType: TaskMonitoringRunType
+  taskId: String!
+  taskRunIndex: Int
+}
+
+input JobHistoryTaskLogInput {
+  attempt: Int
+  cursor: String
+  jobHistoryId: ID!
+  limitBytes: Int
+  runType: TaskMonitoringRunType
+  taskId: String!
+  taskRunIndex: Int
+}
+
+input JobHistoryTaskMonitoringInput {
+  jobHistoryId: ID!
+  runType: TaskMonitoringRunType
+}
+
+input JobHistoryTaskRenderedTemplatesInput {
+  jobHistoryId: ID!
+  runType: TaskMonitoringRunType
+  taskId: String!
+  taskRunIndex: Int
+}
+
+"""The field to order jobs by."""
+input JobOrderBy {
+  """The direction to order jobs by."""
+  direction: OrderDirection!
+
+  """The field to order jobs by."""
+  field: JobOrderField!
+}
+
+"""The field to order jobs by."""
+enum JobOrderField {
+  createdAt
+  id
+  name
+  type
+}
+
+"""The result of getting jobs."""
+type JobPageInfo {
+  """The jobs."""
+  jobs: [Job!]
+
+  """The cursor to get the next page."""
+  next: String
+
+  """The total count of jobs."""
+  totalCount: Int
+}
+
+"""The job parameter schema."""
+type JobParameterSchema {
+  """The default of the schema."""
+  default: JSON
+
+  """The key of the schema."""
+  key: String!
+
+  """The required of the schema."""
+  required: Boolean!
+
+  """The type of the schema."""
+  type: SchemaTypes!
+
+  """
+  The UI type hint of the parameter (e.g. GPU_TOGGLE). Mirrors the DAG platform_config ui_type_hint.
+  """
+  uiTypeHint: JobParameterUiTypeHint
+}
+
+"""The parameter schema of the job."""
+input JobParameterSchemaInput {
+  """The default value of the parameter."""
+  default: JSON
+
+  """The key of the parameter."""
+  key: String!
+
+  """Whether the parameter is required."""
+  required: Boolean!
+
+  """The type of the parameter."""
+  type: SchemaTypes!
+
+  """The UI type hint of the parameter (e.g. GPU_TOGGLE)."""
+  uiTypeHint: JobParameterUiTypeHint
+}
+
+"""The UI type hint of a job parameter."""
+enum JobParameterUiTypeHint {
+  GPU_COUNT
+  GPU_TOGGLE
+  GPU_USE
+  SLICE
+  USER
+}
+
+"""The job progress schema."""
+type JobProgressSchema {
+  """The default of the schema."""
+  default: JSON
+
+  """The key of the schema."""
+  key: String!
+
+  """The required of the schema."""
+  required: Boolean!
+
+  """The type of the schema."""
+  type: SchemaTypes!
+}
+
+"""The progress schema of the job."""
+input JobProgressSchemaInput {
+  """The default value of the progress."""
+  default: JSON
+
+  """The key of the progress."""
+  key: String!
+
+  """Whether the progress is required."""
+  required: Boolean!
+
+  """The type of the progress."""
+  type: SchemaTypes!
+}
+
+"""The status of the job."""
+enum JobStatus {
+  AWAITING_APPROVAL
+  CANCELED
+  FAILED
+  PENDING
+  REJECTED
+  RUNNING
+  SUCCESS
+}
+
+"""Filter for a dynamic keyword meta field."""
+input KeywordMetaFilter {
+  contains: String
+  equals: String
+  in: [String!]
+
+  """The key of the meta field (e.g., "weather")."""
+  key: String!
+}
+
+"""A meta distribution item."""
+type MetaDistributionItem {
+  """The count of data items with this meta."""
+  count: Int
+
+  """The meta key."""
+  key: String
+
+  """The meta type."""
+  type: String
+}
+
+"""A meta distribution response."""
+type MetaDistributionResponse {
+  """The meta distribution."""
+  metaDistribution: [MetaDistributionItem!]
+}
+
+"""
+A container for various meta field filters, matching the new index structure.
+"""
+input MetaFilter {
+  """Filter by date meta fields (meta.date.*)."""
+  date: [DateMetaFilter!]
+
+  """Filter by keyword meta fields (meta.keyword.*)."""
+  keyword: [KeywordMetaFilter!]
+
+  """Filter by miscellaneous meta fields (metaMisc)."""
+  misc: [MiscMetaFilter!]
+
+  """Filter by numeric meta fields (meta.num.*)."""
+  num: [NumberMetaFilter!]
+}
+
+"""Meta key information including key name and type."""
+type MetaKeyInfo {
+  """The key name of the metadata."""
+  key: String!
+
+  """The type of the metadata value."""
+  type: String!
+}
+
+"""Filter for a dynamic miscellaneous meta field (metaMisc)."""
+input MiscMetaFilter {
+  """The exact value of the meta field to match."""
+  equals: String!
+
+  """The key of the meta field."""
+  key: String!
+}
+
+"""The model entity."""
+type Model {
+  completedAt: DateTime
+  contents: JSONObject
+  createdAt: DateTime
+  createdBy: String
+  customDagId: String
+  datasetId: ID!
+  definitionId: ID
+  description: String
+  id: ID!
+  isPinned: Boolean
+  name: String!
+  scoreKey: String
+  scoreUnit: String
+  scoreValue: Float
+  status: ModelStatus
+  taskType: ModelTaskType
+  totalDataCount: Int
+  trainDataCount: Int
+  trainSliceId: ID
+  trainingAnnotations: [TrainingAnnotations!]
+  trainingParameters: JSONObject
+  trainingReport: [TrainingReportItem!]
+  updatedAt: DateTime
+  updatedBy: String
+  validationDataCount: Int
+  validationSliceId: ID
+}
+
+"""
+C17: S3 content ids to delete with a model. Ids still referenced elsewhere are left out.
+"""
+type ModelContentIdsToDelete {
+  """
+  Content ids in the model contents and its training report items (ULID only, no duplicates). Delete each as a single content and as a folder content.
+  """
+  contentIds: [String!]!
+
+  """Whether the model exists in the dataset."""
+  modelExists: Boolean!
+}
+
+type ModelDeployDefinition {
+  createdAt: DateTime!
+  createdBy: String!
+  datasetId: ID
+  description: String
+  id: ID!
+  interfaceId: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
+  interfacePath: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
+  interfaceVersion: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
+  isPinned: Boolean!
+  isSystem: Boolean!
+  modelSpecification: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
+  name: String!
+  serverImageName: String
+  serverImageTag: String
+  startScript: String
+  updatedAt: DateTime!
+  updatedBy: String!
+}
+
+type ModelDeployDefinitionDeletion {
+  deletedDeploymentCount: Int! @deprecated(reason: "C17 revision 3: deleting a template no longer deletes deployments. Always 0; use detachedDeploymentCount.")
+
+  """
+  Deployments in all datasets that lost this template (definitionId became null). They keep running and can be invoked, stopped and deleted, but not started again.
+  """
+  detachedDeploymentCount: Int!
+  id: ID!
+  unlinkedModelCount: Int!
+}
+
+type ModelDeployDefinitionUsage {
+  deploymentCount: Int!
+  modelCount: Int!
+}
+
+type ModelDeployment {
+  createdAt: DateTime!
+  createdBy: String!
+  datasetId: ID!
+
+  """
+  Template of this deployment. Null when the template was deleted: the deployment can still be invoked, stopped and deleted, but not started again.
+  """
+  definitionId: ID
+  description: String
+  expiresAt: DateTime
+  gpuCount: Int!
+  gpuTypes: [String!]!
+  id: ID!
+
+  """
+  FDE-112: Seconds the invoke relay waits for this deployment's server to send response headers. The response body is not limited by it. 10 to 3600, default 600.
+  """
+  invokeTimeoutSeconds: Int!
+  isPinned: Boolean!
+  lastHeartbeatAt: DateTime
+
+  """
+  Trained model served by this deployment. Null for a base model deployment: the template's server loads its own base weights.
+  """
+  modelId: ID
+  name: String!
+
+  """FDE-112: Runtime record of the current generation."""
+  runtime: ModelDeploymentRuntime
+  startedAt: DateTime!
+  status: ModelDeploymentStatus!
+  updatedAt: DateTime!
+  updatedBy: String!
+}
+
+input ModelDeploymentFilter {
+  """The options to filter model deployments by."""
+  must: ModelDeploymentFilterOptions
+
+  """The options to exclude model deployments by."""
+  not: ModelDeploymentFilterOptions
+}
+
+input ModelDeploymentFilterOptions {
+  definitionIdIn: [ID!]
+
+  """The IDs of the model deployments to filter by."""
+  idIn: [ID!]
+  nameContains: String
+  statusIn: [ModelDeploymentStatus!]
+}
+
+type ModelDeploymentInterface {
+  description: String!
+  id: String!
+  name: String!
+  version: String!
+}
+
+input ModelDeploymentOrder {
+  direction: OrderDirection!
+  field: ModelDeploymentOrderField!
+}
+
+enum ModelDeploymentOrderField {
+  CREATED_AT
+  EXPIRES_AT
+  NAME
+}
+
+type ModelDeploymentPage {
+  modelDeployments: [ModelDeployment!]!
+  next: String
+  totalCount: Int!
+}
+
+"""
+FDE-112: One run (generation) of a deployment as launched in the cluster. No secrets.
+"""
+type ModelDeploymentRuntime {
+  cleanupActivityHistoryId: ID
+  deployActivityHistoryId: ID
+  deploymentId: ID!
+  endStatus: ModelDeploymentRuntimeEndStatus
+  failureReason: String
+  generation: Int!
+  gpuCount: Int!
+  gpuTypes: [String!]!
+
+  """Full image reference including the registry."""
+  image: String
+  namespace: String
+  readyAt: DateTime
+  registeredAt: DateTime
+  removedAt: DateTime
+  requestedAt: DateTime!
+
+  """Top-level Kubernetes Deployment name."""
+  resourceName: String
+  resourceUid: String
+  startScript: String
+}
+
+enum ModelDeploymentRuntimeAction {
+  KEEP
+  REMOVE
+}
+
+"""
+FDE-112: Per-deployment, per-generation runtime tokens. System only; write them to the runtime Secret and never log them.
+"""
+type ModelDeploymentRuntimeCredentials {
+  endpointToken: String!
+  heartbeatToken: String!
+}
+
+enum ModelDeploymentRuntimeEndStatus {
+  DELETED
+  EXPIRED
+  FAILED
+  STOPPED
+}
+
+type ModelDeploymentRuntimeInstruction {
+  action: ModelDeploymentRuntimeAction!
+  status: ModelDeploymentStatus
+}
+
+input ModelDeploymentRuntimeRefInput {
+  datasetId: ID!
+  deploymentId: ID!
+  generation: Int!
+}
+
+type ModelDeploymentRuntimeState {
+  action: ModelDeploymentRuntimeAction!
+  datasetId: ID!
+  deploymentId: ID!
+  generation: Int!
+}
+
+enum ModelDeploymentServerState {
+  FAILED
+  LOADING
+  READY
+}
+
+enum ModelDeploymentStatus {
+  DELETING
+  EXPIRED
+  FAILED
+  PENDING
+  READY
+  STARTING
+  STOPPED
+  STOPPING
+  UNRESPONSIVE
+}
+
+"""The options to filter models by."""
+input ModelFilter {
+  """The options to filter models by."""
+  must: ModelFilterOptions
+
+  """The options to exclude models by."""
+  not: ModelFilterOptions
+}
+
+"""The options to filter models by."""
+input ModelFilterOptions {
+  """The user ids who created models."""
+  createdByIn: [String!]
+
+  """The dag IDs to filter by."""
+  customDagIdIn: [String!]
+  definitionIdIn: [ID!]
+
+  """
+  true matches models without a deployment template (definitionId IS NULL); false matches models with one. Reversed under not.
+  """
+  definitionIdIsNull: Boolean
+
+  """The IDs of the models to filter by."""
+  idIn: [ID!]
+
+  """The name of the model contains."""
+  nameContains: String
+
+  """The score keys to filter by."""
+  scoreKeyIn: [String!]
+
+  """The statuses to filter by."""
+  statusIn: [ModelStatus!]
+
+  """The task types to filter by."""
+  taskTypeIn: [ModelTaskType!]
+}
+
+"""The field to order models by."""
+input ModelOrderBy {
+  """The direction to order models by."""
+  direction: OrderDirection!
+
+  """The field to order models by."""
+  field: ModelOrderField!
+}
+
+"""The field to order models by."""
+enum ModelOrderField {
+  completedAt
+  createdAt
+  name
+  scoreValue
+  updatedAt
+}
+
+"""The result of a models query."""
+type ModelPageInfo {
+  """The models."""
+  models: [Model!]
+
+  """The cursor to the next page."""
+  next: String
+
+  """The total number of models."""
+  totalCount: Float
+}
+
+enum ModelStatus {
+  COMPLETED
+  FAILED
+  IN_PROGRESS
+  PENDING
+  PREPARING
+}
+
+enum ModelTaskType {
+  INSTANCE_SEGMENTATION
+  OBJECT_DETECTION
+  OCR
+  VISION_GENERATION
+  VLM
+}
+
+type Mutation {
+  addDataToSlice(datasetId: ID!, id: ID!, sliceId: ID!): Data!
+  assignRole(
+    datasetId: String
+
+    """사용자의 이메일"""
+    email: String!
+    roleType: RoleType!
+  ): Boolean!
+  assignRoles(
+    """사용자의 이메일"""
+    email: String!
+
+    """할당할 역할 목록"""
+    roles: [RequestRoleInput!]!
+  ): Boolean!
+  bindModelDeployDefinition(datasetId: ID!, definitionId: ID!, modelId: ID!): Model!
+
+  """Cancel job history!"""
+  cancelJob(
+    """The ID of the dataset to get."""
+    datasetId: ID
+
+    """The ID of the job history to cancel."""
+    id: ID!
+  ): JobHistory!
+
+  """Change the status of a comment on a data slice."""
+  changeDataCommentStatus(
+    """The ID of the comment."""
+    commentId: ID!
+
+    """The ID of the data."""
+    dataId: ID!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The ID of the slice."""
+    sliceId: ID!
+
+    """The new status for the comment."""
+    status: CommentStatus!
+  ): Data!
+  changeDataLabeler(dataId: ID!, datasetId: ID!, labeler: String, sliceId: ID!): Data!
+  changeDataReviewer(dataId: ID!, datasetId: ID!, reviewer: String, sliceId: ID!): Data!
+  changeDataStatus(dataId: ID!, datasetId: ID!, sliceId: ID!, status: DataSliceStatus!): Data!
+  changePassword(
+    """사용자의 이메일"""
+    email: String!
+
+    """사용자의 새로운 비밀번호"""
+    newPassword: String!
+
+    """사용자의 현재 비밀번호"""
+    oldPassword: String!
+  ): Boolean!
+  changeUserName(
+    """사용자의 이메일"""
+    email: String!
+
+    """사용자의 새로운 이름"""
+    newName: String!
+  ): Boolean!
+
+  """
+  FDE-112: System callback after the runtime of this generation is removed. Idempotent. Returns null when the record no longer exists. A Bearer heartbeat token (sidecar) is checked when present; a call without a Bearer token is a system activity call.
+  """
+  confirmModelDeploymentRemoved(datasetId: ID!, deploymentId: ID!, generation: Int!): ModelDeployment
+
+  """Create a new analytics report."""
+  createAnalyticsReport(
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The description for the analytics report."""
+    description: String
+
+    """The metadata for the analytics report."""
+    meta: JSONObject
+
+    """The title for the analytics report."""
+    title: String
+  ): AnalyticsReport!
+
+  """Create a new analytics report item."""
+  createAnalyticsReportItem(
+    """The content ID for the analytics report item."""
+    contentId: String
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The description for the analytics report item."""
+    description: String
+
+    """The metadata for the analytics report item."""
+    meta: JSONObject
+
+    """The ID of the analytics report."""
+    reportId: ID!
+
+    """The title for the analytics report item."""
+    title: String
+
+    """The type of the analytics report item."""
+    type: AnalyticsReportItemType!
+  ): AnalyticsReportItem!
+  createAutoCuration(
+    """The auto curation result content info."""
+    autoCurationResultContent: ContentBaseInput
+
+    """The cluster scatter contents."""
+    clusterScatterContents: ClusterScatterContentsInput
+
+    """The data information of the auto curation."""
+    dataInfo: AutoCurationDataInfoInput
+
+    """The dataset ID of the auto curation."""
+    datasetId: ID!
+
+    """The description of the auto curation."""
+    description: String
+
+    """The meta of the auto curation."""
+    meta: JSONObject
+
+    """The method of the auto curation."""
+    method: AutoCurationMethodInput!
+
+    """The name of the auto curation."""
+    name: String!
+
+    """The slice information of the auto curation."""
+    sliceInfo: AutoCurationSliceInfoInput
+
+    """The type of the auto curation."""
+    type: AutoCurationTypes!
+  ): AutoCuration!
+  createContent(
+    """The content type of the content."""
+    contentType: String
+
+    """The key of the content."""
+    key: String
+
+    """The port number to generate presigned URL."""
+    port: Int
+  ): GeneratedContent!
+  createData(
+    """The annotation to associate with the data."""
+    annotation: AnnotationInput
+
+    """The ID of the dataset to create data in."""
+    datasetId: ID!
+
+    """The key of the data to create."""
+    key: String!
+
+    """The metadata to associate with the data."""
+    meta: [DataMetaInput!]
+
+    """The scenes to associate with the data."""
+    scene: [SceneInput!]
+
+    """The IDs of the slices to associate with the data."""
+    slices: [ID!]
+
+    """The sub type of the data to create"""
+    subType: String
+
+    """The thumbnail file of the data."""
+    thumbnail: ContentBaseInput
+
+    """The type of the data to create."""
+    type: DataType!
+  ): Data!
+
+  """Create a comment on a data slice."""
+  createDataComment(
+    """The comment category."""
+    category: String
+
+    """The comment content."""
+    comment: String
+
+    """The ID of the data."""
+    dataId: ID!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The metadata for the comment."""
+    meta: JSONObject
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): Data!
+
+  """Create a reply to a comment on a data slice."""
+  createDataCommentReply(
+    """The reply content."""
+    comment: String!
+
+    """The ID of the comment to reply to."""
+    commentId: ID!
+
+    """The ID of the data."""
+    dataId: ID!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): Data!
+  createDataset(
+    """The description of the dataset."""
+    description: String
+
+    """The name of the dataset."""
+    name: String!
+
+    """
+    Dataset kind. Pass VLM for a VLM dataset; omit for a Computer Vision dataset. Cannot be changed later.
+    """
+    type: DatasetType
+  ): Dataset!
+
+  """
+  Create the VLM question set of a VLM dataset. Fails if it already exists.
+  """
+  createDatasetVLMSettings(
+    """The ID of the VLM dataset."""
+    datasetId: ID!
+
+    """The whole question set to store."""
+    settings: JSONObject!
+  ): DatasetVLMSettings!
+
+  """Create a diagnosis."""
+  createDiagnosis(contents: JSONObject, datasetId: ID!, description: String, diagnosisDataCount: Int, diagnosisParameters: JSONObject, discriminatorKey: String, discriminatorValues: [String!], modelId: ID, name: String!, scoreKey: String, scoreUnit: String, scoreValue: Float, sourceDataCount: Int, sourceSliceId: String, targetDataCount: Int, targetSliceId: String): Diagnosis!
+
+  """Create a diagnosis report item and return the associated diagnosis."""
+  createDiagnosisReportItem(contentId: ID, datasetId: ID!, description: String, diagnosisId: ID!, discriminatorValue: String, name: String!, type: AnalyticsReportItemType!): Diagnosis!
+  createExport(
+    """The number of annotations to export."""
+    annotationCount: Int
+
+    """The number of data to export."""
+    dataCount: Int
+
+    """The search filter of the data."""
+    dataFilter: JSONObject = null
+
+    """The ID of the dataset to create an export for."""
+    datasetId: ID!
+
+    """The number of frames to export."""
+    frameCount: Int
+
+    """The location of the export files."""
+    location: String
+
+    """The meta data of the export."""
+    meta: JSONObject = null
+
+    """The name of the export."""
+    name: String
+  ): Export!
+  createFolderContent(
+    """The key of the folder content."""
+    key: String
+
+    """The port number to generate presigned URL."""
+    port: Int
+  ): ContentBase!
+  createInvitation(
+    """The quota of the invitation user"""
+    quota: PositiveInt
+  ): Invitation!
+
+  """Create a job."""
+  createJob(
+    """The dataset ID of the job."""
+    datasetId: ID
+
+    """The description of the job."""
+    description: String
+
+    """The meta of the job."""
+    meta: JSONObject
+
+    """The name of the job."""
+    name: String!
+
+    """The parameter schema of the job."""
+    parameterSchema: [JobParameterSchemaInput!]
+
+    """The progress schema of the job."""
+    progressSchema: [JobProgressSchemaInput!]
+
+    """The settings of the job."""
+    settings: JSONObject
+
+    """The type of the job."""
+    type: String!
+  ): Job!
+
+  """Create a model."""
+  createModel(contents: JSONObject, customDagId: String, datasetId: ID!, description: String, isPinned: Boolean, name: String!, scoreKey: String, scoreUnit: String, scoreValue: Float, taskType: ModelTaskType!, totalDataCount: Int, trainDataCount: Int, trainSliceId: ID, trainingAnnotations: [TrainingAnnotationsInput!], trainingParameters: JSONObject, validationDataCount: Int, validationSliceId: ID): Model!
+
+  """
+  FDE-115: Create a deployment template. Owner and workspace admins only; system templates come from zenith code.
+  """
+  createModelDeployDefinition(datasetId: ID!, input: CreateModelDeployDefinitionInput!): ModelDeployDefinition!
+
+  """
+  Register a deployment request. PENDING does not mean a server has been launched.
+  """
+  createModelDeployment(
+    bindModelToDefinition: Boolean = false
+    datasetId: ID!
+    definitionId: ID!
+    description: String
+    expiresAt: DateTime
+    gpuCount: Int
+    gpuTypes: [String!]
+    invokeTimeoutSeconds: Int
+
+    """
+    Trained model to serve. Omit or pass null to deploy the template's base model; bindModelToDefinition is then ignored.
+    """
+    modelId: ID
+    name: String!
+  ): ModelDeployment!
+  createSlice(
+    """The ID of the dataset that the slice belongs to."""
+    datasetId: String!
+
+    """A description of the slice."""
+    description: String
+
+    """The additional metadata of the slice."""
+    meta: JSONObject
+
+    """The name of the slice."""
+    name: String!
+  ): Slice!
+
+  """
+  Create the VLM question set of a slice, e.g. with settings read from the dataset or another slice. Fails if it already exists.
+  """
+  createSliceVLMSettings(
+    """The ID of the VLM dataset the slice belongs to."""
+    datasetId: ID!
+
+    """The whole question set to store."""
+    settings: JSONObject!
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): SliceVLMSettings!
+
+  """Create a training report and return the associated model."""
+  createTrainingReportItem(contentId: ID, datasetId: ID!, description: String, modelId: ID!, name: String!, type: AnalyticsReportItemType!): Model!
+
+  """Create a workflow instance associated with a template."""
+  createWorkflowInstance(
+    """
+    The dataset this instance belongs to (the run ambient datasetId is injected from here). Transitional: optional and falls back to globalBindings.datasetId; will become required.
+    """
+    datasetId: ID
+
+    """Optional human-readable description of the workflow instance."""
+    description: String
+
+    """Global bindings overriding the template bindings."""
+    globalBindings: JSONObject
+
+    """Name of the workflow instance."""
+    name: String!
+
+    """Trigger configuration (e.g. schedules, manual triggers)."""
+    triggerConfig: JSONObject
+
+    """The workflow template ID to associate with this instance."""
+    workflowTemplateId: ID!
+  ): WorkflowInstance!
+
+  """Create a reusable workflow template from a JSON workflow spec."""
+  createWorkflowTemplateFromJson(
+    """The workflow JSON spec to persist as a reusable workflow template."""
+    spec: WorkflowSpecInput!
+  ): WorkflowTemplate!
+  deactivateUser(
+    """사용자의 이메일"""
+    email: String!
+  ): Boolean!
+
+  """
+  Delete an analytics report with its items and files. Starts a DELETE_ANALYTICS_REPORT activity and returns true; false when the report does not exist. Conflict while the report is running.
+  """
+  deleteAnalyticsReport(
+    """The dataset ID."""
+    datasetId: String!
+
+    """The report ID."""
+    reportId: String!
+  ): Boolean!
+
+  """Delete an analytics report item."""
+  deleteAnalyticsReportItem(
+    """The dataset ID."""
+    datasetId: String!
+
+    """The item ID."""
+    itemId: String!
+
+    """The report ID."""
+    reportId: String!
+  ): Boolean!
+
+  """
+  C17: Delete the analytics report row and its item rows in one transaction. Files are not deleted (the deletion activity deletes them first). Returns true, also when the report is already gone.
+  """
+  deleteAnalyticsReportRecords(datasetId: ID!, reportId: ID!): Boolean!
+  deleteAnnotationVersion(dataId: ID!, datasetId: ID!, id: ID!): Data!
+  deleteAutoCuration(
+    """Dataset ID what you want to delete."""
+    datasetId: ID!
+
+    """AutoCuration ID what you want to delete."""
+    id: ID!
+  ): Boolean!
+  deleteContent(id: ID!): Boolean!
+  deleteData(datasetId: ID!, id: ID!): Boolean!
+
+  """Delete a comment from a data slice."""
+  deleteDataComment(
+    """The ID of the comment to delete."""
+    commentId: ID!
+
+    """The ID of the data."""
+    dataId: ID!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): Data!
+
+  """Delete a reply to a comment on a data slice."""
+  deleteDataCommentReply(
+    """The ID of the comment."""
+    commentId: ID!
+
+    """The ID of the data."""
+    dataId: ID!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The ID of the reply to delete."""
+    replyId: ID!
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): Data!
+  deleteDataset(
+    """The ID of the dataset to delete."""
+    datasetId: ID!
+  ): Boolean!
+
+  """
+  C17 revision 3: Delete every template that belongs only to this dataset, the same way as deleteModelDeployDefinition: deployments are kept and lose the template, models are unlinked. Shared and system templates are not touched. Returns the number of deleted templates, 0 when there are none.
+  """
+  deleteDatasetModelDeployDefinitions(datasetId: ID!): Int!
+
+  """
+  Delete the VLM question set of a dataset entirely. Fails with CONFLICT when expectedUpdatedAt does not match the stored version.
+  """
+  deleteDatasetVLMSettings(
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """
+    The version the client last read: updatedAt of the settings, or createdAt when updatedAt is null. Send the value exactly as received. If the stored settings have a different version, the mutation fails with CONFLICT. Omit it to skip the check.
+    """
+    expectedUpdatedAt: DateTime
+  ): Boolean!
+
+  """
+  Delete a diagnosis with its report items and files. Starts a DELETE_DIAGNOSIS activity and returns true; false when the diagnosis does not exist. Conflict while the diagnosis is running.
+  """
+  deleteDiagnosis(
+    """The dataset ID."""
+    datasetId: ID!
+
+    """The diagnosis ID."""
+    diagnosisId: ID!
+  ): Boolean!
+
+  """
+  C17: Delete the diagnosis row and its diagnosis report item rows in one transaction. Files are not deleted (the deletion activity deletes them first). Returns true, also when the diagnosis is already gone.
+  """
+  deleteDiagnosisRecords(datasetId: ID!, diagnosisId: ID!): Boolean!
+
+  """Delete a diagnosis report item and return the associated diagnosis."""
+  deleteDiagnosisReportItem(
+    """The dataset ID."""
+    datasetId: ID!
+
+    """The diagnosis ID."""
+    diagnosisId: ID!
+
+    """The diagnosis report item ID."""
+    diagnosisReportItemId: ID!
+  ): Diagnosis!
+  deleteExport(
+    """The ID of the dataset that the export belongs to."""
+    datasetId: ID!
+
+    """The ID of the export to delete."""
+    id: ID!
+  ): Boolean!
+  deleteFile(
+    """The folder content ID."""
+    contentId: ID!
+
+    """The file name to delete."""
+    fileName: String!
+
+    """The port number."""
+    port: Int
+  ): Boolean!
+  deleteFolderContent(
+    """The folder content ID to delete."""
+    contentId: ID!
+  ): Boolean!
+  deleteInvitation(
+    """초대의 이름"""
+    invitationName: String!
+  ): Boolean!
+
+  """Delete a job."""
+  deleteJob(
+    """The ID of the job to delete."""
+    id: ID!
+  ): Boolean!
+
+  """
+  Delete a model with its training report and files. Starts a DELETE_MODEL activity and returns true; false when the model does not exist. Conflict while the model is running or used by a model deployment.
+  """
+  deleteModel(
+    """The dataset ID."""
+    datasetId: ID!
+
+    """The model ID."""
+    modelId: ID!
+  ): Boolean!
+
+  """
+  Delete a template (C17 revision 3). Deployments and models are kept and lose the link: a deployment without a template can still be invoked, stopped and deleted, but not started again. Owner and workspace admins only. System templates cannot be deleted.
+  """
+  deleteModelDeployDefinition(datasetId: ID!, definitionId: ID!): ModelDeployDefinitionDeletion!
+
+  """
+  FDE-112: Delete a deployment. Returns null when the record is deleted now; otherwise it becomes DELETING until the runtime confirms removal.
+  """
+  deleteModelDeployment(datasetId: ID!, deploymentId: ID!): ModelDeployment
+
+  """
+  C17: Delete the model row and its training report item rows in one transaction. Files are not deleted (the deletion activity deletes them first). Returns true, also when the model is already gone. Fails with DELETION_BLOCKED, deleting nothing, while a model deployment uses the model.
+  """
+  deleteModelRecords(datasetId: ID!, modelId: ID!): Boolean!
+  deleteScene(dataId: ID!, datasetId: ID!, id: ID!): Data!
+  deleteSlice(
+    """The ID of the dataset that the slice belongs to."""
+    datasetId: String!
+
+    """The ID of the slice to delete."""
+    id: ID!
+  ): Boolean!
+  deleteSliceAnnotationVersion(dataId: ID!, datasetId: ID!, id: ID!, sliceId: ID!): Data!
+
+  """
+  Delete the VLM question set of a slice entirely. Fails with CONFLICT when expectedUpdatedAt does not match the stored version.
+  """
+  deleteSliceVLMSettings(
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """
+    The version the client last read: updatedAt of the settings, or createdAt when updatedAt is null. Send the value exactly as received. If the stored settings have a different version, the mutation fails with CONFLICT. Omit it to skip the check.
+    """
+    expectedUpdatedAt: DateTime
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): Boolean!
+
+  """Delete a training report and return the associated model."""
+  deleteTrainingReportItem(
+    """The dataset ID."""
+    datasetId: ID!
+
+    """The model ID."""
+    modelId: ID!
+
+    """The training report ID."""
+    trainingReportItemId: ID!
+  ): Model!
+
+  """
+  Delete a workflow instance that has no active runs (CREATED/QUEUED/RUNNING).
+  """
+  deleteWorkflowInstance(
+    """The workflow instance ID to delete."""
+    workflowInstanceId: ID!
+  ): Boolean!
+
+  """Delete a workflow template that has no linked workflow instances."""
+  deleteWorkflowTemplate(
+    """The workflow template ID to delete."""
+    workflowTemplateId: ID!
+  ): Boolean!
+
+  """Duplicate a workflow instance with copied bindings and trigger config."""
+  duplicateWorkflowInstance(
+    """Optional name for the duplicated workflow instance."""
+    name: String
+
+    """The workflow instance ID to duplicate."""
+    workflowInstanceId: ID!
+  ): WorkflowInstance!
+
+  """
+  System launcher reports an observed launch failure (FAILED only); this does not stop a server. FDE-112: stops are confirmed by confirmModelDeploymentRemoved.
+  """
+  finishModelDeployment(
+    datasetId: ID!
+    deploymentId: ID!
+    generation: Int!
+
+    """Short failure code or sentence, at most 200 characters, no secrets."""
+    reason: String
+    status: ModelDeploymentStatus!
+  ): ModelDeployment!
+  forceChangePassword(
+    """사용자의 이메일"""
+    email: String!
+
+    """사용자의 새로운 비밀번호"""
+    newPassword: String!
+  ): Boolean!
+  generateContentDownloadURL(id: ID!, port: Int): String!
+  generateContentHeadURL(id: ID!, port: Int): String!
+  generateContentUpdateURL(contentType: String, id: ID!, port: Int): String!
+  generateFileDownloadURL(
+    """The folder content ID."""
+    contentId: ID!
+
+    """The file name to download."""
+    fileName: String!
+
+    """The port number to generate presigned URL."""
+    port: Int
+  ): String!
+  generateFileHeadURL(
+    """The folder content ID."""
+    contentId: ID!
+
+    """The file name to get head information."""
+    fileName: String!
+
+    """The port number to generate presigned URL."""
+    port: Int
+  ): String!
+  generateFileUploadURL(
+    """The folder content ID."""
+    contentId: ID!
+
+    """The content type of the file."""
+    contentType: String
+
+    """The file name to upload."""
+    fileName: String!
+
+    """The port number to generate presigned URL."""
+    port: Int
+  ): String!
+
+  """
+  System runtime callback. serverState is the server health result (LOADING, READY or FAILED), not process liveness. FDE-112: the answer tells the runtime of this generation to KEEP running or REMOVE itself; FAILED ends the deployment as FAILED and answers REMOVE. Requires `Authorization: Bearer <heartbeat token>` of this deployment and generation.
+  """
+  heartbeatModelDeployment(datasetId: ID!, deploymentId: ID!, generation: Int!, serverState: ModelDeploymentServerState!): ModelDeploymentRuntimeInstruction!
+  insertAnnotationVersion(dataId: ID!, datasetId: ID!, version: AnnotationVersionInput!): Data!
+  insertScene(datasetId: ID!, id: ID!, scene: SceneInput!): Data!
+  insertSliceAnnotationVersion(dataId: ID!, datasetId: ID!, sliceId: ID!, version: AnnotationVersionInput!): Data!
+
+  """
+  FDE-112: System deploy activity gets the endpoint and heartbeat tokens of the current generation before it creates resources. Pending deployments only.
+  """
+  issueModelDeploymentRuntimeCredentials(datasetId: ID!, deploymentId: ID!, generation: Int!): ModelDeploymentRuntimeCredentials!
+
+  """
+  Pause a workflow instance so scheduled triggers should not start new runs.
+  """
+  pauseWorkflowInstance(
+    """The ID of the workflow instance to retrieve."""
+    workflowInstanceId: ID!
+  ): WorkflowInstance!
+  pinSlice(
+    """The ID of the dataset that the slice belongs to."""
+    datasetId: String!
+
+    """The ID of the slice to pin."""
+    id: ID!
+  ): Slice!
+
+  """
+  Prefetch the English translation of a caption search query. Fire-and-forget: returns immediately; the search itself applies the cached translation transparently and falls back to the original query when absent.
+  """
+  prewarmCaptionSearch(datasetId: ID!, query: String!): Boolean!
+  refreshToken(accessToken: JWT!, idToken: JWT!, refreshToken: JWT!): AuthToken!
+
+  """
+  System runtime launcher callback after the actual server service has been created.
+  """
+  registerModelDeploymentRuntime(
+    datasetId: ID!
+    deploymentId: ID!
+    generation: Int!
+
+    """Full image reference including the registry."""
+    image: String!
+    namespace: String!
+
+    """
+    Top-level Kubernetes Deployment name (model-deployment-<id lowercase>).
+    """
+    resourceName: String!
+    resourceUid: String!
+    serverAddress: String!
+  ): ModelDeployment!
+  removeDataFromSlice(datasetId: ID!, id: ID!, sliceId: ID!): Data!
+  removeDataMeta(
+    """The dataset ID of the data to update."""
+    datasetId: ID!
+
+    """The ID of the data to update."""
+    id: ID!
+
+    """The metadata of the data."""
+    meta: [RemoveDataMetaInput!]
+  ): Data!
+  removeRole(
+    datasetId: String
+
+    """사용자의 이메일"""
+    email: String!
+    roleType: RoleType!
+  ): Boolean!
+  removeRoles(
+    """사용자의 이메일"""
+    email: String!
+
+    """제거할 역할 목록"""
+    roles: [RequestRoleInput!]!
+  ): Boolean!
+
+  """Restart a failed or stopped workflow run from the beginning."""
+  restartWorkflowRun(
+    """
+    The ID of the failed or stopped workflow run to restart from the beginning.
+    """
+    workflowRunId: ID!
+  ): WorkflowRun!
+
+  """Resume a paused workflow instance."""
+  resumeWorkflowInstance(
+    """The ID of the workflow instance to retrieve."""
+    workflowInstanceId: ID!
+  ): WorkflowInstance!
+
+  """Resume a failed workflow run from its failure point."""
+  resumeWorkflowRun(
+    """The ID of the failed workflow run to resume from the failure point."""
+    workflowRunId: ID!
+  ): WorkflowRun!
+
+  """Review job history submission"""
+  reviewJobHistorySubmission(
+    """The review comment for the job history."""
+    comment: String
+
+    """The job history ID to review."""
+    id: ID!
+
+    """The approval/rejection status of the job history."""
+    result: Boolean!
+  ): JobHistory!
+
+  """
+  FDE-115: Pin or unpin a template. Pinned templates come first for everyone.
+  """
+  setModelDeployDefinitionPinned(datasetId: ID!, definitionId: ID!, isPinned: Boolean!): ModelDeployDefinition!
+
+  """
+  FDE-115: Pin or unpin a deployment. Pinned deployments come first for everyone.
+  """
+  setModelDeploymentPinned(datasetId: ID!, deploymentId: ID!, isPinned: Boolean!): ModelDeployment!
+  signIn(email: EmailAddress!, password: NonEmptyString!): AuthToken!
+  signOut(accessToken: JWT!, idToken: JWT!, refreshToken: JWT!): Boolean!
+  signUp(displayName: String!, email: EmailAddress!, invitationCode: NonEmptyString!, password: NonEmptyString!): Boolean!
+
+  """Start job!"""
+  startJob(
+    """The dataset ID to start job."""
+    datasetId: ID
+
+    """
+    The selected GPU resource for a managed GPU-capable job. Omit to run a CPU-capable job without GPU.
+    """
+    gpuResource: GpuResourceSelectionInput
+
+    """The job ID to start."""
+    id: ID
+
+    """The type of the job."""
+    jobType: String
+
+    """The meta to initialize job."""
+    meta: JSONObject
+
+    """The parameters to start job."""
+    parameters: JSONObject
+
+    """The progress to initialize job."""
+    progress: JSONObject
+
+    """The slice ID for more specific data targeting."""
+    sliceId: ID
+  ): JobHistory!
+
+  """
+  FDE-112: Start a stopped, failed or expired deployment again as a new PENDING run. Without expiresAt, a remaining expiry is kept and a passed one is renewed for the same duration.
+  """
+  startModelDeployment(datasetId: ID!, deploymentId: ID!, expiresAt: DateTime): ModelDeployment!
+
+  """Start a workflow run from a workflow instance."""
+  startWorkflowRun(
+    """
+    Optional client-supplied idempotency token. Repeated calls with the same (workflowInstanceId, clientToken) return the existing run instead of creating a duplicate.
+    """
+    clientToken: String
+
+    """
+    Optional one-off global bindings override for this workflow run snapshot.
+    """
+    globalBindingsOverride: JSONObject
+
+    """The ID of the workflow instance to run."""
+    workflowInstanceId: ID!
+
+    """
+    Inline workflow spec. Only provide if overriding template spec for testing.
+    """
+    workflowSpec: WorkflowSpecInput
+  ): WorkflowRun!
+
+  """
+  FDE-112: Request a stop. The deployment becomes STOPPING and turns STOPPED once the runtime confirms removal.
+  """
+  stopModelDeployment(datasetId: ID!, deploymentId: ID!): ModelDeployment!
+
+  """Stop a queued or running workflow run."""
+  stopWorkflowRun(
+    """Optional stop reason for the workflow run."""
+    reason: String
+
+    """The workflow run ID to stop."""
+    workflowRunId: ID!
+  ): WorkflowRun!
+  systemSignIn(clientId: String!, clientSecret: String!): SystemAuthToken!
+
+  """
+  Unlink a model from its deployment template (definitionId becomes null). Idempotent. Existing deployments keep their own template.
+  """
+  unbindModelDeployDefinition(datasetId: ID!, modelId: ID!): Model!
+  unpinSlice(
+    """The ID of the dataset that the slice belongs to."""
+    datasetId: String!
+
+    """The ID of the slice to unpin."""
+    id: ID!
+  ): Slice!
+
+  """Update an analytics report."""
+  updateAnalyticsReport(
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The new description for the analytics report."""
+    description: String
+
+    """The new metadata for the analytics report."""
+    meta: JSONObject
+
+    """The ID of the analytics report to update."""
+    reportId: ID!
+
+    """The new status for the analytics report."""
+    status: AnalyticsReportStatus
+
+    """The new title for the analytics report."""
+    title: String
+  ): AnalyticsReport!
+
+  """Update an analytics report item."""
+  updateAnalyticsReportItem(
+    """The new content ID for the analytics report item."""
+    contentId: String
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The new description for the analytics report item."""
+    description: String
+
+    """The ID of the analytics report item to update."""
+    itemId: ID!
+
+    """The new metadata for the analytics report item."""
+    meta: JSONObject
+
+    """The ID of the analytics report."""
+    reportId: ID!
+
+    """The new title for the analytics report item."""
+    title: String
+  ): AnalyticsReportItem!
+  updateAnnotation(dataId: ID!, datasetId: ID!, meta: JSONObject!): Data!
+  updateAnnotationVersion(channels: [String!], contentId: ID, dataId: ID!, datasetId: ID!, id: ID!, meta: JSONObject, version: String): Data!
+  updateAutoCuration(
+    """The auto curation result content info."""
+    autoCurationResultContent: ContentBaseInput
+
+    """The cluster scatter contents."""
+    clusterScatterContents: ClusterScatterContentsInput
+
+    """The data information of the auto curation."""
+    dataInfo: AutoCurationDataInfoInput
+
+    """The dataset ID of the auto curation."""
+    datasetId: ID!
+
+    """The description of the auto curation."""
+    description: String
+
+    """The ID of the auto curation."""
+    id: ID!
+
+    """The meta of the auto curation."""
+    meta: JSONObject
+
+    """The method of the auto curation."""
+    method: AutoCurationMethodInput
+
+    """The name of the auto curation."""
+    name: String
+
+    """The slice information of the auto curation."""
+    sliceInfo: AutoCurationSliceInfoInput
+
+    """The type of the auto curation."""
+    type: AutoCurationTypes
+  ): AutoCuration!
+  updateData(
+    """The annotation stats of the data."""
+    annotationStats: [AnnotationStatInput!]
+
+    """
+    The caption of the data. Omitted keeps the current value; explicit null clears it.
+    """
+    caption: String
+
+    """
+    Contract v2: when provided, the caption value is stored in the given source slot and the effective caption is recomputed by the server (VLM wins over GT when both exist). Omitted keeps the v1 behavior of writing the effective caption directly.
+    """
+    captionSource: CaptionSource
+
+    """The dataset ID of the data to update."""
+    datasetId: ID!
+
+    """
+    Optimistic guard: when provided, the update applies only if the current caption exactly equals this value (null matches a cleared caption). Omitted skips the check.
+    """
+    expectedCaption: String
+
+    """The ID of the data to update."""
+    id: ID!
+
+    """The key of the data."""
+    key: String
+
+    """The metadata of the data."""
+    meta: [DataMetaInput!]
+
+    """The sub type of the data."""
+    subType: String
+
+    """The type of the data."""
+    type: DataType
+  ): Data!
+
+  """Update a comment on a data slice."""
+  updateDataComment(
+    """The new comment category."""
+    category: String
+
+    """The new comment content."""
+    comment: String
+
+    """The ID of the comment to update."""
+    commentId: ID!
+
+    """The ID of the data."""
+    dataId: ID!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The new metadata for the comment."""
+    meta: JSONObject
+
+    """The ID of the slice."""
+    sliceId: ID!
+
+    """The new status for the comment."""
+    status: CommentStatus
+  ): Data!
+
+  """Update a reply to a comment on a data slice."""
+  updateDataCommentReply(
+    """The new reply content."""
+    comment: String!
+
+    """The ID of the comment."""
+    commentId: ID!
+
+    """The ID of the data."""
+    dataId: ID!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The ID of the reply to update."""
+    replyId: ID!
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): Data!
+  updateDataSlice(annotationStats: [AnnotationStatInput!], dataId: ID!, datasetId: ID!, meta: JSONObject, sliceId: ID!): Data!
+  updateDataTags(dataId: ID!, datasetId: ID!, sliceId: ID!, tags: [String!]): Data!
+  updateDataset(
+    """
+    Structured caption settings. Replaces the stored settings as a whole; null clears them.
+    """
+    captionSettings: DatasetCaptionSettingsInput
+
+    """The description of the dataset."""
+    description: String
+
+    """The ID of the dataset."""
+    id: ID!
+
+    """The name of the dataset."""
+    name: String
+  ): Dataset!
+
+  """
+  Replace the VLM question set of a dataset. Existing questions and evidence classes can only be deleted or restored, not changed. Fails with CONFLICT when expectedUpdatedAt does not match the stored version.
+  """
+  updateDatasetVLMSettings(
+    """The ID of the VLM dataset."""
+    datasetId: ID!
+
+    """
+    The version the client last read: updatedAt of the settings, or createdAt when updatedAt is null. Send the value exactly as received. If the stored settings have a different version, the mutation fails with CONFLICT. Omit it to skip the check.
+    """
+    expectedUpdatedAt: DateTime
+
+    """The whole question set to store."""
+    settings: JSONObject!
+  ): DatasetVLMSettings!
+
+  """Update a diagnosis."""
+  updateDiagnosis(contents: JSONObject, datasetId: ID!, description: String, diagnosisDataCount: Int, diagnosisId: ID!, diagnosisParameters: JSONObject, discriminatorKey: String, discriminatorValues: [String!], modelId: ID, name: String, scoreKey: String, scoreUnit: String, scoreValue: Float, sourceDataCount: Int, sourceSliceId: String, status: DiagnosisStatus, targetDataCount: Int, targetSliceId: String): Diagnosis!
+
+  """Update a diagnosis report item and return the associated diagnosis."""
+  updateDiagnosisReportItem(contentId: ID, datasetId: ID!, description: String, diagnosisId: ID!, diagnosisReportItemId: ID!, discriminatorValue: String, name: String, type: AnalyticsReportItemType): Diagnosis!
+  updateExport(
+    """The number of annotations to export."""
+    annotationCount: Int
+
+    """The completed time of the export."""
+    completedAt: DateTime
+
+    """The number of data to export."""
+    dataCount: Int
+
+    """The search filter of the data."""
+    dataFilter: JSONObject = null
+
+    """The ID of the dataset to create an export for."""
+    datasetId: ID!
+
+    """The number of frames to export."""
+    frameCount: Int
+
+    """The ID of the export to update."""
+    id: ID!
+
+    """The location of the export files."""
+    location: String
+
+    """The meta data of the export."""
+    meta: JSONObject = null
+
+    """The name of the export."""
+    name: String
+  ): Export!
+  updateFrames(
+    """The ID of the data to update frames."""
+    dataId: ID!
+
+    """The dataset ID of the data to update frames."""
+    datasetId: ID!
+
+    """The frames array to update."""
+    frames: [DataFrameInput!]!
+  ): Data!
+
+  """
+  Replace the GPU quota runtime settings of the workspace. Requires OWNER or WORKSPACE_ADMIN. Omitted limit fields mean "no override", not "leave unchanged".
+  """
+  updateGpuQuotaRuntimeSettings(
+    """The full replacement settings."""
+    input: GpuQuotaRuntimeSettingsInput!
+  ): GpuQuotaRuntimeSettings!
+
+  """Update a job."""
+  updateJob(
+    """The description of the job."""
+    description: String
+
+    """The job ID to update."""
+    id: ID!
+
+    """The meta of the job."""
+    meta: JSONObject
+
+    """The name of the job."""
+    name: String
+
+    """The parameter schema of the job."""
+    parameterSchema: [JobParameterSchemaInput!]
+
+    """The progress schema of the job."""
+    progressSchema: [JobProgressSchemaInput!]
+
+    """The settings of the job."""
+    settings: JSONObject
+
+    """The type of the job."""
+    type: String
+  ): Job!
+
+  """Update job history!"""
+  updateJobHistory(
+    """The comment of the job history."""
+    comment: String
+
+    """The job history ID to update."""
+    id: ID!
+
+    """The meta of the job history."""
+    meta: JSONObject
+
+    """The progress of the job history."""
+    progress: JSONObject
+
+    """The status of the job history."""
+    status: JobStatus
+  ): JobHistory!
+
+  """Update a model."""
+  updateModel(contents: JSONObject, customDagId: String, datasetId: ID!, description: String, isPinned: Boolean, modelId: ID!, name: String, scoreKey: String, scoreUnit: String, scoreValue: Float, status: ModelStatus, taskType: ModelTaskType, totalDataCount: Int, trainDataCount: Int, trainSliceId: ID, trainingAnnotations: [TrainingAnnotationsInput!], trainingParameters: JSONObject, validationDataCount: Int, validationSliceId: ID): Model!
+  updateModelDeployment(datasetId: ID!, deploymentId: ID!, description: String, invokeTimeoutSeconds: Int, name: String): ModelDeployment!
+  updateScene(dataId: ID!, datasetId: ID!, id: ID!, scene: UpdateSceneInput!): Data!
+  updateSlice(
+    """The aggregate caption of the slice."""
+    caption: String
+
+    """
+    Structured caption settings for the enhancement prompt. Replaces the stored settings as a whole; null clears them.
+    """
+    captionSettings: DatasetCaptionSettingsInput
+
+    """The ID of the dataset that the slice belongs to."""
+    datasetId: String!
+
+    """A description of the slice."""
+    description: String
+
+    """
+    Optimistic guard: when provided, the update applies only if the current caption exactly equals this value (null matches a cleared caption). Omitted skips the check.
+    """
+    expectedCaption: String
+
+    """The ID of the slice to retrieve."""
+    id: ID!
+
+    """The additional metadata of the slice."""
+    meta: JSONObject
+
+    """The name of the slice."""
+    name: String
+  ): Slice!
+  updateSliceAnnotation(dataId: ID!, datasetId: ID!, meta: JSONObject!, sliceId: ID!): Data!
+  updateSliceAnnotationVersion(channels: [String!], contentId: ID, dataId: ID!, datasetId: ID!, id: ID!, meta: JSONObject, sliceId: ID!, version: String): Data!
+
+  """
+  Replace the VLM question set of a slice. Existing questions and evidence classes can only be deleted or restored, not changed. Fails with CONFLICT when expectedUpdatedAt does not match the stored version.
+  """
+  updateSliceVLMSettings(
+    """The ID of the VLM dataset the slice belongs to."""
+    datasetId: ID!
+
+    """
+    The version the client last read: updatedAt of the settings, or createdAt when updatedAt is null. Send the value exactly as received. If the stored settings have a different version, the mutation fails with CONFLICT. Omit it to skip the check.
+    """
+    expectedUpdatedAt: DateTime
+
+    """The whole question set to store."""
+    settings: JSONObject!
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): SliceVLMSettings!
+
+  """Update a training report and return the associated model."""
+  updateTrainingReportItem(contentId: ID, datasetId: ID!, description: String, modelId: ID!, name: String, trainingReportItemId: ID!, type: AnalyticsReportItemType): Model!
+
+  """
+  Update workflow instance metadata, status, bindings, or trigger config.
+  """
+  updateWorkflowInstance(
+    """Optional workflow instance description."""
+    description: String
+
+    """Optional workflow instance global bindings."""
+    globalBindings: JSONObject
+
+    """Optional pin state (pin the instance to the top of lists)."""
+    isPinned: Boolean
+
+    """Optional workflow instance display name."""
+    name: String
+
+    """Optional workflow instance status."""
+    status: WorkflowInstanceStatus
+
+    """Optional workflow instance trigger config."""
+    triggerConfig: JSONObject
+
+    """The workflow instance ID to update."""
+    workflowInstanceId: ID!
+  ): WorkflowInstance!
+
+  """
+  Replace the workflow instance spec with an inline JSON spec. The spec is validated against the standard workflow rules (START, node_output bindings must reference an upstream ancestor node, etc.). When set, the instance spec takes precedence over the linked template spec for future runs.
+  """
+  updateWorkflowInstanceSpec(
+    """
+    The next workflow spec to store on the instance. Replaces any previous instance-scoped spec override.
+    """
+    spec: WorkflowSpecInput!
+
+    """The workflow instance ID whose spec should be overridden."""
+    workflowInstanceId: ID!
+  ): WorkflowInstance!
+
+  """Update a reusable workflow template from a JSON workflow spec."""
+  updateWorkflowTemplateFromJson(
+    """The next workflow JSON spec for the workflow template."""
+    spec: WorkflowSpecInput!
+
+    """The workflow template ID to update."""
+    workflowTemplateId: ID!
+  ): WorkflowTemplate!
+  upsertCaptionTranslations(
+    """
+    The exact caption text these translations belong to. Translations are keyed by the hash of this text, so it must match the stored caption byte for byte.
+    """
+    caption: String!
+
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The ID of the data."""
+    id: ID!
+
+    """Translations to store (one per language)."""
+    translations: [CaptionDisplayTranslationInput!]!
+  ): [String!]!
+  upsertDataMeta(
+    """The dataset ID of the scene to update."""
+    datasetId: ID!
+
+    """The ID of the scene to update."""
+    id: ID!
+
+    """The metadata of the scene."""
+    meta: [DataMetaInput!]
+
+    """The system metadata of the scene."""
+    systemMeta: [DataMetaInput!]
+  ): Data!
+  upsertUserAccessKey(
+    """사용자의 이메일"""
+    email: String!
+  ): AccessKey!
+}
+
+"""A GPU activity of the current subject."""
+type MyGpuActivity {
+  """
+  The activation phase of an admitted activity. Null while waiting, after completion, or when unknown.
+  """
+  activationPhase: GpuActivationPhase
+
+  """The stable Product activity id."""
+  activityId: ID!
+
+  """The stable Product activity type."""
+  activityType: String!
+
+  """The requested card count. Null when unknown."""
+  cardCount: Int
+
+  """When the activity was created."""
+  createdAt: DateTime!
+
+  """
+  The dataset of the activity. Null when unknown or not accessible to the caller.
+  """
+  datasetId: ID
+
+  """
+  Why the activity failed. Null unless the state is FAILED; GENERIC when the failure carries no classification. The classification may arrive a few seconds after the failure.
+  """
+  failureKind: GpuFailureKind
+
+  """
+  The configured GPU tasks of the activity with their real Airflow states. Null when the server does not provide task inspection.
+  """
+  gpuTasks: MyGpuActivityTasks
+
+  """The selected resource mode. Null when unknown."""
+  mode: GpuResourceMode
+
+  """
+  The requested memory in GB for SLICE. Null for whole-card modes or when unknown.
+  """
+  requestedMemGb: Int
+
+  """The reserved memory in GB, when granted."""
+  reservedMemGb: Float
+
+  """A safe reason code for the current state."""
+  safeReason: String
+
+  """The GPU request state."""
+  state: GpuRequestState!
+
+  """The display task name."""
+  taskName: String!
+
+  """
+  Why the activity is waiting. Null when it is not waiting or when the server does not report a reason.
+  """
+  waitReason: GpuWaitReason
+}
+
+"""
+How the summary activities relate to the paged terminal activity history.
+"""
+type MyGpuActivityHistory {
+  """
+  Whether more terminal activities exist beyond the summary. Page them with myGpuActivities.
+  """
+  hasMoreTerminal: Boolean!
+
+  """
+  The opaque cursor for the first terminal activity page. Null when hasMoreTerminal is false.
+  """
+  nextCursor: String
+
+  """
+  The number of terminal activities already included inline in the summary activities (0..20).
+  """
+  terminalIncluded: Int!
+}
+
+"""A bounded page of terminal GPU activities of the current subject."""
+type MyGpuActivityPage {
+  """Whether another page follows. False when unavailable."""
+  hasMore: Boolean!
+
+  """The terminal GPU activities of this page. Empty when unavailable."""
+  items: [MyGpuActivity!]!
+
+  """
+  The opaque cursor of the next page. Null on the last page or when unavailable.
+  """
+  nextCursor: String
+
+  """When the page was observed."""
+  observedAt: DateTime
+
+  """The readiness of the page."""
+  readiness: GpuReadinessState!
+
+  """A safe reason code when the page is unavailable."""
+  unavailableReason: String
+}
+
+"""
+One configured GPU task of an activity with its Airflow task state. Airflow state, not GPU queue state.
+"""
+type MyGpuActivityTask {
+  """The current try number."""
+  attempt: Int
+
+  """When the task instance ended."""
+  endedAt: String
+
+  """Whether this task is the GPU request anchor task of the activity."""
+  isAnchor: Boolean!
+
+  """The display label of the task."""
+  label: String!
+
+  """The raw Airflow state string when observed."""
+  rawState: String
+
+  """When the task instance started."""
+  startedAt: String
+
+  """
+  The Airflow task instance state. UNKNOWN when it could not be observed; never a GPU queue state.
+  """
+  state: TaskState!
+
+  """The Airflow task id from the server-owned GPU binding."""
+  taskId: String!
+}
+
+"""
+The configured GPU tasks of one activity with their Airflow states. Grouped per activity, not per GPU grant.
+"""
+type MyGpuActivityTasks {
+  """When the task states were observed. Null when not observed."""
+  observedAt: DateTime
+
+  """
+  READY when the child run was observed; UNAVAILABLE otherwise (tasks still listed when known).
+  """
+  readiness: GpuReadinessState!
+
+  """
+  The normalized Airflow state of the managed child run. Null when not observed.
+  """
+  runState: TaskMonitoringRunState
+
+  """
+  The configured GPU tasks in binding order. Empty only when the binding could not be resolved or the caller is not allowed.
+  """
+  tasks: [MyGpuActivityTask!]!
+
+  """A safe reason code when readiness is UNAVAILABLE."""
+  unavailableReason: String
+}
+
+"""The GPU queue summary of the current subject."""
+type MyGpuQueueSummary {
+  """
+  Whether new GPU admission is paused workspace-wide. Not a property of this subject queue and not a capacity or quota denial. Null when the server does not report it.
+  """
+  admissionPaused: Boolean
+
+  """The requests waiting on capacity."""
+  capacityWaitCount: Int!
+
+  """Whether an active drain fence affects the subject."""
+  hasActiveDrainFence: Boolean!
+
+  """The requests awaiting an admission decision."""
+  pendingAdmissionCount: Int!
+
+  """The requests waiting on quota."""
+  quotaWaitCount: Int!
+
+  """The requests currently running."""
+  runningCount: Int!
+
+  """The requests starting up after admission."""
+  startingCount: Int!
+
+  """The total queued request count."""
+  totalCount: Int!
+
+  """The requests waiting on quota or capacity."""
+  waitingCount: Int!
+}
+
+"""The GPU summary of the current subject."""
+type MyGpuSummary {
+  """The GPU activities of the subject. Empty when unavailable."""
+  activities: [MyGpuActivity!]!
+
+  """
+  How the activities relate to the paged terminal history. Null when unknown or unavailable.
+  """
+  activityHistory: MyGpuActivityHistory
+
+  """
+  The GPU quota policy effective for the current subject. Null when it could not be resolved. The same value the effectiveGpuQuota root query returns.
+  """
+  effectiveGpuQuota: EffectiveGpuQuota
+
+  """When the summary was observed."""
+  observedAt: DateTime
+
+  """The queue summary. Null when unavailable."""
+  queue: MyGpuQueueSummary
+
+  """The readiness of the summary."""
+  readiness: GpuReadinessState!
+
+  """The currently reserved memory in GB."""
+  reservedMemGb: Float
+
+  """
+  The number of whole cards the subject currently holds across GRANTED whole-card and distributed activities. Pairs with effectiveGpuQuota.wholeCardsPerUserLimit. Null when the server does not report it; never zero for unknown.
+  """
+  reservedWholeCards: Int
+
+  """The slice memory limit in GB."""
+  sliceMemLimitGb: Float
+
+  """A safe reason code when the summary is unavailable."""
+  unavailableReason: String
+
+  """The usage percent against the limit."""
+  usagePercent: Float
+}
+
+"""A string that cannot be passed as an empty value"""
+scalar NonEmptyString
+
+"""Integers that will have a value of 0 or more."""
+scalar NonNegativeInt
+
+"""Filter for a dynamic numeric meta field."""
+input NumberMetaFilter {
+  """The key of the meta field (e.g., "temperature")."""
+  key: String!
+
+  """The range condition for the value."""
+  range: NumericRangeFilter
+}
+
+"""Provides operators for numeric range filtering."""
+input NumericRangeFilter {
+  """Equal to value."""
+  equals: Float
+
+  """Greater than value."""
+  gt: Float
+
+  """Greater than or equal to value."""
+  gte: Float
+
+  """Less than value."""
+  lt: Float
+
+  """Less than or equal to value."""
+  lte: Float
+}
+
+"""The direction to order by."""
+enum OrderDirection {
+  ASC
+  DESC
+}
+
+"""Integers that will have a value greater than 0."""
+scalar PositiveInt
+
+type Query {
+  UserAccessKey(
+    """사용자의 이메일"""
+    email: String!
+  ): AccessKey!
+
+  """Get a specific analytics report by ID."""
+  analyticsReport(
+    """The dataset ID."""
+    datasetId: String!
+
+    """The report ID."""
+    reportId: ID!
+  ): AnalyticsReport!
+
+  """
+  C17: S3 content ids to delete with the analytics report: content ids of its items (ULID only). Ids still referenced by another report item, a model, a diagnosis or an export are left out. reportExists=false when the report is gone.
+  """
+  analyticsReportContentIdsToDelete(datasetId: ID!, reportId: ID!): AnalyticsReportContentIdsToDelete!
+
+  """Get a list of analytics reports for a dataset."""
+  analyticsReports(
+    cursor: String
+
+    """The dataset id to filter analytics reports."""
+    datasetId: ID!
+
+    """The filter for listing analytics reports."""
+    filter: AnalyticsReportFilter
+    length: Int = 10
+    orderBy: AnalyticsReportOrderBy
+  ): AnalyticsReportPageInfo!
+  annotationClassGroups(datasetId: ID!, sliceId: ID): [DataAnnotationMeta!]!
+  annotationClasses(datasetId: ID!, sliceId: ID): [DataAnnotationMeta!]!
+  annotationStats(
+    """Dataset ID to get annotation statistics."""
+    datasetId: String!
+
+    """The filter to apply to the data."""
+    filter: DataFilter
+  ): AnnotationStats!
+  annotationSubClasses(datasetId: ID!, sliceId: ID): [DataAnnotationMeta!]!
+  annotationTypes(datasetId: ID!, sliceId: ID): [DataAnnotationMeta!]!
+  autoCuration(
+    """Dataset ID what you want to find."""
+    datasetId: ID!
+
+    """The ID of the auto curation to get."""
+    id: ID
+
+    """The name of the auto curation to retrieve."""
+    name: String
+  ): AutoCuration!
+  autoCurations(
+    """The cursor for the next page of auto curations."""
+    cursor: String
+
+    """The dataset ID of the auto curations."""
+    datasetId: ID!
+
+    """The options to filter auto curations by."""
+    filter: AutoCurationFilter
+
+    """The length of the auto curations."""
+    length: Int
+
+    """The order of the auto curations."""
+    orderBy: AutoCurationOrderBy
+  ): AutoCurationPageInfo!
+  classDistribution(
+    """Dataset ID to get class distribution."""
+    datasetId: String!
+
+    """The filter to apply to the data."""
+    filter: DataFilter
+  ): ClassDistributionResponse!
+
+  """
+  Get comment categories from dataset or specific slice with their counts.
+  """
+  commentCategories(
+    """Filter categories that contain this text (case-insensitive)."""
+    categoryContains: String
+
+    """The ID of the dataset to get comment categories from."""
+    datasetId: ID!
+
+    """Maximum number of categories to return. Default is 100."""
+    limit: Float = 100
+
+    """
+    The ID of the specific slice. If not provided, categories from all slices in the dataset will be returned.
+    """
+    sliceId: ID
+  ): CommentCategoriesResponse!
+
+  """Get custom job detail by flow source and custom job id."""
+  customJob(customJobId: ID!, jobType: String!): CustomJob!
+
+  """Get custom job list by flow source and job type."""
+  customJobs(
+    """The job type of the custom jobs."""
+    jobType: String
+  ): [CustomJob!]!
+  data(
+    datasetId: String!
+
+    """The ID of the data to get."""
+    id: ID
+
+    """The key of the data to get."""
+    key: String
+  ): Data!
+  dataList(
+    cursor: String
+
+    """The ID of the dataset to get data from."""
+    datasetId: String!
+    filter: DataFilter
+    length: Int
+    orderBy: DataOrderBy
+  ): DataPageInfo!
+  dataMetaKeys(datasetId: ID!): [MetaKeyInfo!]!
+  dataTags(datasetId: ID!, sliceId: ID, tagContains: String): [String!]!
+
+  """Get a dataset by ID."""
+  dataset(
+    """The ID of the dataset to get."""
+    datasetId: ID
+
+    """The name of the dataset to get."""
+    name: String
+  ): Dataset
+  datasetAnnotations(
+    """Dataset ID to get annotation types and class names."""
+    datasetId: String!
+  ): DatasetAnnotations!
+
+  """VLM question set of a dataset. Null when the dataset has none."""
+  datasetVLMSettings(
+    """The ID of the dataset."""
+    datasetId: ID!
+  ): DatasetVLMSettings
+
+  """Get datasets."""
+  datasets(
+    """The cursor to start from."""
+    cursor: String
+
+    """The options to filter datasets by."""
+    filter: DatasetFilter
+
+    """The number of datasets to return."""
+    length: Int
+
+    """The options to order datasets by."""
+    orderBy: DatasetOrderBy
+  ): DatasetPageInfo
+
+  """Get diagnoses."""
+  diagnoses(
+    """The cursor to start from."""
+    cursor: String
+
+    """The dataset ID of the diagnoses."""
+    datasetId: ID!
+
+    """The options to filter diagnoses by."""
+    filter: DiagnosisFilter
+
+    """The number of diagnoses to return."""
+    length: Int
+
+    """The options to order diagnoses by."""
+    orderBy: DiagnosisOrderBy
+  ): DiagnosisPageInfo
+
+  """Get a diagnosis by ID or name."""
+  diagnosis(
+    """The dataset ID."""
+    datasetId: ID!
+
+    """The diagnosis ID."""
+    diagnosisId: ID
+
+    """The diagnosis name."""
+    name: String
+  ): Diagnosis
+
+  """
+  C17: S3 content ids to delete with the diagnosis: string values in its contents (nested) and content ids of its diagnosis report items (ULID only). Ids still referenced by a model, another diagnosis, a report item or an export are left out. diagnosisExists=false when the diagnosis is gone.
+  """
+  diagnosisContentIdsToDelete(datasetId: ID!, diagnosisId: ID!): DiagnosisContentIdsToDelete!
+
+  """
+  Get the GPU quota effective for the current subject. Readable by any authenticated user; the subject comes from the authenticated context only. Null when the quota could not be resolved.
+  """
+  effectiveGpuQuota: EffectiveGpuQuota
+  export(
+    """The ID of the dataset that the export belongs to."""
+    datasetId: ID!
+
+    """The ID of the export to retrieve."""
+    id: ID!
+  ): Export!
+  exports(
+    """The cursor to use for pagination."""
+    cursor: String
+
+    """The ID of the dataset to get exports for."""
+    datasetId: ID!
+
+    """The filter to apply to the exports."""
+    filter: ExportFilter
+
+    """The number of exports to return."""
+    length: Int
+
+    """The order to return the exports in."""
+    orderBy: ExportOrderBy
+  ): ExportPageInfo!
+  frameMetaKeys(datasetId: ID!, sliceId: ID): [MetaKeyInfo!]!
+
+  """
+  Get the GPU quota runtime settings of the workspace. Requires OWNER or WORKSPACE_ADMIN; the workspace comes from the route context only. Null when the settings could not be read.
+  """
+  gpuQuotaRuntimeSettings: GpuQuotaRuntimeSettings
+
+  """
+  Get the selectable GPU resource options of a workload. Degrades to UNAVAILABLE when the GPU module is down.
+  """
+  gpuResourceOptions(
+    """The server-owned workload key."""
+    workloadKey: String!
+  ): GpuResourceOptions!
+
+  """
+  Get the GPU workload of one activity. Requires the same access as reading that activity. Null when the activity has no GPU workload or it could not be read.
+  """
+  gpuWorkloadByActivity(
+    """The stable Product activity id."""
+    activityId: ID!
+  ): GpuActivityWorkload
+  invitation(
+    """초대의 이름"""
+    invitationName: String!
+  ): Invitation!
+  invitations(
+    """초대 결과에 대한 페이지"""
+    page: Float
+
+    """초대 결과에 대한 페이지 크기"""
+    pageSize: Float
+  ): InvitationPageInfo!
+
+  """Get a job by ID."""
+  job(
+    """The ID of the job to get."""
+    id: ID
+
+    """The name of the job to retrieve."""
+    name: String
+  ): Job!
+
+  """Get job histories."""
+  jobHistories(
+    """The page token."""
+    cursor: String
+
+    """The ID of the dataset."""
+    datasetId: ID
+
+    """The filter of the job history."""
+    filter: JobHistoryFilter
+
+    """The number of job histories to return."""
+    length: Int
+
+    """The order by options of the job history."""
+    orderBy: JobHistoryOrderBy
+  ): JobHistoryPageInfo!
+
+  """Get a job history by ID."""
+  jobHistory(
+    """The ID of the dataset to get."""
+    datasetId: ID
+
+    """The ID of the job history to get."""
+    id: ID!
+  ): JobHistory!
+
+  """Get task detail for a job history task."""
+  jobHistoryTaskDetail(input: JobHistoryTaskDetailInput!): TaskDetail!
+
+  """Get a cursor-based log chunk for a job history task."""
+  jobHistoryTaskLog(input: JobHistoryTaskLogInput!): TaskLogChunk!
+
+  """Get the last 1,000 log lines for a job history task."""
+  jobHistoryTaskLogDownload(input: JobHistoryTaskLogDownloadInput!): TaskLogDownload!
+
+  """Get task monitoring graph and task summaries for a job history."""
+  jobHistoryTaskMonitoring(input: JobHistoryTaskMonitoringInput!): TaskMonitoring!
+
+  """Get rendered template fields for a job history task."""
+  jobHistoryTaskRenderedTemplates(input: JobHistoryTaskRenderedTemplatesInput!): TaskRenderedTemplates!
+
+  """Get jobs."""
+  jobs(
+    """The cursor to start from."""
+    cursor: String
+
+    """The options to filter jobs by."""
+    filter: JobFilter
+
+    """The number of jobs to find."""
+    length: Int
+
+    """The options to order jobs by."""
+    orderBy: JobOrderBy
+  ): JobPageInfo!
+  listFolderFiles(
+    """The folder content ID."""
+    contentId: ID!
+
+    """The port number."""
+    port: Int
+  ): [String!]!
+  metaDistribution(
+    """Dataset ID to get meta distribution."""
+    datasetId: String!
+
+    """The filter to apply to the data."""
+    filter: DataFilter
+  ): MetaDistributionResponse!
+
+  """Get a model by ID or name."""
+  model(
+    """The dataset ID."""
+    datasetId: ID!
+
+    """The model ID."""
+    modelId: ID
+
+    """The model name."""
+    name: String
+  ): Model
+
+  """
+  C17: S3 content ids to delete with the model: string values in its contents (nested) and content ids of its training report items (ULID only). Ids still referenced by another model, a diagnosis, a report item or an export are left out. modelExists=false when the model is gone. Fails with DELETION_BLOCKED while the model has model deployments.
+  """
+  modelContentIdsToDelete(datasetId: ID!, modelId: ID!): ModelContentIdsToDelete!
+  modelDeployDefinition(datasetId: ID!, definitionId: ID!): ModelDeployDefinition
+
+  """
+  FDE-115: Deployments and models across all datasets that use this template.
+  """
+  modelDeployDefinitionUsage(datasetId: ID!, definitionId: ID!): ModelDeployDefinitionUsage!
+  modelDeployDefinitions(datasetId: ID!): [ModelDeployDefinition!]!
+  modelDeployment(datasetId: ID!, deploymentId: ID!): ModelDeployment
+  modelDeploymentInterface(datasetId: ID!, deploymentId: ID!): JSONObject!
+  modelDeploymentInterfaces(datasetId: ID!): [ModelDeploymentInterface!]!
+
+  """
+  FDE-112: System sweep. Tells each running runtime to KEEP or REMOVE by the heartbeat rules without changing records. At most 500 runtimes.
+  """
+  modelDeploymentRuntimeStates(runtimes: [ModelDeploymentRuntimeRefInput!]!): [ModelDeploymentRuntimeState!]!
+
+  """FDE-112: Runtime records of a deployment, newest generation first."""
+  modelDeploymentRuntimes(datasetId: ID!, deploymentId: ID!): [ModelDeploymentRuntime!]!
+  modelDeployments(
+    cursor: String
+    datasetId: ID!
+    definitionIdIn: [ID!]
+
+    """
+    C17: must/not filter like other lists. Combined with the flat arguments above (all must match).
+    """
+    filter: ModelDeploymentFilter
+    length: Int
+    nameContains: String
+    orderBy: ModelDeploymentOrder
+    statusIn: [ModelDeploymentStatus!]
+  ): ModelDeploymentPage!
+
+  """Get models."""
+  models(
+    """The cursor to start from."""
+    cursor: String
+
+    """The dataset ID of the models."""
+    datasetId: ID!
+
+    """The options to filter models by."""
+    filter: ModelFilter
+
+    """The number of models to return."""
+    length: Int
+
+    """The options to order models by."""
+    orderBy: ModelOrderBy
+  ): ModelPageInfo
+
+  """
+  Get the GPU summary of the current subject. The subject comes from the authenticated context only.
+  """
+  myGpu: MyGpuSummary!
+
+  """
+  Get a page of terminal GPU activities of the current subject. Independent of myGpu; the subject comes from the authenticated context only.
+  """
+  myGpuActivities(
+    """
+    The opaque cursor returned by the previous page or by myGpu.activityHistory. Omit for the first page.
+    """
+    after: String
+
+    """The page size, 1..100. Defaults to 20."""
+    first: Int
+  ): MyGpuActivityPage!
+
+  """Get the next data from the current data."""
+  nextData(
+    """The current data ID to get data after."""
+    currentDataId: ID!
+
+    """The ID of the dataset to get data from."""
+    datasetId: String!
+
+    """The filter options to get data by."""
+    filter: DataFilter
+
+    """The order options to get data by."""
+    orderBy: DataOrderBy
+  ): Data
+  slice(
+    """The ID of the dataset that the slice belongs to."""
+    datasetId: String!
+
+    """The ID of the slice to retrieve."""
+    id: ID
+
+    """The name of the slice to retrieve."""
+    name: String
+  ): Slice!
+
+  """
+  C17: S3 content ids to delete with the slice: content ids of every annotation version of the slice, including rows left after removeDataFromSlice (ULID only). Ids still referenced by annotation versions outside the slice, a model, a diagnosis, a report item or an export are left out. sliceExists=false when the slice is gone.
+  """
+  sliceContentIdsToDelete(datasetId: ID!, sliceId: ID!): SliceContentIdsToDelete!
+  sliceMetaKeys(datasetId: ID!, sliceId: ID!): [MetaKeyInfo!]!
+
+  """VLM question set of a slice. Null when the slice has none."""
+  sliceVLMSettings(
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """The ID of the slice."""
+    sliceId: ID!
+  ): SliceVLMSettings
+  slices(
+    """The cursor to use for pagination."""
+    cursor: String
+
+    """The ID of the dataset to get slices for."""
+    datasetId: String!
+
+    """The filter to apply to the slices."""
+    filter: SliceFilter
+
+    """The number of slices to return."""
+    length: Int
+
+    """The order to return the slices in."""
+    orderBy: SliceOrderBy
+  ): SlicePageInfo!
+  user(
+    """The email of the user"""
+    email: String!
+  ): User!
+  users(
+    """The page for the user results"""
+    page: Float
+
+    """The page size for the user results"""
+    pageSize: Float
+  ): UserPageInfo!
+
+  """
+  Enumerate available workflow node types and their dispatch metadata (handlerRef, runtime, requiredTargetFields, dispatchEligible). The builder uses this to populate the node-type picker and derive required input fields. Mirrors docs/contract/schema/workflowHandlerRegistry.ts.
+  """
+  workflowHandlerRegistry: [WorkflowHandlerRegistryEntry!]!
+
+  """Get a workflow instance by ID."""
+  workflowInstance(
+    """The ID of the workflow instance to retrieve."""
+    workflowInstanceId: ID!
+  ): WorkflowInstance
+
+  """Get workflow instances with cursor pagination."""
+  workflowInstances(
+    """The cursor to start the workflow instance list from."""
+    cursor: String
+
+    """Filter workflow instances by the dataset they belong to."""
+    datasetId: ID
+
+    """The page length for workflow instances."""
+    length: Int
+
+    """Filter workflow instances by template ID."""
+    workflowTemplateId: ID
+  ): WorkflowInstancePageInfo!
+
+  """Get a workflow run by ID."""
+  workflowRun(
+    """The workflow run ID to retrieve."""
+    workflowRunId: ID!
+  ): WorkflowRun
+
+  """Get workflow runs with cursor pagination."""
+  workflowRuns(
+    """The cursor to start the workflow run list from."""
+    cursor: String
+
+    """The page length for workflow runs."""
+    length: Int
+
+    """Filter workflow runs by workflow instance ID."""
+    workflowInstanceId: ID
+  ): WorkflowRunPageInfo!
+
+  """Get a workflow template by ID."""
+  workflowTemplate(
+    """The workflow template ID to retrieve."""
+    workflowTemplateId: ID!
+  ): WorkflowTemplate
+
+  """Get workflow templates with cursor pagination."""
+  workflowTemplates(
+    """The cursor to start the workflow template list from."""
+    cursor: String
+
+    """The page length for workflow templates."""
+    length: Int
+  ): WorkflowTemplatePageInfo!
+
+  """
+  Get the GPU summary of the workspace. Requires OWNER or WORKSPACE_ADMIN; the workspace comes from the route context only.
+  """
+  workspaceGpu: WorkspaceGpuSummary!
+}
+
+"""
+실행 시점 기준 상대 기간. SELECT_DATA 노드 실행 시 KST 자정 기준(오늘 포함) 절대 구간(from)으로 해석된다. 스케줄 실행마다 최근 구간이 자동 재계산된다.
+"""
+input RelativeDateOption {
+  """기간 크기(양의 정수). 예: 최근 7일 → 7"""
+  amount: Int!
+
+  """단위 (기본 DAY)."""
+  unit: RelativeDateUnit = DAY
+}
+
+"""상대 기간 단위 (SELECT_DATA 실행 시 절대 구간으로 해석)."""
+enum RelativeDateUnit {
+  DAY
+  WEEK
+}
+
+input RemoveDataMetaInput {
+  """The key of the metadata."""
+  key: String!
+
+  """The type of the metadata."""
+  type: DataMetaTypes!
+}
+
+"""Display type for a rendered template value."""
+enum RenderedTemplateValueType {
+  JSON
+  LIST
+  TEXT
+  UNKNOWN
+}
+
+input RequestRoleInput {
+  datasetId: String
+  roleType: RoleType!
+}
+
+"""The Role Object"""
+type Role {
+  """The created time of the role"""
+  createdAt: DateTime
+
+  """The datasetId of the assigned role"""
+  datasetId: String
+
+  """The description of the role"""
+  description: String
+
+  """The display Name of the user."""
+  displayName: String
+  name: String
+
+  """The type of the role"""
+  roleType: String
+}
+
+enum RoleType {
+  DatasetAdmin
+  DatasetCollaborator
+  DatasetMember
+  Owner
+  WorkspaceAdmin
+}
+
+"""
+The `SafeInt` scalar type represents non-fractional signed whole numeric values that are considered safe as defined by the ECMAScript specification.
+"""
+scalar SafeInt @specifiedBy(url: "https://www.ecma-international.org/ecma-262/#sec-number.issafeinteger")
+
+"""Scene information in data structure"""
+type Scene {
+  """The file download id for The selected scene entity."""
+  content: ContentBase!
+  id: ID!
+
+  """The meta data for The selected scene entity."""
+  meta: JSONObject
+
+  """The scene entity type. ex) Image"""
+  type: SceneType!
+}
+
+input SceneInput {
+  """The file download id for The selected scene entity."""
+  content: ContentBaseInput!
+
+  """The meta data for The selected scene entity."""
+  meta: JSONObject
+
+  """The scene entity type. ex) Image"""
+  type: SceneType!
+}
+
+"""The type of the scene in data structure."""
+enum SceneType {
+  ETC
+  IMAGE
+  MCAP
+  VIDEO
+}
+
+"""The type of the schema."""
+enum SchemaTypes {
+  Boolean
+  DateTime
+  JSONObject
+  Number
+  String
+}
+
+type SelectedFrame {
+  dataId: ID!
+  selectedFrameIndex: [String!]
+}
+
+"""A slice is a subset of a dataset that can be used to filter data."""
+type Slice {
+  """The aggregate caption of the slice."""
+  caption: String
+
+  """
+  Structured caption settings used to build the enhancement prompt for this slice (SPO-795).
+  """
+  captionSettings: DatasetCaptionSettings
+
+  """The date and time the slice was created."""
+  createdAt: DateTime
+
+  """The user who created the slice."""
+  createdBy: String
+
+  """The default data point in the slice."""
+  data: Data
+
+  """The number of data points in the slice."""
+  dataCount: Int
+
+  """The ID of the dataset that this slice belongs to."""
+  datasetId: ID!
+
+  """A description of the slice."""
+  description: String
+  id: ID!
+
+  """Whether the slice is pinned."""
+  isPinned: Boolean
+
+  """The additional metadata of the model."""
+  meta: JSONObject
+
+  """The name of the slice."""
+  name: String!
+
+  """The date and time the slice was last updated."""
+  updatedAt: DateTime
+
+  """The user who last updated the slice."""
+  updatedBy: String
+}
+
+"""
+C17: S3 content ids to delete with a slice. Ids still referenced elsewhere are left out.
+"""
+type SliceContentIdsToDelete {
+  """
+  Content ids of every annotation version of the slice, including rows left after removeDataFromSlice (ULID only, no duplicates). Delete each as a single content and as a folder content.
+  """
+  contentIds: [String!]!
+
+  """Whether the slice exists in the dataset."""
+  sliceExists: Boolean!
+}
+
+input SliceFilter {
+  """The options to filter slices by."""
+  must: SliceFilterOptions
+
+  """The options to exclude slices by."""
+  not: SliceFilterOptions
+}
+
+input SliceFilterOptions {
+  """The IDs of the slices to filter by."""
+  idIn: [ID!]
+
+  """The name of the slice."""
+  nameContains: String
+}
+
+input SliceOrderBy {
+  """The direction to order slices by."""
+  direction: OrderDirection!
+
+  """The field to order slices by."""
+  field: SliceOrderField!
+}
+
+"""The field to order slices by."""
+enum SliceOrderField {
+  createdAt
+  name
+}
+
+type SlicePageInfo {
+  """The cursor to use for pagination."""
+  next: String
+
+  """The slices that match the query."""
+  slices: [Slice!]!
+
+  """The total number of slices that match the query."""
+  totalCount: Int!
+}
+
+"""
+VLM question set of a slice in a VLM dataset. Created explicitly, e.g. from the dataset or another slice.
+"""
+type SliceVLMSettings {
+  createdAt: DateTime!
+  createdBy: String
+
+  """The ID of the dataset the slice belongs to."""
+  datasetId: ID!
+
+  """
+  The question set. Questions and evidence classes are only added, deleted or restored.
+  """
+  settings: JSONObject!
+
+  """The ID of the slice."""
+  sliceId: ID!
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+"""The system jwt authentication object"""
+type SystemAuthToken {
+  """The Access Token"""
+  accessToken: JWT!
+
+  """The Expiration Date"""
+  expiresIn: PositiveInt!
+
+  """The ID Token"""
+  idToken: JWT!
+
+  """The Scope for system token"""
+  scope: String!
+}
+
+"""Availability of task-level inspection data."""
+enum TaskDataAvailability {
+  AVAILABLE
+  EXPIRED
+  NOT_FOUND
+  UNAVAILABLE
+}
+
+type TaskDetail {
+  attempt: Int
+  availability: TaskDataAvailability!
+  durationSeconds: Float
+  endedAt: String
+  label: String
+  maxAttempts: Int
+  operator: String
+  rawState: String
+  runtime: TaskRuntimeDetail
+  startedAt: String
+  state: TaskState!
+  taskId: String!
+  taskRunIndex: Int
+  triggerRule: String
+}
+
+type TaskGroupEdge {
+  id: ID!
+  source: String!
+  target: String!
+}
+
+type TaskGroupNode {
+  id: ID!
+  instanceCount: Int!
+  instances: [TaskNode!]!
+  kind: TaskKind!
+  label: String!
+  state: TaskState!
+  taskId: String!
+}
+
+"""Normalized kind of a task."""
+enum TaskKind {
+  DAG_RUN
+  SENSOR
+  TASK
+  UNKNOWN
+}
+
+type TaskKubernetesRuntime {
+  containerName: String
+  image: String
+  namespace: String
+  nodeName: String
+  podName: String
+  podPhase: String
+}
+
+type TaskLogChunk {
+  attempt: Int
+  availability: TaskDataAvailability!
+  content: String
+  hasMore: Boolean!
+  isComplete: Boolean!
+  metadata: TaskLogMetadata
+  nextCursor: String
+  taskId: String!
+  taskRunIndex: Int
+}
+
+type TaskLogDownload {
+  attempt: Int
+  availability: TaskDataAvailability!
+  content: String
+  downloadFilename: String
+  isTail: Boolean!
+  lineCount: Int
+  taskId: String!
+  taskRunIndex: Int
+}
+
+type TaskLogMetadata {
+  endedAt: String
+  lineCount: Int
+  sizeBytes: Int
+  startedAt: String
+}
+
+type TaskMonitoring {
+  available: Boolean!
+  edges: [TaskGroupEdge!]!
+  linkedRun: TaskMonitoringLinkedRun
+  nodes: [TaskGroupNode!]!
+  rawRunState: String
+  runId: String
+  runState: TaskMonitoringRunState
+  runType: TaskMonitoringRunType!
+
+  """A safe reason code when the run graph is unavailable."""
+  unavailableReason: String
+}
+
+type TaskMonitoringLinkedRun {
+  runId: String!
+  runType: TaskMonitoringRunType!
+}
+
+"""Normalized state of the workflow run."""
+enum TaskMonitoringRunState {
+  CANCELED
+  FAILED
+  PENDING
+  RUNNING
+  SUCCESS
+  UNKNOWN
+}
+
+"""The run type for job history task monitoring."""
+enum TaskMonitoringRunType {
+  BASE
+  SUB
+}
+
+type TaskNode {
+  attempt: Int
+  durationSeconds: Float
+  endedAt: String
+  id: ID!
+  kind: TaskKind!
+  label: String!
+  rawState: String
+  startedAt: String
+  state: TaskState!
+  taskId: String!
+  taskRunIndex: Int
+}
+
+type TaskRenderedTemplateSection {
+  key: String!
+  value: JSON
+  valueType: RenderedTemplateValueType!
+}
+
+type TaskRenderedTemplates {
+  availability: TaskDataAvailability!
+  sections: [TaskRenderedTemplateSection!]!
+  taskId: String!
+  taskRunIndex: Int
+}
+
+type TaskRuntimeDetail {
+  executor: String
+  externalExecutorId: String
+  hostname: String
+  kubernetes: TaskKubernetesRuntime
+  pid: Int
+  pool: String
+  poolSlots: Float
+  priorityWeight: Float
+  queue: String
+  queuedAt: String
+  scheduledAt: String
+  unixname: String
+}
+
+"""Normalized state of a task run."""
+enum TaskState {
+  DEFERRED
+  FAILED
+  NONE
+  QUEUED
+  REMOVED
+  RESTARTING
+  RUNNING
+  SCHEDULED
+  SHUTDOWN
+  SKIPPED
+  SUCCESS
+  UNKNOWN
+  UPSTREAM_FAILED
+  UP_FOR_RESCHEDULE
+  UP_FOR_RETRY
+}
+
+"""The training annotations entity."""
+type TrainingAnnotations {
+  annotationType: String!
+  className: String
+  trainCount: Int
+  validationCount: Int
+}
+
+"""The training annotations input."""
+input TrainingAnnotationsInput {
+  annotationType: String!
+  className: String
+  trainCount: Int
+  validationCount: Int
+}
+
+"""The training report Item entity."""
+type TrainingReportItem {
+  contentId: ID
+  createdAt: DateTime
+  createdBy: String
+  description: String
+  id: ID!
+  modelId: ID!
+  name: String!
+  type: AnalyticsReportItemType!
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+input UpdateSceneInput {
+  """The file download id for The selected scene entity."""
+  content: ContentBaseInput
+
+  """The meta data for The selected scene entity."""
+  meta: JSONObject
+
+  """The metadata for The selected scene entity."""
+  type: SceneType
+}
+
+"""The User Object"""
+type User {
+  """The Avatar URL for the user"""
+  avatar: String
+  createdAt: DateTime
+  deletedAt: DateTime
+
+  """The display Name of the user"""
+  displayName: String
+
+  """The email of the user."""
+  email: EmailAddress!
+
+  """The groups of the user"""
+  groups: [Group!]
+  id: ID!
+
+  """The roles of the user"""
+  roles: [Role!]
+  status: UserStatus
+  updatedAt: DateTime
+}
+
+input UserFilterOption {
+  contains: String
+  equals: String
+  exists: Boolean
+  in: [String!]
+}
+
+"""The User object page response object"""
+type UserPageInfo {
+  """The total number of the users"""
+  totalCount: NonNegativeInt!
+
+  """The list of the user object"""
+  users: [User!]!
+}
+
+enum UserStatus {
+  Active
+  Suspended
+}
+
+"""
+A single workflow handler registry entry. Mirrors docs/contract/schema/workflowHandlerRegistry.ts. The builder uses this to enumerate node types and their required HandlerPlan.target fields.
+"""
+type WorkflowHandlerRegistryEntry {
+  """
+  Whether this node type produces a HandlerPlan. False for in-engine node types (START, CONDITION).
+  """
+  dispatchEligible: Boolean!
+
+  """
+  Opaque handler reference dispatched to Operations Manager. Empty for non-dispatch node types (START, CONDITION).
+  """
+  handlerRef: String!
+  nodeType: WorkflowNodeType!
+
+  """
+  Target identifiers this handler requires at dispatch time. Drives the input form on the workflow builder.
+  """
+  requiredTargetFields: [WorkflowTargetField!]!
+  runtime: WorkflowHandlerRuntime!
+}
+
+"""The worker runtime that hosts the workflow handler."""
+enum WorkflowHandlerRuntime {
+  NODE_WORKER
+  PYTHON_WORKER
+}
+
+"""The persisted workflow instance entity (configured pipeline)."""
+type WorkflowInstance {
+  createdAt: DateTime
+  createdBy: String
+
+  """
+  The dataset this instance belongs to. Source of truth for the run ambient datasetId. Nullable for legacy rows pending backfill.
+  """
+  datasetId: ID
+  description: String
+  globalBindings: JSONObject
+  id: ID!
+
+  """Whether the instance is pinned to the top of lists."""
+  isPinned: Boolean!
+  name: String!
+
+  """
+  Optional instance-scoped workflow spec override. When present, takes precedence over the template spec for new runs.
+  """
+  spec: WorkflowSpec
+  status: WorkflowInstanceStatus!
+  triggerConfig: JSONObject
+  updatedAt: DateTime
+  updatedBy: String
+  workflowTemplateId: ID!
+}
+
+"""A paginated workflow instance list response."""
+type WorkflowInstancePageInfo {
+  """The workflow instances for the current page."""
+  items: [WorkflowInstance!]
+
+  """The next cursor when another page exists."""
+  next: String
+
+  """The total workflow instance count."""
+  totalCount: Int
+}
+
+"""The execution status of a workflow instance."""
+enum WorkflowInstanceStatus {
+  ACTIVE
+  PAUSED
+}
+
+"""The execution record for a single workflow node within a workflow run."""
+type WorkflowNodeExecution {
+  completedAt: DateTime
+  createdAt: DateTime
+  errorReason: String
+  id: ID!
+  inputSnapshot: JSONObject
+  jobHistoryId: ID
+  jobType: String
+  nodeKey: String!
+  nodeType: WorkflowNodeType!
+  outputSnapshot: JSONObject
+  sequenceNo: Int!
+  startedAt: DateTime
+  status: WorkflowNodeExecutionStatus!
+  updatedAt: DateTime
+  workflowNodeSnapshotId: ID
+  workflowRunId: ID!
+}
+
+"""The execution status of a workflow node."""
+enum WorkflowNodeExecutionStatus {
+  COMPLETED
+  FAILED
+  QUEUED
+  RUNNING
+  SKIPPED
+}
+
+"""The persisted workflow node snapshot entity."""
+type WorkflowNodeSnapshot {
+  conditionSpec: JSONObject
+  connectedNextNodes: [String!]
+  createdAt: DateTime
+  dataSelection: JSONObject
+  description: String
+  id: ID!
+  inputBindingConfig: JSONObject
+  jobType: String
+  name: String!
+  nodeKey: String!
+  nodeType: WorkflowNodeType!
+  previousNodeKeys: [String!]
+  routing: JSONObject
+  updatedAt: DateTime
+  workflowRunSnapshotId: ID!
+}
+
+"""A single workflow node definition in the workflow JSON spec."""
+type WorkflowNodeSpec {
+  """
+  Binding rules that map literal / global / previous node output values into child job input.
+  """
+  bindings: JSONObject
+
+  """
+  Condition evaluation spec for CONDITION nodes (logicalOperator, conditions array).
+  """
+  conditionSpec: JSONObject
+
+  """
+  Data selection config for SELECT_DATA nodes — user-configured on the node (no input bindings): { filter, orderBy?, limit? }.
+  """
+  dataSelection: JSONObject
+
+  """
+  Optional longer description of the node. Used for documentation purposes only; not interpreted by the engine.
+  """
+  description: String
+
+  """
+  The Job.type lookup key used to resolve the child job. Required for node types that dispatch a child job (AUTO_LABEL/TRAIN/DIAGNOSE) and forbidden for CONDITION nodes.
+  """
+  jobType: String
+
+  """A unique key that identifies the node within a workflow."""
+  key: String!
+
+  """
+  Display name of the node shown in the UI and in run history. Required so reviewers can tell what the node does without inspecting nodeType / handlerRef.
+  """
+  name: String!
+
+  """The semantic type of the workflow node."""
+  nodeType: WorkflowNodeType!
+
+  """
+  Array of upstream node keys that must ALL complete before this node can run (Fan-In / Wait-All).
+  """
+  previousNodeKeys: [String!]
+
+  """
+  Required workflow output keys that must be present when the node completes.
+  """
+  requiredOutputs: [String!]
+
+  """Routing config for CONDITION nodes: { onTrue: [...], onFalse: [...] }."""
+  routing: JSONObject
+}
+
+input WorkflowNodeSpecInput {
+  """
+  Binding rules that map literal / global / previous node output values into child job input.
+  """
+  bindings: JSONObject
+
+  """
+  Condition evaluation spec for CONDITION nodes (logicalOperator, conditions array).
+  """
+  conditionSpec: JSONObject
+
+  """
+  Data selection config for SELECT_DATA nodes — user-configured on the node (no input bindings): { filter, orderBy?, limit? }.
+  """
+  dataSelection: JSONObject
+
+  """
+  Optional longer description of the node. Used for documentation purposes only; not interpreted by the engine.
+  """
+  description: String
+
+  """
+  The Job.type lookup key used to resolve the child job. Required for node types that dispatch a child job (AUTO_LABEL/TRAIN/DIAGNOSE) and forbidden for CONDITION nodes.
+  """
+  jobType: String
+
+  """A unique key that identifies the node within a workflow."""
+  key: String!
+
+  """
+  Display name of the node shown in the UI and in run history. Required so reviewers can tell what the node does without inspecting nodeType / handlerRef.
+  """
+  name: String!
+
+  """The semantic type of the workflow node."""
+  nodeType: WorkflowNodeType!
+
+  """
+  Array of upstream node keys that must ALL complete before this node can run (Fan-In / Wait-All).
+  """
+  previousNodeKeys: [String!]
+
+  """
+  Required workflow output keys that must be present when the node completes.
+  """
+  requiredOutputs: [String!]
+
+  """Routing config for CONDITION nodes: { onTrue: [...], onFalse: [...] }."""
+  routing: JSONObject
+}
+
+"""The supported workflow node types for the MVP runtime."""
+enum WorkflowNodeType {
+  AUTO_LABEL
+  CONDITION
+  DIAGNOSE
+  SELECT_DATA
+  SLICE
+  START
+  TRAIN
+}
+
+"""The persisted workflow run entity (execution history)."""
+type WorkflowRun {
+  """
+  Optional client-supplied idempotency token. When provided, repeated startWorkflowRun calls with the same (workflowInstanceId, clientToken) return the existing run instead of creating a duplicate.
+  """
+  clientToken: String
+  completedAt: DateTime
+  createdAt: DateTime
+  createdBy: String
+  currentNodeKey: String
+
+  """Workflow description captured from the instance at run start."""
+  description: String
+  id: ID!
+  lastNodeExecutionId: ID
+
+  """
+  Workflow name captured from the instance at run start (execution-time). Stable for history — 이후 instance rename/삭제에 영향받지 않음.
+  """
+  name: String
+  nodeExecutions: [WorkflowNodeExecution!]
+  startedAt: DateTime
+  startedBy: String
+  status: WorkflowRunStatus!
+  stopReason: String
+  updatedAt: DateTime
+  updatedBy: String
+  workflowInstanceId: ID!
+  workflowRunSnapshot: WorkflowRunSnapshot
+}
+
+"""A paginated workflow run list response."""
+type WorkflowRunPageInfo {
+  """The workflow runs for the current page."""
+  items: [WorkflowRun!]
+
+  """The next cursor when another page exists."""
+  next: String
+
+  """The total workflow run count."""
+  totalCount: Int
+}
+
+"""An execution-owned workflow snapshot (immutable)."""
+type WorkflowRunSnapshot {
+  createdAt: DateTime
+  createdBy: String
+  description: String
+  globalBindings: JSONObject
+  id: ID!
+  name: String!
+  nodes: [WorkflowNodeSnapshot!]
+  spec: WorkflowSpec
+  startNodeKey: String
+  updatedAt: DateTime
+  updatedBy: String
+  workflowRunId: ID!
+}
+
+"""The execution status of a workflow run."""
+enum WorkflowRunStatus {
+  COMPLETED
+  CREATED
+  FAILED
+  QUEUED
+  RUNNING
+  STOPPED
+}
+
+"""
+The JSON-backed workflow definition spec stored in the workflow definition.
+"""
+type WorkflowSpec {
+  """Workflow description."""
+  description: String
+
+  """Logical workflow key shared by multiple versions."""
+  key: String!
+
+  """Display name of the workflow."""
+  name: String!
+
+  """Ordered workflow node specs for the phase 1 linear runtime."""
+  nodes: [WorkflowNodeSpec!]!
+
+  """
+  The node key that should be executed first. Optional on input — the system creates the single START node and sets this automatically; client specs should omit it (and must not declare a START node).
+  """
+  startNodeKey: String
+}
+
+input WorkflowSpecInput {
+  """Workflow description."""
+  description: String
+
+  """Logical workflow key shared by multiple versions."""
+  key: String!
+
+  """Display name of the workflow."""
+  name: String!
+
+  """Ordered workflow node specs for the phase 1 linear runtime."""
+  nodes: [WorkflowNodeSpecInput!]!
+
+  """
+  The node key that should be executed first. Optional on input — the system creates the single START node and sets this automatically; client specs should omit it (and must not declare a START node).
+  """
+  startNodeKey: String
+}
+
+"""
+Required target identifier fields for a workflow node HandlerPlan.target.
+"""
+enum WorkflowTargetField {
+  DATASET_ID
+  DIAGNOSIS_ID
+  MODEL_ID
+  SLICE_ID
+}
+
+"""A reusable workflow authoring template."""
+type WorkflowTemplate {
+  createdAt: DateTime
+  createdBy: String
+  description: String
+  id: ID!
+  key: String!
+  name: String!
+  spec: WorkflowSpec
+  startNodeKey: String
+  updatedAt: DateTime
+  updatedBy: String
+}
+
+"""A paginated workflow template list response."""
+type WorkflowTemplatePageInfo {
+  """The workflow templates for the current page."""
+  items: [WorkflowTemplate!]
+
+  """The next cursor when another page exists."""
+  next: String
+
+  """The total workflow template count."""
+  totalCount: Int
+}
+
+"""A GPU allocation on a card by activity type."""
+type WorkspaceGpuAllocation {
+  """The stable Product activity type."""
+  activityType: String!
+
+  """The reserved core percent."""
+  reservedCorePercent: Int!
+
+  """The reserved memory in GB."""
+  reservedMemGb: Float!
+
+  """The GPU request state."""
+  state: GpuRequestState!
+}
+
+"""A GPU card of the workspace."""
+type WorkspaceGpuCard {
+  """
+  NVML v2 allocated memory in GB. Null unless the source is a verified V2_SPLIT.
+  """
+  actualAllocatedMemGb: Float
+
+  """The observed core percent. Null without telemetry."""
+  actualCorePercent: Float
+
+  """
+  The allocation in GB attributable to managed workloads. Null unless the V2_SPLIT attribution is complete.
+  """
+  actualManagedMemGb: Float
+
+  """
+  Backward-compatible device-used diagnostic in GB. It includes driver/system-reserved memory and is not workload-only. Null without telemetry.
+  """
+  actualMemGb: Float
+
+  """When the telemetry was observed."""
+  actualObservedAt: DateTime
+
+  """
+  Non-managed or unattributed allocation in GB. It does not identify a process. Null unless the V2_SPLIT attribution is complete.
+  """
+  actualUnmanagedMemGb: Float
+
+  """
+  The memory in GB the scheduler can actually allocate on the card. An inventory fact, not telemetry. Null when the server does not report it.
+  """
+  allocatableMemGb: Float
+
+  """The allocations on the card."""
+  allocations: [WorkspaceGpuAllocation!]!
+
+  """The stable anonymous display name of the card. Not a UUID."""
+  displayName: String!
+
+  """
+  NVML v2 driver/system-reserved memory in GB. Null unless the source is a verified V2_SPLIT.
+  """
+  driverReservedMemGb: Float
+
+  """
+  What the device plugin has allocated on the card. A separate layer from reserved and actual.
+  """
+  hamiAllocated: WorkspaceGpuHamiAllocation!
+
+  """
+  V2_SPLIT for verified allocated/reserved values, V1_COMBINED for legacy total-only telemetry, or null when source quality is unknown.
+  """
+  memoryAccountingMode: GpuMemoryAccountingMode
+
+  """The card model name."""
+  modelName: String!
+
+  """The physical memory in GB."""
+  physicalMemGb: Float!
+
+  """The reserved core percent."""
+  reservedCorePercent: Int!
+
+  """The reserved memory in GB."""
+  reservedMemGb: Float!
+
+  """
+  The scheduler padding in GB held back from the physical capacity (physicalMemGb - allocatableMemGb). Categorically different from driverReservedMemGb; never sum or substitute the two. Null when the server does not report it.
+  """
+  safetyBufferMemGb: Float
+
+  """
+  Whether non-managed or unattributed allocation was detected. Null unless the V2_SPLIT attribution is complete.
+  """
+  unmanagedUsageWarning: Boolean
+}
+
+"""
+The resources the device plugin (HAMi) has allocated on a card. Distinct from reserved and actual.
+"""
+type WorkspaceGpuHamiAllocation {
+  """The allocated core percent. Null when unknown."""
+  corePercent: Float
+
+  """The allocated memory in GB. Null when unknown."""
+  memGb: Float
+
+  """When the allocation was observed."""
+  observedAt: DateTime
+
+  """The readiness of the allocation view."""
+  readiness: GpuReadinessState!
+}
+
+"""The GPU summary of the workspace."""
+type WorkspaceGpuSummary {
+  """The active drain fence count."""
+  activeDrainFenceCount: Int!
+
+  """The requests waiting on capacity."""
+  capacityWaitCount: Int!
+
+  """The GPU cards. Empty when unavailable."""
+  cards: [WorkspaceGpuCard!]!
+
+  """When the summary was observed."""
+  observedAt: DateTime
+
+  """The requests waiting on quota."""
+  quotaWaitCount: Int!
+
+  """The readiness of the summary."""
+  readiness: GpuReadinessState!
+
+  """A safe reason code when the summary is unavailable."""
+  unavailableReason: String
+}

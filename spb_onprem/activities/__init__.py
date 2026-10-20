@@ -1,7 +1,9 @@
 from .service import ActivityService
+from .deletion import DeletionActivityType
 from .entities import (
     ActivityHistory,
     ActivityStatus,
+    TERMINAL_ACTIVITY_STATUSES,
     RenderedTemplateValueType,
     TaskDataAvailability,
     TaskDetail,
@@ -26,8 +28,10 @@ from .entities import (
 
 __all__ = (
     "ActivityService",
+    "DeletionActivityType",
     "ActivityHistory", 
     "ActivityStatus",
+    "TERMINAL_ACTIVITY_STATUSES",
     "RenderedTemplateValueType",
     "TaskDataAvailability",
     "TaskDetail",

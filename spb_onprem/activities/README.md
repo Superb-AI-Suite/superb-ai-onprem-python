@@ -127,6 +127,44 @@ history = ActivityHistory(
 )
 ```
 
+## 🗑️ Deletion Activities (2.0.0)
+
+The delete functions start an activity instead of deleting rows at once, so the
+files in storage are deleted too (`remove_data_from_slice` deletes no files; it only
+takes data out of a slice). Each returns the started `ActivityHistory`.
+
+| Function | Activity type | Parameters sent |
+| --- | --- | --- |
+| `ModelService.delete_models` | `DELETE_MODEL` | `dataset_id`, `model_filter` |
+| `DiagnosisService.delete_diagnoses` | `DELETE_DIAGNOSIS` | `dataset_id`, `diagnosis_filter` |
+| `ReportService.delete_analytics_reports` | `DELETE_ANALYTICS_REPORT` | `dataset_id`, `analytics_report_filter` |
+| `SliceService.delete_slices` | `DELETE_SLICE` | `dataset_id`, `slice_filter` |
+| `DataService.delete_data` | `DELETE_DATA` | `dataset_id`, `data_filter` |
+| `DataService.remove_data_from_slice` | `REMOVE_DATA_FROM_SLICE` | `dataset_id`, `slice_id`, `data_filter` |
+| `DatasetService.delete_dataset` | `DELETE_DATASET` | `dataset_id` |
+| `ModelDeploymentService.delete_model_deployments` | `DELETE_MODEL_DEPLOYMENT` | `dataset_id`, `deployment_filter` |
+
+IDs are sent as the filter `{"must": {"idIn": [...]}}`. A filter model is sent with
+its camelCase aliases (`{"must": {...}, "not": {...}}`). The deprecated singular
+functions (`delete_model`, `delete_diagnosis`, `delete_analytics_report`,
+`delete_slice`) call the plural one with one ID.
+
+An admin of the dataset (Owner, WorkspaceAdmin or DATASET-ADMIN) starts it at
+once; another user submits it as `AWAITING_APPROVAL`. `ContentService.delete_content`
+is not an activity (a content is a file, not an entity); it raises when storage fails.
+
+```python
+from spb_onprem import ActivityService, ActivityStatus, DataService
+
+history = DataService().delete_data(dataset_id="dataset_123", data_ids=["data_1", "data_2"])
+
+# Optional: block until it ends (SUCCESS, FAILED, CANCELED or REJECTED).
+# AWAITING_APPROVAL is not an end; TimeoutError reports the last status.
+done = ActivityService().wait_for_activity(history.id, dataset_id="dataset_123", timeout=600, poll_interval=5)
+if done.status != ActivityStatus.SUCCESS:
+    print(done.status, done.meta)
+```
+
 ## 🔗 Related Services
 
 - **[📊 Data Service](../data/README.md)** - Manage data items processed by activities

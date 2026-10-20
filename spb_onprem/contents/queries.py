@@ -3,6 +3,7 @@ from .params import (
     get_download_url_params,
     delete_content_params,
     get_upload_url_params,
+    get_update_url_params,
     get_file_download_url_params,
 )
 
@@ -36,6 +37,26 @@ class Queries:
         "variables": get_upload_url_params
     }
     
+    GET_UPDATE_URL = {
+        "name": "generateContentUpdateURL",
+        "query": '''
+            mutation GenerateContentUpdateURL($id: ID!, $content_type: String) {
+                generateContentUpdateURL(id: $id, contentType: $content_type)
+            }
+        ''',
+        "variables": get_update_url_params
+    }
+
+    GET_HEAD_URL = {
+        "name": "generateContentHeadURL",
+        "query": '''
+            mutation GenerateContentHeadURL($id: ID!) {
+                generateContentHeadURL(id: $id)
+            }
+        ''',
+        "variables": get_download_url_params
+    }
+
     GET_DOWNLOAD_URL = {
         "name": "generateContentDownloadURL",
         "query": '''

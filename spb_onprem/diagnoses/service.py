@@ -3,6 +3,14 @@ from typing import Optional, List, Tuple, Union
 from spb_onprem.base_service import BaseService
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError
+from spb_onprem.activities.deletion import (
+    DeletionActivityType,
+    deletion_filter,
+    require_id,
+    start_deletion_activity,
+    warn_deprecated,
+)
+from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.contents.service import ContentService
 from spb_onprem.charts import ChartDataResult
 
@@ -254,36 +262,87 @@ class DiagnosisService(BaseService):
         )
         return Diagnosis.model_validate(response)
 
+    def delete_diagnoses(
+        self,
+        dataset_id: str,
+        diagnosis_ids: Optional[List[str]] = None,
+        diagnosis_filter: Optional[Union[DiagnosisFilter, dict]] = None,
+    ) -> ActivityHistory:
+        """Start deleting diagnoses.
+
+        Starts one ``DELETE_DIAGNOSIS`` activity for every diagnosis that
+        ``diagnosis_ids`` or ``diagnosis_filter`` selects (pass exactly one).
+        The activity deletes each diagnosis, its report items and their files.
+        To block until it ends, use ``ActivityService.wait_for_activity``.
+        Targets are found when the activity runs. If none match or they are
+        already deleted, it succeeds without deleting anything. A target that
+        cannot be deleted then (still running) is not refused at request time; the
+        activity ends FAILED (see its ``status`` and ``meta``).
+        A caller who is not an admin of the dataset (Owner, WorkspaceAdmin or
+        DATASET-ADMIN) submits it as AWAITING_APPROVAL.
+
+        Args:
+            dataset_id (str): The dataset ID.
+            diagnosis_ids (Optional[List[str]]): The diagnosis IDs.
+            diagnosis_filter (Optional[DiagnosisFilter | dict]): A DiagnosisFilter
+                (``{"must": ..., "not": ...}``). A dict is sent as it is, in
+                the GraphQL field names. A filter without a condition is refused.
+                A filter with only ``not`` selects every target except those.
+
+        Raises:
+            BadParameterError: If dataset_id is missing.
+            BadDeletionTargetError: If none or both of diagnosis_ids and
+                diagnosis_filter are given, or they are empty (also a
+                ValueError).
+            InvalidInputError: If the platform refuses the request. It checks
+                only keys, types and required values then; other filter
+                problems (e.g. an empty ``idIn``) are checked when the activity
+                runs and would fail it, so the SDK refuses those before sending
+                (BadDeletionTargetError).
+            UnknownError: Other request errors (e.g. no role in the dataset).
+
+        Returns:
+            ActivityHistory: The started activity.
+        """
+        require_id(dataset_id, "dataset_id")
+        parameters = {
+            "dataset_id": dataset_id,
+            "diagnosis_filter": deletion_filter(
+                ids=diagnosis_ids,
+                ids_name="diagnosis_ids",
+                filter=diagnosis_filter,
+                filter_name="diagnosis_filter",
+                filter_types=(DiagnosisFilter,),
+                status_values=[status.value for status in DiagnosisStatus],
+            ),
+        }
+        return start_deletion_activity(
+            self, dataset_id, DeletionActivityType.DELETE_DIAGNOSIS, parameters
+        )
+
     def delete_diagnosis(
         self,
         dataset_id: str,
         diagnosis_id: str,
-    ) -> bool:
-        """diagnosis 삭제.
+    ) -> ActivityHistory:
+        """Start deleting one diagnosis. Deprecated: use ``delete_diagnoses``.
 
-        Args:
-            dataset_id (str): Dataset ID.
-            diagnosis_id (str): Diagnosis ID.
+        It will be removed in the next major version. It warns with
+        DeprecationWarning and calls ``delete_diagnoses(dataset_id, diagnosis_ids=[diagnosis_id])``,
+        so it starts one activity with the filter ``{"must": {"idIn": [diagnosis_id]}}``.
+        Calling it in a loop starts one activity per diagnosis; pass all the IDs to
+        ``delete_diagnoses`` instead.
 
         Raises:
-            BadParameterError: dataset_id 또는 diagnosis_id 미제공 시.
+            BadParameterError: If dataset_id or diagnosis_id is missing.
 
         Returns:
-            bool: 삭제 성공 여부.
+            ActivityHistory: The started activity.
         """
-        if dataset_id is None:
-            raise BadParameterError("dataset_id is required.")
-        if diagnosis_id is None:
-            raise BadParameterError("diagnosis_id is required.")
-
-        response = self.request_gql(
-            Queries.DELETE,
-            Queries.DELETE["variables"](
-                dataset_id=dataset_id,
-                diagnosis_id=diagnosis_id,
-            ),
-        )
-        return bool(response)
+        warn_deprecated("delete_diagnosis", "delete_diagnoses", "diagnosis", "diagnosis_ids", "diagnosis_filter")
+        require_id(dataset_id, "dataset_id")
+        require_id(diagnosis_id, "diagnosis_id")
+        return self.delete_diagnoses(dataset_id, diagnosis_ids=[diagnosis_id])
 
     def create_diagnosis_report_item(
         self,
@@ -470,6 +529,7 @@ class DiagnosisService(BaseService):
         # Upload the JSON data
         self.request(
             method="PUT",
+            auth=False,  # presigned storage URL: no platform credentials
             url=upload_url,
             headers={'Content-Type': 'application/json'},
             json_data=json_data,

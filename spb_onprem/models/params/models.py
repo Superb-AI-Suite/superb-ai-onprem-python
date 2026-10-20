@@ -17,6 +17,11 @@ class ModelFilterOptions(CustomBaseModel):
     task_type_in: Optional[List[ModelTaskType]] = Field(None, alias="taskTypeIn")
     created_by_in: Optional[List[str]] = Field(None, alias="createdByIn")
     score_key_in: Optional[List[str]] = Field(None, alias="scoreKeyIn")
+    # Deployment definition link (platforms with model deployments only).
+    definition_id_in: Optional[List[str]] = Field(None, alias="definitionIdIn")
+    definition_id_is_null: Optional[bool] = Field(
+        None, alias="definitionIdIsNull", description="True: models without a definition"
+    )
 
 
 class ModelFilter(CustomBaseModel):
