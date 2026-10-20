@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import Optional, Tuple, Union
 
 from spb_onprem.base_service import BaseService
+from spb_onprem.exceptions import BadParameterError
 from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
@@ -162,6 +163,94 @@ class ContentService(BaseService):
         content = response['content']
         return BaseContent.model_validate(content)
     
+    def get_update_url(self, content_id: str, content_type: Optional[str] = None) -> str:
+        '''
+        Gets a presigned URL to overwrite an existing content (generateContentUpdateURL).
+
+        The web editor saves an annotation this way: the content keeps its ID,
+        so nothing points at a new content and no old content is left behind.
+
+        Args:
+            content_id (str): The ID of the content to overwrite.
+            content_type (Optional[str]): The MIME type the PUT will send. It is
+                part of the signature, so send the same Content-Type.
+
+        Returns:
+            str: The presigned PUT URL. Its query is a credential: do not log it.
+        '''
+        return self.request_gql(
+            query=Queries.GET_UPDATE_URL,
+            variables=Queries.GET_UPDATE_URL["variables"](content_id, content_type),
+        )
+
+    def update_content_with_data(
+        self,
+        content_id: str,
+        file_data: Union[BytesIO, bytes],
+        content_type: str,
+    ) -> str:
+        '''
+        Overwrites an existing content with new data, keeping its ID.
+
+        Args:
+            content_id (str): The ID of the content to overwrite.
+            file_data (BytesIO | bytes): The new data.
+            content_type (str): The MIME type of the data (e.g. "application/json").
+
+        Raises:
+            BadParameterError: If content_id or content_type is missing.
+
+        Returns:
+            str: The content ID (unchanged).
+        '''
+        if not content_type:
+            raise BadParameterError("content_type is required.")
+        if isinstance(file_data, BytesIO):
+            file_data.seek(0)
+            body = file_data.read()
+        elif isinstance(file_data, (bytes, bytearray)):
+            body = bytes(file_data)
+        else:
+            raise BadParameterError("file_data must be BytesIO or bytes.")
+        update_url = self.get_update_url(content_id, content_type)
+        self.request(
+            method="PUT",
+            auth=False,  # presigned storage URL: no platform credentials
+            url=update_url,
+            headers={'Content-Type': content_type},
+            data=body,
+        )
+        return content_id
+
+    def update_content(self, content_id: str, file_path: str) -> str:
+        '''
+        Overwrites an existing content with a file, keeping its ID.
+
+        Args:
+            content_id (str): The ID of the content to overwrite.
+            file_path (str): The file to upload (its type is guessed from the name).
+
+        Returns:
+            str: The content ID (unchanged).
+        '''
+        content_type = mimetypes.guess_type(file_path)[0] or "application/octet-stream"
+        with open(file_path, 'rb') as f:
+            return self.update_content_with_data(content_id, f.read(), content_type)
+
+    def update_json_content(self, content_id: str, data: Union[dict, list]) -> str:
+        '''
+        Overwrites an existing content with JSON (e.g. an annotation), keeping its ID.
+
+        Args:
+            content_id (str): The ID of the content to overwrite.
+            data (dict | list): The JSON data.
+
+        Returns:
+            str: The content ID (unchanged).
+        '''
+        body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        return self.update_content_with_data(content_id, body, "application/json")
+
     def create_folder_content(self) -> str:
         '''
         Creates a folder content ID for S3 upload.

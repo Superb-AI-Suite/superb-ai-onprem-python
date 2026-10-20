@@ -670,6 +670,61 @@ class DataService(BaseService):
         data = Data.model_validate(response)
         return data
 
+    def overwrite_slice_annotation_version_content(
+        self,
+        dataset_id: str,
+        data_id: str,
+        slice_id: str,
+        version_id: str,
+        annotation: Union[dict, list, bytes],
+        content_type: str = "application/json",
+    ) -> str:
+        """Overwrite the file of a slice annotation version in place, like the web editor.
+
+        The version keeps its content ID, so no new content is created and no
+        old one is left behind (unlike creating a content and calling
+        ``update_slice_annotation_version(content_id=...)``).
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            slice_id (str): The slice id.
+            version_id (str): The slice annotation version id.
+            annotation (dict | list | bytes): The new file: JSON data, or bytes
+                of ``content_type``.
+            content_type (str): The MIME type of bytes. JSON data is always
+                sent as "application/json".
+
+        Raises:
+            BadParameterError: If an id is missing, or the data, slice, version
+                or its content is not found.
+
+        Returns:
+            str: The content ID that was overwritten (unchanged).
+        """
+        for name, value in (("dataset_id", dataset_id), ("data_id", data_id),
+                            ("slice_id", slice_id), ("version_id", version_id)):
+            if value is None:
+                raise BadParameterError(f"{name} is required.")
+        data = self.get_data(dataset_id=dataset_id, data_id=data_id)
+        entry = next((item for item in (data.slices or []) if item.id == slice_id), None)
+        if entry is None:
+            raise BadParameterError(f"data {data_id} is not in slice {slice_id}.")
+        versions = (entry.annotation.versions if entry.annotation else None) or []
+        version = next((item for item in versions if item.id == version_id), None)
+        if version is None:
+            raise BadParameterError(f"slice {slice_id} of data {data_id} has no annotation version {version_id}.")
+        if version.content is None or not version.content.id:
+            raise BadParameterError(f"annotation version {version_id} has no content to overwrite.")
+
+        # Imported here: the contents module is a sibling service.
+        from spb_onprem.contents.service import ContentService
+
+        contents = ContentService()
+        if isinstance(annotation, (bytes, bytearray)):
+            return contents.update_content_with_data(version.content.id, bytes(annotation), content_type)
+        return contents.update_json_content(version.content.id, annotation)
+
     def delete_slice_annotation_version(
         self,
         dataset_id: str,
