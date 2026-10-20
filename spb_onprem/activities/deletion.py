@@ -65,15 +65,27 @@ def has_condition(value: Any) -> bool:
         return any(has_condition(item) for item in value.values())
     if isinstance(value, (list, tuple)):
         return len(value) > 0
-    return value is not None and value != ""
+    if isinstance(value, str):
+        return value.strip() != ""
+    return value is not None
+
+
+#: The platform reads an empty or blank text search as "no condition", so it
+#: would select everything. Same keys as zenith and the deletion DAGs.
+TEXT_MATCH_KEYS = ("nameContains", "keyContains", "titleContains")
 
 
 def check_deletion_filter(value: Mapping[str, Any], filter_name: str) -> None:
     """Refuse a deletion filter that selects nothing on purpose or everything by accident.
 
-    Refused: ``{}``, ``must: null``, ``must.idIn: []`` (the same as the DAGs)
-    and any filter without a condition, such as ``{"must": {}}`` (stricter
-    than the DAGs).
+    Refused, the same as zenith and the deletion DAGs: ``{}``, ``must: null``,
+    a ``must`` that is not an object, ``must.idIn: []`` and a blank
+    ``must.nameContains`` / ``keyContains`` / ``titleContains`` (empty or
+    only spaces). Also refused, stricter than the DAGs: any filter without a
+    condition, such as ``{"must": {}}``.
+
+    A filter with only ``not`` (for example ``{"not": {"idIn": [x]}}``) selects
+    every target except those, as on the platform.
     """
     if not value:
         raise BadDeletionTargetError(f"{filter_name} must not be empty.")
@@ -81,8 +93,14 @@ def check_deletion_filter(value: Mapping[str, Any], filter_name: str) -> None:
         must = value["must"]
         if must is None:
             raise BadDeletionTargetError(f"{filter_name}.must must not be null.")
-        if isinstance(must, Mapping) and "idIn" in must and not must["idIn"]:
+        if not isinstance(must, Mapping):
+            raise BadDeletionTargetError(f"{filter_name}.must must be an object.")
+        if "idIn" in must and not must["idIn"]:
             raise BadDeletionTargetError(f"{filter_name}.must.idIn must not be empty.")
+        for key in TEXT_MATCH_KEYS:
+            text = must.get(key)
+            if isinstance(text, str) and not text.strip():
+                raise BadDeletionTargetError(f"{filter_name}.must.{key} must not be blank.")
     if not has_condition(value):
         raise BadDeletionTargetError(
             f"{filter_name} has no condition. An empty filter would select every target."

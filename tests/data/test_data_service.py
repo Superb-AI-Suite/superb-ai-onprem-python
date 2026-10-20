@@ -125,6 +125,9 @@ class TestDataService:
             {"data_filter": DataListFilter()},
             {"data_filter": DataListFilter(must_filter=DataFilterOptions())},
             {"data_filter": "must"},
+            {"data_filter": {"must": {"keyContains": "   "}}},
+            {"data_filter": DataListFilter(must_filter=DataFilterOptions(key_contains=" "))},
+            {"data_filter": {"must": {"keyContains": "", "idIn": ["a"]}}},
         ],
     )
     def test_delete_data_refuses_empty_targets(self, kwargs):

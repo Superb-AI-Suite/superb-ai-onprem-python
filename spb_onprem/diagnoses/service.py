@@ -283,6 +283,7 @@ class DiagnosisService(BaseService):
             diagnosis_filter (Optional[DiagnosisFilter | dict]): A DiagnosisFilter
                 (``{"must": ..., "not": ...}``). A dict is sent as it is, in
                 the GraphQL field names. A filter without a condition is refused.
+                A filter with only ``not`` selects every target except those.
 
         Raises:
             BadParameterError: If dataset_id is missing.

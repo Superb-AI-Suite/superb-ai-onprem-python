@@ -120,6 +120,13 @@ class TestEntityDeletion:
         {"filter": {"must": {"idIn": []}, "not": {"nameContains": "x"}}},
         {"filter": {"must": {}}},
         {"filter": "must"},
+        {"filter": {"must": "idIn"}},
+        # A blank text search reads as "no condition" on the platform (selects everything).
+        {"filter": {"must": {"nameContains": "   "}}},
+        {"filter": {"must": {"nameContains": ""}}},
+        {"filter": {"must": {"titleContains": " \t"}, "not": {"idIn": ["x"]}}},
+        {"filter": {"must": {"keyContains": "  ", "idIn": ["x"]}}},
+        {"filter": {"must": {"nameContains": "  "}, "not": {"nameContains": "keep"}}},
     ])
     def test_bad_targets_are_refused(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
                                      param_key, job_type, model_filter, targets):
@@ -135,6 +142,26 @@ class TestEntityDeletion:
         with pytest.raises(ValueError):
             getattr(service, plural)(dataset_id="dataset-1", **kwargs)
         service.request_gql.assert_not_called()
+
+    def test_blank_search_in_a_filter_model_is_refused(self, cls, plural, singular, ids_arg, filter_arg,
+                                                      id_arg, param_key, job_type, model_filter):
+        service = _service(cls)
+        options = type(model_filter.must_filter if hasattr(model_filter, "must_filter") else model_filter.must)
+        text_field = "title_contains" if "title_contains" in options.model_fields else "name_contains"
+        blank = type(model_filter).model_validate({"must": {text_field: "   "}})
+
+        with pytest.raises(BadDeletionTargetError, match="must not be blank"):
+            getattr(service, plural)(dataset_id="dataset-1", **{filter_arg: blank})
+        service.request_gql.assert_not_called()
+
+    def test_not_only_filter_selects_the_rest(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
+                                              param_key, job_type, model_filter):
+        """{"not": {"idIn": [x]}} means "all but x"; zenith and the DAGs take it too."""
+        service = _service(cls)
+
+        getattr(service, plural)(dataset_id="dataset-1", **{filter_arg: {"not": {"idIn": IDS}}})
+
+        assert _sent(service)["parameters"][param_key] == {"not": {"idIn": IDS}}
 
     def test_wrong_filter_model_is_refused(self, cls, plural, singular, ids_arg, filter_arg, id_arg,
                                            param_key, job_type, model_filter):

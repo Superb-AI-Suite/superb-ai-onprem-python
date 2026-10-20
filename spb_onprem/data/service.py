@@ -312,7 +312,8 @@ class DataService(BaseService):
             slice_id (str): The slice id. Required.
             data_ids (Optional[List[str]]): Several data ids.
             data_filter (Optional[DataListFilter | dict]): The data to remove.
-                It is limited to the slice by the activity.
+                It is limited to the slice by the activity. A filter with only
+                ``not`` selects all the other data in the slice.
 
         Raises:
             BadParameterError: If dataset_id or slice_id is missing.
@@ -382,7 +383,8 @@ class DataService(BaseService):
             data_id (Optional[str]): One data id.
             data_ids (Optional[List[str]]): Several data ids.
             data_filter (Optional[DataListFilter | dict]): The data to delete.
-                It must have a condition; an empty filter is refused.
+                It must have a condition; an empty filter is refused. A filter
+                with only ``not`` selects all the other data.
 
         Raises:
             BadParameterError: If dataset_id is missing.
