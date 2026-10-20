@@ -651,8 +651,8 @@ class DataService(BaseService):
             raise BadParameterError("data_id is required.")
         if slice_id is None:
             raise BadParameterError("slice_id is required.")
-        if id is None:
-            raise BadParameterError("id is required.")
+        if version_id is None:
+            raise BadParameterError("version_id is required.")
         
         response = self.request_gql(
             Queries.UPDATE_SLICE_ANNOTATION_VERSION,
