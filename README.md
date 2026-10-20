@@ -270,10 +270,15 @@ except UnknownError as e:
 
 ## 🔐 Security notes
 
-- Platform credentials are sent only to the platform API host, never to presigned storage URLs.
-- SDK error messages and logs hide credentials and presigned URL signatures. urllib3's own
-  DEBUG logging (off by default) is not the SDK's: if you turn it on, presigned URLs, signature
-  included, can show up in your logs.
+- Platform credentials (`Authorization`, or `x-user-email` in system mode) are sent only to the
+  platform API host, never to presigned storage URLs, and are dropped when a redirect leaves the host.
+  **Exception:** the deprecated `InferService` sends them to `MODEL_ENDPOINT_URL`, whatever its host.
+- SDK error messages, SDK logs, `SDK_DEBUG_GQL` output and SDK exceptions hide credentials and
+  presigned URL signatures (URL query strings).
+- On import, the SDK adds a filter to the `urllib3.connectionpool` and `urllib3.util.retry` loggers
+  that replaces URL query strings with `<redacted>` in their records, at every level (for example
+  the WARNING urllib3 writes when it retries). Other output that shows raw requests, such as
+  `http.client` debug printing (`HTTPConnection.debuglevel`), is not covered.
 
 ## 🧪 Requirements
 
