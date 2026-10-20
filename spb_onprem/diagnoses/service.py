@@ -294,8 +294,11 @@ class DiagnosisService(BaseService):
             BadDeletionTargetError: If none or both of diagnosis_ids and
                 diagnosis_filter are given, or they are empty (also a
                 ValueError).
-            InvalidInputError: If the platform refuses the filter (format
-                checks at request time, e.g. an empty ``idIn``).
+            InvalidInputError: If the platform refuses the request. It checks
+                only keys, types and required values then; other filter
+                problems (e.g. an empty ``idIn``) are checked when the activity
+                runs and would fail it, so the SDK refuses those before sending
+                (BadDeletionTargetError).
             UnknownError: Other request errors (e.g. no role in the dataset).
 
         Returns:
@@ -310,6 +313,7 @@ class DiagnosisService(BaseService):
                 filter=diagnosis_filter,
                 filter_name="diagnosis_filter",
                 filter_types=(DiagnosisFilter,),
+                status_values=[status.value for status in DiagnosisStatus],
             ),
         }
         return start_deletion_activity(

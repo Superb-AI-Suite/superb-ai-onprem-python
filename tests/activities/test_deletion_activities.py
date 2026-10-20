@@ -1,4 +1,5 @@
 """Delete functions start deletion activities (2.0.0) and the helpers around them."""
+import re
 from unittest.mock import Mock, patch
 
 import pytest
@@ -445,3 +446,28 @@ class TestGraphqlErrorCode:
         """An error with no code used to fail with KeyError('code')."""
         with pytest.raises(UnknownError, match="GraphQL errors: bad input"):
             self._request([{"message": "bad input"}])
+
+
+@pytest.mark.parametrize("cls,plural,filter_arg,bad,message", [
+    (ModelService, "delete_models", "model_filter", {"not": "x", "must": {"idIn": IDS}}, "not must be an object"),
+    (ModelService, "delete_models", "model_filter", {"must": {"idIn": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}}, "list of non-empty ID strings"),
+    (ModelService, "delete_models", "model_filter", {"must": {"idIn": [IDS[0], " "]}}, "list of non-empty ID strings"),
+    (ModelService, "delete_models", "model_filter", {"not": {"idIn": [1]}, "must": {"nameContains": "x"}}, "list of non-empty ID strings"),
+    (ModelService, "delete_models", "model_filter", {"must": {"statusIn": ["DONE"]}}, "unknown statuses ['DONE']"),
+    (ModelService, "delete_models", "model_filter", {"must": {"statusIn": "FAILED"}}, "statusIn must be a list"),
+    (DiagnosisService, "delete_diagnoses", "diagnosis_filter", {"must": {"statusIn": ["TRAINING"]}}, "unknown statuses"),
+    (ReportService, "delete_analytics_reports", "report_filter", {"not": {"statusIn": ["X"]}, "must": {"titleContains": "a"}}, "unknown statuses"),
+])
+def test_dict_filter_value_shapes_are_refused_before_sending(cls, plural, filter_arg, bad, message):
+    service = _service(cls)
+    with pytest.raises(BadDeletionTargetError, match=re.escape(message)):
+        getattr(service, plural)(dataset_id="dataset-1", **{filter_arg: bad})
+    service.request_gql.assert_not_called()
+
+
+def test_known_statuses_pass():
+    from spb_onprem.models.enums import ModelStatus
+
+    service = _service(ModelService)
+    service.delete_models(dataset_id="dataset-1", model_filter={"must": {"statusIn": [ModelStatus.FAILED.value]}})
+    assert _sent(service)["parameters"]["model_filter"] == {"must": {"statusIn": ["FAILED"]}}

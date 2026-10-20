@@ -343,6 +343,7 @@ class ModelDeploymentService(BaseService):
                 filter=deployment_filter,
                 filter_name="deployment_filter",
                 filter_types=(ModelDeploymentFilter,),
+                status_values=[status.value for status in ModelDeploymentStatus],
             ),
         }
         return start_deletion_activity(

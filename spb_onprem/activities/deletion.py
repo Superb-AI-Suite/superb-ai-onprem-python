@@ -27,7 +27,7 @@ AWAITING_APPROVAL; it runs after an admin approves it.
 import copy
 import warnings
 from enum import Enum
-from typing import Any, Mapping, Optional, Sequence, Tuple
+from typing import Any, Collection, Mapping, Optional, Sequence, Tuple
 
 from pydantic import BaseModel
 
@@ -78,20 +78,53 @@ def has_condition(value: Any) -> bool:
 TEXT_MATCH_KEYS = ("nameContains", "keyContains", "titleContains")
 
 
-def check_deletion_filter(value: Mapping[str, Any], filter_name: str) -> None:
+def _check_value_shapes(value: Mapping[str, Any], filter_name: str, status_values) -> None:
+    """Value shapes the platform would only reject when the activity runs (C20)."""
+    if "not" in value and value["not"] is not None and not isinstance(value["not"], Mapping):
+        raise BadDeletionTargetError(f"{filter_name}.not must be an object.")
+    for side in ("must", "not"):
+        options = value.get(side)
+        if not isinstance(options, Mapping):
+            continue
+        ids = options.get("idIn")
+        if ids is not None and (
+            isinstance(ids, (str, bytes))
+            or not isinstance(ids, (list, tuple))
+            or any(not isinstance(item, str) or not item.strip() for item in ids)
+        ):
+            raise BadDeletionTargetError(f"{filter_name}.{side}.idIn must be a list of non-empty ID strings.")
+        statuses = options.get("statusIn")
+        if status_values is not None and statuses is not None:
+            if isinstance(statuses, (str, bytes)) or not isinstance(statuses, (list, tuple)):
+                raise BadDeletionTargetError(f"{filter_name}.{side}.statusIn must be a list.")
+            unknown = [item for item in statuses if not (isinstance(item, str) and item in status_values)]
+            if unknown:
+                raise BadDeletionTargetError(
+                    f"{filter_name}.{side}.statusIn has unknown statuses {unknown}; "
+                    f"use {', '.join(sorted(status_values))}."
+                )
+
+
+def check_deletion_filter(value: Mapping[str, Any], filter_name: str, status_values=None) -> None:
     """Refuse a deletion filter that selects nothing on purpose or everything by accident.
 
     Refused, the same as zenith and the deletion DAGs: ``{}``, ``must: null``,
     a ``must`` that is not an object, ``must.idIn: []`` and a blank
     ``must.nameContains`` / ``keyContains`` / ``titleContains`` (empty or
     only spaces). Also refused, stricter than the DAGs: any filter without a
-    condition, such as ``{"must": {}}``.
+    condition, such as ``{"must": {}}``; a ``not`` that is not an object; an
+    ``idIn`` that is not a list of non-empty strings; and a ``statusIn`` value
+    the entity does not have (when ``status_values`` is given). The platform
+    checks only keys, types and required values when the request is made, and
+    the rest when the activity runs (C20), so these would end as a failed
+    activity; the SDK refuses them before sending.
 
     A filter with only ``not`` (for example ``{"not": {"idIn": [x]}}``) selects
     every target except those, as on the platform.
     """
     if not value:
         raise BadDeletionTargetError(f"{filter_name} must not be empty.")
+    _check_value_shapes(value, filter_name, status_values)
     if "must" in value:
         must = value["must"]
         if must is None:
@@ -119,6 +152,7 @@ def deletion_filter(
     filter_types: Tuple[type, ...] = (),
     one_id: Optional[str] = None,
     one_id_name: Optional[str] = None,
+    status_values: Optional[Collection[str]] = None,
 ) -> dict:
     """The ``<entity>_filter`` parameter of a deletion activity.
 
@@ -171,7 +205,9 @@ def deletion_filter(
         serialized = copy.deepcopy(dict(filter))
     else:
         raise BadDeletionTargetError(f"{filter_name} must be {type_names}.")
-    check_deletion_filter(serialized, filter_name)
+    check_deletion_filter(
+        serialized, filter_name, frozenset(status_values) if status_values is not None else None
+    )
     return serialized
 
 
