@@ -20,6 +20,7 @@ def start_activity_params(
         UndefinedType,
         dict
     ] = Undefined,
+    slice_id: Optional[str] = None,
 ) -> dict:
     """Create parameters for starting an activity.
     
@@ -30,6 +31,9 @@ def start_activity_params(
         parameters (Optional[dict]): The parameters to start the activity with.
         progress (Optional[dict]): The progress to start the activity with.
         meta (Optional[dict]): The meta information to start the activity with.
+        slice_id (Optional[str]): The slice the activity works on, for a
+            slice-scoped activity such as REMOVE_DATA_FROM_SLICE. The server
+            puts it in the run conf as ``slice_id``.
         
     Returns:
         dict: Parameters for starting an activity
@@ -55,5 +59,7 @@ def start_activity_params(
         params["progress"] = progress
     if meta is not Undefined:
         params["meta"] = meta
+    if slice_id is not None:
+        params["sliceId"] = slice_id
 
     return params

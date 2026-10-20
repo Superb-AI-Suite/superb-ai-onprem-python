@@ -425,6 +425,7 @@ class ActivityService(BaseService):
             UndefinedType,
             dict
         ] = Undefined,
+        slice_id: Optional[str] = None,
     ) -> ActivityHistory:
         """Start an activity.
         
@@ -435,6 +436,7 @@ class ActivityService(BaseService):
             parameters (Optional[dict]): The parameters for the activity.
             progress (Optional[dict]): The progress for the activity.
             meta (Optional[dict]): The meta for the activity.
+            slice_id (Optional[str]): The slice of a slice-scoped activity.
         
         Returns:
             ActivityHistory: The activity history object.
@@ -448,6 +450,7 @@ class ActivityService(BaseService):
                 parameters=parameters,
                 progress=progress,
                 meta=meta,
+                slice_id=slice_id,
             )
         )
         return ActivityHistory.model_validate(response)

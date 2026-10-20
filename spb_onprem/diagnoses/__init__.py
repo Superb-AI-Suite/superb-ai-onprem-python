@@ -22,7 +22,7 @@ __all__ = (
     "DiagnosisService",
     "Diagnosis",
     "DiagnosisReportItem",
-    "DiagnosisReportItemType",
+    "AnalyticsReportItemType",
     "DiagnosisPageInfo",
     "DiagnosisStatus",
     "DiagnosisOrderField",

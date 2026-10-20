@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional, Union
 
 from spb_onprem.base_service import BaseService
@@ -24,6 +25,8 @@ from spb_onprem.activities.deletion import (
 )
 from spb_onprem.activities.entities import ActivityHistory
 
+logger = logging.getLogger(__name__)
+
 
 class SliceService(BaseService):
     """Service class for handling slice-related operations."""
@@ -47,30 +50,19 @@ class SliceService(BaseService):
         Returns:
             Slice: The created slice object.
         """
-        # Debug logging: 파라미터 확인
-        print(f"[DEBUG] create_slice called with:")
-        print(f"  dataset_id: {dataset_id} (type: {type(dataset_id)})")
-        print(f"  name: {name} (type: {type(name)})")
-        print(f"  description: {description} (type: {type(description)})")
-
         variables = Queries.CREATE_SLICE["variables"](
             dataset_id=dataset_id,
             slice_name=name,
             slice_description=description
         )
-        print(f"[DEBUG] GraphQL variables: {variables}")
+        logger.debug("create_slice variables: %s", variables)
 
         response = self.request_gql(
             Queries.CREATE_SLICE,
             variables
         )
-        # Debug logging: 실제 GraphQL 응답 확인
-        print(f"[DEBUG] GraphQL create_slice response: {response}")
-        print(f"[DEBUG] Response type: {type(response)}")
-        print(f"[DEBUG] Response keys: {response.keys() if isinstance(response, dict) else 'Not a dict'}")
-
         # response는 이미 createSlice 객체 자체 (request_gql이 data.createSlice를 추출함)
-        print(f"[DEBUG] Using response directly as slice_dict: {response}")
+        logger.debug("create_slice response: %s", response)
         return Slice.model_validate(response)
 
     def get_slices(

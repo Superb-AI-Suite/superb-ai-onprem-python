@@ -237,6 +237,26 @@ class TestEntityDeletion:
         service.request_gql.assert_not_called()
 
 
+def test_entity_deletions_are_not_slice_scoped():
+    """Only REMOVE_DATA_FROM_SLICE sends startJob(sliceId); deleting slices works on the dataset."""
+    for cls, plural, ids_arg in [(SliceService, "delete_slices", "slice_ids"),
+                                 (ModelService, "delete_models", "model_ids")]:
+        service = _service(cls)
+        getattr(service, plural)("dataset-1", **{ids_arg: IDS})
+        assert "sliceId" not in _sent(service)
+
+
+def test_start_activity_passes_slice_id():
+    service = ActivityService()
+    service.request_gql = Mock(return_value=_history())
+
+    service.start_activity(dataset_id="dataset-1", activity_type="X", parameters={}, slice_id="slice-1")
+
+    assert service.request_gql.call_args[0][1] == {
+        "datasetId": "dataset-1", "jobType": "X", "parameters": {}, "sliceId": "slice-1",
+    }
+
+
 def test_no_sub_dag_id_is_sent():
     service = _service(SliceService)
 

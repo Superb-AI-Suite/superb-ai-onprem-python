@@ -192,6 +192,7 @@ def start_deletion_activity(
     dataset_id: str,
     activity_type: DeletionActivityType,
     parameters: dict,
+    slice_id: Optional[str] = None,
 ) -> ActivityHistory:
     """Start a deletion activity with ``startJob`` through ``service``.
 
@@ -201,6 +202,9 @@ def start_deletion_activity(
         activity_type (DeletionActivityType): The activity to start.
         parameters (dict): The activity parameters. They must match the job
             definition's parameter schema; the server rejects other keys.
+        slice_id (Optional[str]): The slice of a slice-scoped activity
+            (REMOVE_DATA_FROM_SLICE). It is sent as ``startJob(sliceId)`` too,
+            because the server sets the run conf's ``slice_id`` from it.
 
     Returns:
         ActivityHistory: The started activity. Its status is PENDING, or
@@ -212,6 +216,7 @@ def start_deletion_activity(
             dataset_id=dataset_id,
             activity_type=DeletionActivityType(activity_type).value,
             parameters=parameters,
+            slice_id=slice_id,
         ),
     )
     return ActivityHistory.model_validate(response)

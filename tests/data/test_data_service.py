@@ -158,6 +158,9 @@ class TestDataService:
         assert isinstance(result, ActivityHistory)
         assert self._sent() == {
             "datasetId": "dataset-123",
+            # Slice-scoped: the slice also goes as startJob(sliceId), so the server
+            # does not overwrite the run conf's slice_id with an empty value.
+            "sliceId": "slice-789",
             "jobType": "REMOVE_DATA_FROM_SLICE",
             "parameters": {
                 "dataset_id": "dataset-123",
@@ -170,9 +173,22 @@ class TestDataService:
         """The old positional call (dataset_id, data_id, slice_id) still works."""
         self.data_service.remove_data_from_slice("dataset-123", "data-456", "slice-789")
 
-        parameters = self._sent()["parameters"]
-        assert parameters["slice_id"] == "slice-789"
-        assert parameters["data_filter"] == {"must": {"idIn": ["data-456"]}}
+        sent = self._sent()
+        assert sent["sliceId"] == "slice-789"
+        assert sent["parameters"]["slice_id"] == "slice-789"
+        assert sent["parameters"]["data_filter"] == {"must": {"idIn": ["data-456"]}}
+
+    def test_remove_data_from_slice_mutation_passes_slice_id(self):
+        """The startJob mutation declares $sliceId and passes it to startJob."""
+        query = ActivityQueries.START_ACTIVITY["query"]
+        assert "$sliceId: ID" in query
+        assert "sliceId: $sliceId" in query
+
+    def test_delete_data_is_not_slice_scoped(self):
+        """DELETE_DATA works on the dataset; no sliceId is sent."""
+        self.data_service.delete_data(dataset_id="dataset-123", data_ids=["a"])
+
+        assert "sliceId" not in self._sent()
 
     def test_remove_data_from_slice_many(self):
         """Several data or a filter go in one activity."""

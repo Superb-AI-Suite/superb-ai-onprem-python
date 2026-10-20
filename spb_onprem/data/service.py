@@ -332,8 +332,14 @@ class DataService(BaseService):
                 data_id=data_id, data_ids=data_ids, data_filter=data_filter
             ),
         }
+        # Slice-scoped: send the slice as startJob(sliceId) too, so the run conf's
+        # slice_id is this slice and not an empty value from the server.
         return start_deletion_activity(
-            self, dataset_id, DeletionActivityType.REMOVE_DATA_FROM_SLICE, parameters
+            self,
+            dataset_id,
+            DeletionActivityType.REMOVE_DATA_FROM_SLICE,
+            parameters,
+            slice_id=slice_id,
         )
     
     def add_data_to_slice(

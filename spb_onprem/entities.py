@@ -95,7 +95,6 @@ __all__ = [
     "Content",
     "Frame",
     "Model",
-    "TrainingReport",
     "Comment",
     "Reply",
     "DataAnnotationStat",

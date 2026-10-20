@@ -188,7 +188,6 @@ __all__ = (
     "DiagnosisPageInfo",
     "DiagnosisStatus",
     "DiagnosisReportItem",
-    "DiagnosisReportItemType",
     "DiagnosesFilter",
     "DiagnosesFilterOptions",
 
