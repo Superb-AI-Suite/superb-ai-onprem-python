@@ -383,9 +383,58 @@ class TestUnchangeableFields:
             "option": settings.get_question(Q1).options[0],
             "class": settings.get_question(Q1).get_evidence_class(EV1),
         }
-        with pytest.raises(VLMSettingsChangeError, match="cannot change once created") as raised:
+        with pytest.raises(VLMSettingsChangeError, match="cannot change once saved") as raised:
             setattr(objects[target], field, value)
         assert "delete the" in str(raised.value)
+
+    def test_unsent_items_can_still_change(self):
+        """Items built or added but not sent yet are not stored: their content can still change."""
+        settings = VLMSettings(questions=[VLMQuestion(text="Draft?", answer_type=VLMAnswerType.TEXT)])
+        draft = settings.questions[0]
+        draft.text = "Final text?"
+        draft.answer_type = VLMAnswerType.SINGLE_CHOICE
+        draft.options = [VLMAnswerOption(label="a")]
+        added = _read().settings.add_question(text="New?", answer_type=VLMAnswerType.BOOLEAN)
+        added.text = "New question?"
+        evidence = _read().settings.get_question(Q1).add_evidence_class(name="cup", shape="BOX")
+        evidence.name = "mug"
+        assert draft.text == "Final text?" and added.text == "New question?" and evidence.name == "mug"
+
+    def test_items_lock_after_they_are_sent(self):
+        settings = VLMSettings(questions=[VLMQuestion(text="Draft?", answer_type=VLMAnswerType.TEXT)])
+        question = settings.questions[0]
+        service = _service({**RECORD, "settings": settings.to_payload()})
+
+        service.create_dataset_vlm_settings("dataset-1", settings)
+
+        with pytest.raises(VLMSettingsChangeError, match="cannot change once saved"):
+            question.text = "Changed after saving"
+        # The sent object now checks later changes against what was stored.
+        settings.questions.pop()
+        with pytest.raises(VLMSettingsChangeError, match="was removed"):
+            _service(RECORD).update_dataset_vlm_settings("dataset-1", settings)
+
+    @pytest.mark.parametrize("target,alias,field,value", [
+        ("question", "answerType", "answer_type", "TEXT"),
+        ("question2", "numberRange", "number_range", {"min": 1}),
+        ("question", "reasoningGuide", "reasoning_guide", "x"),
+        ("settings", "deletedQuestions", "deleted_questions", []),
+        ("class", "addedAt", "added_at", T0),
+    ])
+    def test_alias_assignment_is_refused(self, target, alias, field, value):
+        settings = _read().settings
+        objects = {
+            "settings": settings,
+            "question": settings.get_question(Q1),
+            "question2": settings.get_question(Q2),
+            "class": settings.get_question(Q1).get_evidence_class(EV1),
+        }
+        with pytest.raises(VLMSettingsChangeError, match=f"{field}"):
+            setattr(objects[target], alias, value)
+        # Also on items not sent yet.
+        fresh = VLMQuestion(text="?", answer_type=VLMAnswerType.NUMBER)
+        with pytest.raises(VLMSettingsChangeError, match="not the alias numberRange"):
+            fresh.numberRange = {"min": 1}
 
     def _update(self, settings):
         service = _service(copy.deepcopy(RECORD))

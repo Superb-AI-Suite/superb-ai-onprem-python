@@ -36,6 +36,12 @@ class VLMSettingsService(BaseService):
         ForbiddenError: The caller may not edit them.
     """
 
+    @staticmethod
+    def _saved(settings: VLMSettings, record):
+        """After a create or update, the sent settings are what is stored: lock their items."""
+        settings._mark_saved()
+        return record
+
     # Dataset ---------------------------------------------------------------
     def get_dataset_vlm_settings(self, dataset_id: str) -> Optional[DatasetVLMSettings]:
         """The question set of a dataset, or None when it has none."""
@@ -51,7 +57,7 @@ class VLMSettingsService(BaseService):
             Queries.CREATE_DATASET_VLM_SETTINGS,
             Queries.CREATE_DATASET_VLM_SETTINGS["variables"](dataset_id, settings),
         )
-        return DatasetVLMSettings.from_platform(response)
+        return self._saved(settings, DatasetVLMSettings.from_platform(response))
 
     def update_dataset_vlm_settings(
         self,
@@ -68,7 +74,7 @@ class VLMSettingsService(BaseService):
             Queries.UPDATE_DATASET_VLM_SETTINGS,
             Queries.UPDATE_DATASET_VLM_SETTINGS["variables"](dataset_id, settings, expected_updated_at),
         )
-        return DatasetVLMSettings.from_platform(response)
+        return self._saved(settings, DatasetVLMSettings.from_platform(response))
 
     def delete_dataset_vlm_settings(self, dataset_id: str, expected_updated_at: Optional[str] = None) -> bool:
         """Delete the question set of a dataset entirely. A new one can be created afterwards."""
@@ -93,7 +99,7 @@ class VLMSettingsService(BaseService):
             Queries.CREATE_SLICE_VLM_SETTINGS,
             Queries.CREATE_SLICE_VLM_SETTINGS["variables"](dataset_id, slice_id, settings),
         )
-        return SliceVLMSettings.from_platform(response)
+        return self._saved(settings, SliceVLMSettings.from_platform(response))
 
     def update_slice_vlm_settings(
         self,
@@ -107,7 +113,7 @@ class VLMSettingsService(BaseService):
             Queries.UPDATE_SLICE_VLM_SETTINGS,
             Queries.UPDATE_SLICE_VLM_SETTINGS["variables"](dataset_id, slice_id, settings, expected_updated_at),
         )
-        return SliceVLMSettings.from_platform(response)
+        return self._saved(settings, SliceVLMSettings.from_platform(response))
 
     def delete_slice_vlm_settings(
         self, dataset_id: str, slice_id: str, expected_updated_at: Optional[str] = None

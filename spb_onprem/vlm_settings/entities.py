@@ -16,9 +16,12 @@ Rules the platform enforces (zenith ``vlmSettings``):
   changed. Use the helpers (``add_question``, ``delete_question``,
   ``restore_question``, ``VLMQuestion.add_evidence_class`` ...): deleting moves
   an item to the deleted list with ``deleted_at``; restoring moves it back.
-- A question's ``id``, ``text``, ``answer_type``, ``options`` and
+- Once saved, a question's ``id``, ``text``, ``answer_type``, ``options`` and
   ``number_range``, and an evidence class's ``id``, ``name`` and ``shape``,
-  cannot change. Assigning them raises ``VLMSettingsChangeError``.
+  cannot change. Assigning them raises ``VLMSettingsChangeError``. Items not
+  sent yet (just built or added) can still be changed.
+- Set fields by their Python names (``answer_type``), not the camelCase
+  aliases (``answerType``).
 - What can change: the common and per-question ``reasoning_guide``, an
   evidence class's ``color`` and the order in a list.
 """
@@ -99,17 +102,42 @@ class _SettingsModel(CustomBaseModel):
     # break reading. Writing checks the keys.
     model_config = ConfigDict(populate_by_name=True, extra="allow")
 
-    #: Fields that cannot change once created (platform rule).
+    #: Fields that cannot change once saved on the platform (platform rule).
     _FIXED: ClassVar[FrozenSet[str]] = frozenset()
     _WHAT: ClassVar[str] = "item"
 
+    #: True once the item is saved (read from or sent to the platform).
+    _locked: bool = PrivateAttr(False)
+
+    @classmethod
+    def _field_of_alias(cls, name: str) -> Optional[str]:
+        for field_name, info in cls.model_fields.items():
+            if info.alias and info.alias == name and info.alias != field_name:
+                return field_name
+        return None
+
     def __setattr__(self, name: str, value: Any) -> None:
-        if name in self._FIXED:
+        aliased = self._field_of_alias(name)
+        field = aliased or name
+        if field in self._FIXED and self._locked:
             raise VLMSettingsChangeError([
-                f"{self._WHAT} {name} cannot change once created (platform rule); "
+                f"{self._WHAT} {field} cannot change once saved (platform rule); "
                 f"delete the {self._WHAT} and add a new one instead."
             ])
+        if aliased:
+            # With extra keys allowed, `q.answerType = ...` would add a second key instead of setting answer_type.
+            raise VLMSettingsChangeError([f"set {aliased}, not the alias {name}."])
         super().__setattr__(name, value)
+
+    def _lock(self) -> None:
+        """Mark this item (and what it holds) as saved: its fixed fields cannot change any more."""
+        self._locked = True
+        for field_name in type(self).model_fields:
+            value = getattr(self, field_name, None)
+            items = value if isinstance(value, list) else [value]
+            for item in items:
+                if isinstance(item, _SettingsModel):
+                    item._lock()
 
     def _set(self, name: str, value: Any) -> None:
         """Set a field from SDK code (helpers), skipping the guard."""
@@ -302,6 +330,11 @@ class VLMSettings(_SettingsModel):
         """The ``settings`` JSON to send (camelCase keys, no null values)."""
         return self.model_dump(mode="json", by_alias=True, exclude_none=True)
 
+    def _mark_saved(self) -> None:
+        """Remember these settings as stored on the platform and lock their items."""
+        self._saved = self.to_payload()
+        self._lock()
+
     # Questions -------------------------------------------------------------
     def get_question(self, question_id: str) -> VLMQuestion:
         """The question with this id, current or deleted."""
@@ -367,7 +400,7 @@ class _VLMSettingsRecord(CustomBaseModel):
         """Read a record the platform sent: nothing is filled in, and the stored
         settings are kept to check a later update."""
         record = cls.model_validate(data, context={FROM_PLATFORM: True})
-        record.settings._saved = record.settings.to_payload()
+        record.settings._mark_saved()
         return record
 
     @property

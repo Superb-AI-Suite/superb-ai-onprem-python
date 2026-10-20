@@ -84,8 +84,10 @@ The returned record is ready for the next edit. The same works for a slice
 ### What cannot change
 
 A question's `id`, `text`, `answer_type`, `options` and `number_range`, and an evidence
-class's `id`, `name` and `shape`, are fixed once created (labels already point at them).
-Assigning one raises `VLMSettingsChangeError` with the reason. Changing them in place
+class's `id`, `name` and `shape`, are fixed once saved (labels already point at them).
+Assigning one on a saved item (read with `get_*`, or sent with `create_*` / `update_*`) raises
+`VLMSettingsChangeError` with the reason. Items not sent yet can still be changed. Set fields by
+their Python names (`answer_type`); assigning a camelCase alias (`answerType`) is refused. Changing them in place
 (for example `question.options.append(...)`), removing a question or class from its list,
 or moving a class to another question is caught by `update_*` before sending, against the
 settings that were read. To change a question, delete it and add a new one.
