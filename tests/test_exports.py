@@ -36,3 +36,13 @@ def test_create_slice_prints_nothing(capsys):
 
     assert created.id == "slice-1"
     assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize("name", [
+    "ModelDeployDefinitionUsage", "ModelDeployDefinitionDeletion", "ModelDeploymentRuntimeEndStatus",
+    "DeploymentInvokePart", "DeploymentInvokeError", "DeploymentInvokeForbiddenError",
+    "DeploymentInvokeNotFoundError", "DeploymentInvokeConflictError", "DeploymentInvokeInvalidInputError",
+])
+def test_deployment_types_are_exported_at_the_top(name):
+    """Return types and errors of public functions can be imported from spb_onprem."""
+    assert name in spb_onprem.__all__ and hasattr(spb_onprem, name)
