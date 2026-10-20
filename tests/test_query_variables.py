@@ -20,6 +20,7 @@ from spb_onprem.base_types import Undefined
 from spb_onprem.contents.entities import BaseContent
 from spb_onprem.data.entities import AnnotationVersion, Data, DataMeta, Scene
 from spb_onprem.data.enums import DataMetaTypes, DataType, SceneType
+from spb_onprem.vlm_settings import VLMSettings
 
 DECLARED = re.compile(r"\$(\w+)\s*:\s*([\[\]\w!]+)")
 
@@ -45,10 +46,10 @@ OVERRIDES = {
     ("data", "UPDATE_WITH_EXPECTED_CAPTION"): {"meta": [DataMeta(key="k", type=DataMetaTypes.STRING, value="v")]},
     ("models", "CREATE"): {"contents": {"weights": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}},
     ("models", "UPDATE"): {"contents": {"weights": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}},
-    ("vlm_settings", "CREATE_DATASET_VLM_SETTINGS"): {"settings": {"questions": []}},
-    ("vlm_settings", "UPDATE_DATASET_VLM_SETTINGS"): {"settings": {"questions": []}},
-    ("vlm_settings", "CREATE_SLICE_VLM_SETTINGS"): {"settings": {"questions": []}},
-    ("vlm_settings", "UPDATE_SLICE_VLM_SETTINGS"): {"settings": {"questions": []}},
+    ("vlm_settings", "CREATE_DATASET_VLM_SETTINGS"): {"settings": VLMSettings()},
+    ("vlm_settings", "UPDATE_DATASET_VLM_SETTINGS"): {"settings": VLMSettings()},
+    ("vlm_settings", "CREATE_SLICE_VLM_SETTINGS"): {"settings": VLMSettings()},
+    ("vlm_settings", "UPDATE_SLICE_VLM_SETTINGS"): {"settings": VLMSettings()},
 }
 
 #: Sent but not declared, on purpose or harmless. The server's jobs/job/updateJob take no

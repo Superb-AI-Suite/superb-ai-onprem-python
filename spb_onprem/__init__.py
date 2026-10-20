@@ -13,7 +13,7 @@ from .vlm_settings import (
     VLMSettingsService,
     DatasetVLMSettings,
     SliceVLMSettings,
-    VLMQuestionSet,
+    VLMSettings,
     VLMQuestion,
     VLMAnswerOption,
     VLMNumberRange,
@@ -21,6 +21,7 @@ from .vlm_settings import (
     VLMAnswerType,
     VLMEvidenceShape,
     VLMSettingsValidationError,
+    VLMSettingsChangeError,
 )
 from .contents.service import ContentService
 from .models.service import ModelService
@@ -152,7 +153,7 @@ __all__ = (
     "VLMSettingsService",
     "DatasetVLMSettings",
     "SliceVLMSettings",
-    "VLMQuestionSet",
+    "VLMSettings",
     "VLMQuestion",
     "VLMAnswerOption",
     "VLMNumberRange",
@@ -160,6 +161,7 @@ __all__ = (
     "VLMAnswerType",
     "VLMEvidenceShape",
     "VLMSettingsValidationError",
+    "VLMSettingsChangeError",
     "ContentService",
     "ModelService",
     "ReportService",
