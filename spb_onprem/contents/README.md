@@ -8,6 +8,7 @@ This documentation is being prepared. Please check back soon for comprehensive g
 - Content type handling
 - File management best practices
 - Storage optimization
+
 ## Overwriting a content in place
 
 The web editor saves an annotation by overwriting its content; the content keeps its ID.
