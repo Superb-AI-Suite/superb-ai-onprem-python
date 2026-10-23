@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 
 from spb_onprem.base_model import CustomBaseModel, Field
 from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportItemType
@@ -9,7 +9,8 @@ class DiagnosisReportItem(CustomBaseModel):
     id: Optional[str] = Field(None, description="리포트 아이템 ID")
     diagnosis_id: Optional[str] = Field(None, alias="diagnosisId", description="Diagnosis ID")
     name: Optional[str] = Field(None, description="이름")
-    type: Optional[AnalyticsReportItemType] = Field(None, description="타입")
+    # An unknown value from a newer platform stays a str instead of failing.
+    type: Optional[Union[AnalyticsReportItemType, str]] = Field(None, union_mode="left_to_right", description="타입")
     content_id: Optional[str] = Field(None, alias="contentId", description="컨텐츠 ID")
     description: Optional[str] = Field(None, description="설명")
     discriminator_value: Optional[str] = Field(None, alias="discriminatorValue", description="Discriminator 값 (e.g., '0.5')")

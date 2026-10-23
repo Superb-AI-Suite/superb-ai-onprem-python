@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Any, Union
 from enum import Enum
 from spb_onprem.base_model import CustomBaseModel, Field
 from spb_onprem.contents.entities.base_content import BaseContent
@@ -16,6 +16,8 @@ class AnalyticsReportItemType(str, Enum):
     HISTOGRAM = 'HISTOGRAM'
     METRICS = 'METRICS'
     CONFUSION_MATRIX = 'CONFUSION_MATRIX'
+    MARKDOWN = 'MARKDOWN'
+    MEDIA_COMPARISON = 'MEDIA_COMPARISON'
 
 
 class AnalyticsReportItem(CustomBaseModel):
@@ -25,7 +27,10 @@ class AnalyticsReportItem(CustomBaseModel):
     리포트 내의 개별 차트나 시각화 아이템을 나타냅니다.
     """
     id: Optional[str] = Field(None, description="리포트 아이템 고유 식별자")
-    type: Optional[AnalyticsReportItemType] = Field(None, description="리포트 아이템 타입 (PIE, BAR, HEATMAP 등)")
+    # An unknown value from a newer platform stays a str instead of failing.
+    type: Optional[Union[AnalyticsReportItemType, str]] = Field(
+        None, union_mode="left_to_right", description="리포트 아이템 타입 (PIE, BAR, HEATMAP 등)"
+    )
     title: Optional[str] = Field(None, description="리포트 아이템 제목")
     description: Optional[str] = Field(None, description="리포트 아이템 설명")
     content: Optional[BaseContent] = Field(None, description="리포트 아이템 컨텐츠")

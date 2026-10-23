@@ -271,7 +271,7 @@ class ReportService(BaseService):
         self,
         dataset_id: str,
         report_id: str,
-        type: AnalyticsReportItemType,
+        type: Union[AnalyticsReportItemType, str],
         title: Union[str, UndefinedType] = Undefined,
         description: Union[str, UndefinedType] = Undefined,
         content_id: Union[str, UndefinedType] = Undefined,
@@ -283,7 +283,7 @@ class ReportService(BaseService):
         Args:
             dataset_id (str): The dataset ID
             report_id (str): The report ID
-            type (AnalyticsReportItemType): The type of report item
+            type (Union[AnalyticsReportItemType, str]): The type of report item (enum or its string value)
             title (Optional[str]): The title of the item
             description (Optional[str]): The description of the item
             content_id (Optional[str]): The content ID of the item

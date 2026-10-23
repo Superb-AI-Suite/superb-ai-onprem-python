@@ -349,7 +349,7 @@ class DiagnosisService(BaseService):
         dataset_id: str,
         diagnosis_id: str,
         name: str,
-        type: AnalyticsReportItemType,
+        type: Union[AnalyticsReportItemType, str],
         content_id: Optional[str] = None,
         description: Optional[str] = None,
         discriminator_value: Optional[str] = None,
@@ -360,7 +360,7 @@ class DiagnosisService(BaseService):
             dataset_id (str): Dataset ID.
             diagnosis_id (str): Diagnosis ID.
             name (str): 리포트 아이템 이름.
-            type (AnalyticsReportItemType): 리포트 아이템 타입.
+            type (Union[AnalyticsReportItemType, str]): 리포트 아이템 타입. enum 또는 같은 값의 문자열.
             content_id (Optional[str], optional): Content ID. Defaults to None.
             description (Optional[str], optional): 설명. Defaults to None.
             discriminator_value (Optional[str], optional): 구분자 값 (예: "0.5"). Defaults to None.
@@ -388,7 +388,7 @@ class DiagnosisService(BaseService):
         diagnosis_id: str,
         diagnosis_report_item_id: str,
         name: Union[Optional[str], UndefinedType] = Undefined,
-        type: Union[Optional[AnalyticsReportItemType], UndefinedType] = Undefined,
+        type: Union[Optional[Union[AnalyticsReportItemType, str]], UndefinedType] = Undefined,
         content_id: Union[Optional[str], UndefinedType] = Undefined,
         description: Union[Optional[str], UndefinedType] = Undefined,
         discriminator_value: Union[Optional[str], UndefinedType] = Undefined,
@@ -400,7 +400,7 @@ class DiagnosisService(BaseService):
             diagnosis_id (str): Diagnosis ID.
             diagnosis_report_item_id (str): 리포트 아이템 ID.
             name (Union[Optional[str], UndefinedType], optional): 이름. Defaults to Undefined.
-            type (Union[Optional[AnalyticsReportItemType], UndefinedType], optional): 타입. Defaults to Undefined.
+            type (Union[Optional[Union[AnalyticsReportItemType, str]], UndefinedType], optional): 타입. enum 또는 문자열. Defaults to Undefined.
             content_id (Union[Optional[str], UndefinedType], optional): Content ID. Defaults to Undefined.
             description (Union[Optional[str], UndefinedType], optional): 설명. Defaults to Undefined.
             discriminator_value (Union[Optional[str], UndefinedType], optional): 구분자 값. Defaults to Undefined.
