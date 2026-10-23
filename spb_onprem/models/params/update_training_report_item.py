@@ -10,7 +10,7 @@ def update_training_report_item_params(
     model_id: str,
     training_report_id: str,
     name: Union[Optional[str], UndefinedType] = Undefined,
-    type: Optional[AnalyticsReportItemType] = None,
+    type: Optional[Union[AnalyticsReportItemType, str]] = None,
     content_id: Union[Optional[str], UndefinedType] = Undefined,
     description: Union[Optional[str], UndefinedType] = Undefined,
 ):
@@ -34,6 +34,6 @@ def update_training_report_item_params(
     if description is not Undefined:
         variables["description"] = description
     if type is not Undefined and type is not None:
-        variables["type"] = type.value
+        variables["type"] = type.value if isinstance(type, AnalyticsReportItemType) else type
 
     return variables

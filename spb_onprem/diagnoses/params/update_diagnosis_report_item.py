@@ -10,7 +10,7 @@ def update_diagnosis_report_item_params(
     diagnosis_id: str,
     diagnosis_report_item_id: str,
     name: Union[Optional[str], UndefinedType] = Undefined,
-    type: Union[Optional[AnalyticsReportItemType], UndefinedType] = Undefined,
+    type: Union[Optional[Union[AnalyticsReportItemType, str]], UndefinedType] = Undefined,
     content_id: Union[Optional[str], UndefinedType] = Undefined,
     description: Union[Optional[str], UndefinedType] = Undefined,
     discriminator_value: Union[Optional[str], UndefinedType] = Undefined,
@@ -30,7 +30,7 @@ def update_diagnosis_report_item_params(
     if name is not Undefined:
         variables["name"] = name
     if type is not Undefined:
-        variables["type"] = type.value if type is not None else None
+        variables["type"] = type.value if isinstance(type, AnalyticsReportItemType) else type
     if content_id is not Undefined:
         variables["content_id"] = content_id
     if description is not Undefined:

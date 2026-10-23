@@ -6,7 +6,7 @@ from spb_onprem.reports.entities.analytics_report_item import AnalyticsReportIte
 def create_analytics_report_item_params(
     dataset_id: str,
     report_id: str,
-    type: AnalyticsReportItemType,
+    type: Union[AnalyticsReportItemType, str],
     title: Union[str, UndefinedType] = Undefined,
     description: Union[str, UndefinedType] = Undefined,
     content_id: Union[str, UndefinedType] = Undefined,

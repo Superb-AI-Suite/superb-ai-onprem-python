@@ -266,7 +266,7 @@ class ModelService(BaseService):
         dataset_id: str,
         model_id: str,
         name: str,
-        type: AnalyticsReportItemType,
+        type: Union[AnalyticsReportItemType, str],
         content_id: Optional[str] = None,
         description: Optional[str] = None,
     ) -> Model:
@@ -289,7 +289,7 @@ class ModelService(BaseService):
         model_id: str,
         training_report_id: str,
         name: Union[Optional[str], UndefinedType] = Undefined,
-        type: Union[Optional[AnalyticsReportItemType], UndefinedType] = Undefined,
+        type: Union[Optional[Union[AnalyticsReportItemType, str]], UndefinedType] = Undefined,
         content_id: Union[Optional[str], UndefinedType] = Undefined,
         description: Union[Optional[str], UndefinedType] = Undefined,
     ) -> Model:
