@@ -274,6 +274,15 @@ class TestCall:
         with pytest.raises(BadResponseError, match="redirect"):
             _call(_response(302, b"", headers={"Location": "https://elsewhere.example.test/"}))
 
+    def test_http_host_redirected_to_https_names_the_fix(self):
+        service = _service()
+        service._auth_user.host = "http://platform.example.test"
+        response = _response(301, b"", headers={"Location": "https://platform.example.test/graphql/x"})
+        with patch("spb_onprem.model_deployments.service.requests.post", return_value=response) as post:
+            with pytest.raises(BadResponseError, match="Set the host to https://"):
+                service.invoke_model_deployment(DATASET_ID, DEPLOYMENT_ID, DeploymentInvokeRequest(text="hi"))
+        post.assert_called_once()
+
     def test_connection_error(self):
         service = _service()
         with patch("spb_onprem.model_deployments.service.requests.post",

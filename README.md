@@ -280,6 +280,11 @@ except UnknownError as e:
 - Platform credentials (`Authorization`, or `x-user-email` in system mode) are sent only to the
   platform API host, never to presigned storage URLs, and are dropped when a redirect leaves the host.
   **Exception:** the deprecated `InferService` sends them to `MODEL_ENDPOINT_URL`, whatever its host.
+- Platform API requests (GraphQL, model deployment invoke) do not follow redirects, so the credentials
+  are never resent to another URL. Write `host` with `https://`: if an `http://` host is redirected
+  to `https://`, the SDK raises a `BadResponseError` that says so (following the redirect would turn
+  the POST into a GET and fail with an unclear Apollo CSRF 400). Reading a config whose `host` uses
+  `http://` (other than a loopback host) gives an `InsecureHostWarning` once.
 - SDK error messages, SDK logs, `SDK_DEBUG_GQL` output and SDK exceptions hide credentials and
   presigned URL signatures (URL query strings).
 - On import, the SDK adds a filter to the `urllib3.connectionpool` and `urllib3.util.retry` loggers

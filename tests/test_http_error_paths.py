@@ -6,6 +6,8 @@
   task log) does not show the cause's message.
 - A system-mode HTTP error does not log the x-user-email header.
 - A redirect to another host does not carry x-user-email.
+- A GraphQL POST that gets a redirect is not resent anywhere (so the
+  credentials reach no other URL) and raises an error that names the cause.
 """
 import logging
 import threading
@@ -26,7 +28,7 @@ class _Server:
     def __init__(self, handler):
         self.httpd = HTTPServer(("127.0.0.1", 0), handler)
         self.httpd.received = []
-        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+        self.thread = threading.Thread(target=self.httpd.serve_forever, kwargs={"poll_interval": 0.05}, daemon=True)
         self.thread.start()
 
     @property
@@ -41,7 +43,7 @@ class _Server:
 def _handler(status, location=None):
     class Handler(BaseHTTPRequestHandler):
         def _reply(self):
-            self.server.received.append({"path": self.path, "headers": dict(self.headers)})
+            self.server.received.append({"method": self.command, "path": self.path, "headers": dict(self.headers)})
             length = int(self.headers.get("Content-Length") or 0)
             if length:
                 self.rfile.read(length)
@@ -140,6 +142,52 @@ def test_redirect_to_another_host_drops_the_system_header(fast_retries):
     assert redirect.httpd.received[0]["headers"].get("x-user-email") == EMAIL
     assert target.httpd.received[0]["path"] == "/elsewhere"
     assert "x-user-email" not in {key.lower() for key in target.httpd.received[0]["headers"]}
+
+
+GQL = {"name": "x", "query": "query { x }"}
+
+
+@pytest.mark.parametrize("status", [301, 302, 303, 307, 308])
+def test_graphql_redirect_to_https_names_the_cause(status, fast_retries, capsys, caplog):
+    """An http:// host that the server redirects to https:// (the Apollo CSRF 400 case)."""
+    server = _Server(_handler(status, location="https://platform.example.test/graphql/"))
+    try:
+        service = _service(f"http://127.0.0.1:{server.port}", system=False)
+        with caplog.at_level(logging.DEBUG, logger="spb_onprem"):
+            with pytest.raises(BadResponseError) as raised:
+                service.request_gql(GQL, {})
+    finally:
+        server.close()
+
+    message = str(raised.value)
+    assert f"HTTP {status}" in message
+    assert "does not follow redirects" in message
+    assert "Set the host to https://" in message
+    assert "~/.spb/onprem-config" in message
+    # One POST, not resent as GET or to the https URL.
+    assert [(item["method"], item["path"]) for item in server.httpd.received] == [("POST", "/graphql/")]
+    output = _all_output(capsys, caplog, raised.value)
+    token = service._auth_user.access_token.split(" ", 1)[1]  # base64 of the key pair
+    assert token not in output and "test-secret" not in output
+
+
+@pytest.mark.parametrize("system", [False, True], ids=["access-key", "system"])
+@pytest.mark.parametrize("status", [301, 307, 308])
+def test_graphql_redirect_sends_no_credentials_to_another_host(status, system, fast_retries):
+    target = _Server(_handler(200))
+    redirect = _Server(_handler(status, location=f"http://localhost:{target.port}/graphql/"))
+    try:
+        service = _service(f"http://127.0.0.1:{redirect.port}", system=system)
+        with pytest.raises(BadResponseError, match="Check the platform host"):
+            service.request_gql(GQL, {})
+    finally:
+        redirect.close()
+        target.close()
+
+    sent = {key.lower() for key in redirect.httpd.received[0]["headers"]}
+    assert ("x-user-email" if system else "authorization") in sent  # it was sent to the platform
+    assert len(redirect.httpd.received) == 1
+    assert target.httpd.received == []  # the other host got nothing, so no credentials
 
 
 @pytest.mark.parametrize("url", [

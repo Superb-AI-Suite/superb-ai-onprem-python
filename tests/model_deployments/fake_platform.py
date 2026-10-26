@@ -59,7 +59,7 @@ class FakePlatform:
         self.requests: List[dict] = []
 
     # session protocol ---------------------------------------------------------
-    def post(self, endpoint, json=None, headers=None):
+    def post(self, endpoint, json=None, headers=None, allow_redirects=True):
         self.requests.append({"endpoint": endpoint, "payload": copy.deepcopy(json), "headers": headers})
         operation = re.search(r"\{\s*(\w+)", json["query"]).group(1)
         try:
