@@ -13,7 +13,7 @@ from spb_onprem.activities.deletion import (
     start_deletion_activity,
 )
 from spb_onprem.activities.entities import ActivityHistory
-from spb_onprem.base_service import BaseService, redact_url_queries
+from spb_onprem.base_service import BaseService, post_without_redirects, redact_url_queries, redirect_error
 from spb_onprem.base_types import Undefined, UndefinedType
 from spb_onprem.exceptions import BadParameterError, BadResponseError
 from spb_onprem.models.entities import Model
@@ -419,12 +419,12 @@ class ModelDeploymentService(BaseService):
         files = request.multipart_files()
         try:
             # No retry session: a retried invoke runs the model again.
-            response = requests.post(
+            response = post_without_redirects(
+                requests.post,
                 url,
                 files=files,
                 headers=dict(self._auth_user.auth_headers),
                 timeout=timeout,
-                allow_redirects=False,
             )
         except requests.exceptions.RequestException as error:
             # Same rule as BaseService.request: hide URL queries and keep no exception chain.
@@ -433,9 +433,7 @@ class ModelDeploymentService(BaseService):
             ) from None
         if response.status_code != 200:
             if 300 <= response.status_code < 400:
-                raise BadResponseError(
-                    f"Model deployment invoke got an unexpected redirect (HTTP {response.status_code})."
-                )
+                raise redirect_error(url, response)
             raise invoke_error(response.status_code, response.content, response.headers.get("Retry-After"))
         content_type = response.headers.get("Content-Type", "")
         return DeploymentInvokeResult(

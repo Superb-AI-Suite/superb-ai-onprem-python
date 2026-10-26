@@ -1,10 +1,47 @@
 import base64
+import ipaddress
 import os
 import configparser
+import warnings
 from typing import Optional, ClassVar
+from urllib.parse import urlsplit
 
 from spb_onprem.base_model import CustomBaseModel, Field
-from spb_onprem.exceptions import SDKConfigError
+from spb_onprem.exceptions import InsecureHostWarning, SDKConfigError
+
+
+def _is_loopback(hostname: str) -> bool:
+    if hostname == "localhost" or hostname.endswith(".localhost"):
+        return True
+    try:
+        return ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        return False
+
+
+def warn_if_plain_http(host: str, config_file_path: str) -> None:
+    """Warn when the configured platform host uses plain ``http://``.
+
+    A server that redirects http to https turns the SDK's GraphQL POST into a
+    GET (HTTP 301/302), which then fails with an unclear error such as an
+    Apollo CSRF 400. Loopback hosts (local development) are not warned about.
+    The host itself is not shown: it is in the named config file.
+    """
+    try:
+        parts = urlsplit(host.strip())
+        hostname = parts.hostname or ""
+    except ValueError:
+        return
+    if parts.scheme.lower() != "http" or _is_loopback(hostname):
+        return
+    warnings.warn(
+        f"The platform host in {config_file_path} uses http://. Credentials are sent unencrypted, "
+        "and if the server redirects to https:// every SDK request fails, because the SDK does not "
+        "follow redirects. Set host to https://... unless the server serves plain HTTP only.",
+        InsecureHostWarning,
+        stacklevel=2,
+    )
+
 
 class AuthUser(CustomBaseModel):
     host: str = Field(alias="host")
@@ -57,6 +94,8 @@ class AuthUser(CustomBaseModel):
                 if key not in config["default"]:
                     raise SDKConfigError(f"Missing required key '{key}' in config file: {config_file_path}")
             
+            # Once per process: get_instance keeps the instance.
+            warn_if_plain_http(config["default"]["host"], config_file_path)
             return cls(
                 host=config["default"]["host"],
                 access_key=config["default"]["access_key"],

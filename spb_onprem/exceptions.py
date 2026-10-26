@@ -40,6 +40,16 @@ class UnknownError(BaseSDKError):
     pass
 
 
+class InsecureHostWarning(UserWarning):
+    """The platform host in the SDK config uses plain ``http://``.
+
+    Credentials are then sent unencrypted, and a server that redirects to
+    ``https://`` makes every SDK request fail (the SDK does not follow
+    redirects). Silence it with ``warnings.filterwarnings("ignore",
+    category=InsecureHostWarning)`` if the server serves plain HTTP only.
+    """
+
+
 class BadDeletionTargetError(BadParameterError, ValueError):
     """The targets of a deletion are missing, ambiguous or empty.
 

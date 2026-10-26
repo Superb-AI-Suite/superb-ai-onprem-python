@@ -1,5 +1,5 @@
 from typing import Optional, Dict, Any, ClassVar
-from urllib.parse import urlsplit
+from urllib.parse import urljoin, urlsplit, urlunsplit
 import json
 import logging
 import os
@@ -70,6 +70,76 @@ def _prepared_url(url: str) -> Optional[str]:
 
 def redact_headers(headers) -> Dict[str, Any]:
     return {k: ("<redacted>" if str(k).lower() in SENSITIVE_HEADERS else v) for k, v in dict(headers).items()}
+
+
+#: Where the platform host is set, for error messages.
+HOST_SETTING = "host in ~/.spb/onprem-config, or SUNRISE_SERVER_URL / SUPERB_SYSTEM_SDK_HOST for the system SDK"
+
+
+def _shown_url(url: str) -> str:
+    """The URL for a message: no user:password@, query or fragment."""
+    parts = urlsplit(url)
+    return urlunsplit((
+        parts.scheme,
+        parts.netloc.rpartition("@")[2],
+        parts.path,
+        "<redacted>" if parts.query else "",
+        "",
+    ))
+
+
+def redirect_error(request_url: str, response) -> BadResponseError:
+    """The error for a platform API request that got a redirect (3xx).
+
+    The SDK sends platform API requests without following redirects: a POST
+    redirected with 301/302/303 is resent as GET without its body (the server
+    then answers with an unclear error such as an Apollo CSRF 400), and
+    following would send the credentials to another URL. Nothing is resent.
+    """
+    location = (getattr(response, "headers", None) or {}).get("Location")
+    try:
+        target = urljoin(request_url, location) if location else None
+        shown = _shown_url(target) if target else None
+        to_https = bool(target) and (
+            urlsplit(request_url).scheme.lower() == "http" and urlsplit(target).scheme.lower() == "https"
+        )
+    except ValueError:  # a malformed Location
+        shown, to_https = None, False
+    message = f"The platform answered with a redirect (HTTP {response.status_code}"
+    if shown:
+        message += f" to {shown}"
+    message += (
+        "). The SDK does not follow redirects for platform API requests: a redirected POST can be "
+        "resent as GET without its body (HTTP 301/302/303) and fail with an unclear error such as an "
+        "Apollo CSRF HTTP 400, and the credentials would go to another URL."
+    )
+    if to_https:
+        message += f" The host uses http:// but the server wants https://. Set the host to https:// ({HOST_SETTING})."
+    else:
+        message += f" Check the platform host ({HOST_SETTING})."
+    return BadResponseError(message)
+
+
+def post_without_redirects(post, url: str, **kwargs):
+    """``post(url, **kwargs)`` (a session's or requests' post) without following redirects.
+
+    requests still prepares the next request of a redirect it does not follow,
+    so a malformed Location fails inside ``post`` (e.g. ValueError "Invalid
+    IPv6 URL"). If the response hook saw a redirect, that raises
+    ``redirect_error`` instead. The caller checks the returned status.
+    """
+    redirects = []
+
+    def keep_redirect(response, *args, **hook_kwargs):
+        if 300 <= response.status_code < 400:
+            redirects.append(response)
+
+    try:
+        return post(url, allow_redirects=False, hooks={"response": keep_redirect}, **kwargs)
+    except Exception:
+        if redirects:
+            raise redirect_error(url, redirects[-1]) from None
+        raise
 
 
 class _RedactUrlQueryFilter(logging.Filter):
@@ -273,10 +343,12 @@ class BaseService():
                     "variables": variables,
                 },
             )
-            response = session.post(
+            # No redirects: see redirect_error. The credentials go to self.endpoint only.
+            response = post_without_redirects(
+                session.post,
                 self.endpoint,
                 json=payload,
-                headers=self._auth_user.auth_headers
+                headers=self._auth_user.auth_headers,
             )
             _print_debug(
                 "response_http",
@@ -285,6 +357,8 @@ class BaseService():
                     "elapsed_ms": int(response.elapsed.total_seconds() * 1000) if getattr(response, "elapsed", None) else None,
                 },
             )
+            if 300 <= response.status_code < 400:
+                raise redirect_error(self.endpoint, response)
             response.raise_for_status()
             
             result = response.json()
