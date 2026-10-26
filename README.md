@@ -284,7 +284,9 @@ except UnknownError as e:
   are never resent to another URL. Write `host` with `https://`: if an `http://` host is redirected
   to `https://`, the SDK raises a `BadResponseError` that says so (following the redirect would turn
   the POST into a GET and fail with an unclear Apollo CSRF 400). Reading a config whose `host` uses
-  `http://` (other than a loopback host) gives an `InsecureHostWarning` once.
+  `http://` (other than a loopback host) gives an `InsecureHostWarning` once. If the server serves
+  plain HTTP only, turn it off with
+  `warnings.filterwarnings("ignore", category=spb_onprem.exceptions.InsecureHostWarning)`.
 - SDK error messages, SDK logs, `SDK_DEBUG_GQL` output and SDK exceptions hide credentials and
   presigned URL signatures (URL query strings).
 - On import, the SDK adds a filter to the `urllib3.connectionpool` and `urllib3.util.retry` loggers

@@ -16,6 +16,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
 
+from spb_onprem import DeploymentInvokeRequest, ModelDeploymentService
 from spb_onprem.base_service import BaseService
 from spb_onprem.exceptions import BadRequestError, BadRequestParameterError, BadResponseError
 from spb_onprem.users.entities import AuthUser
@@ -188,6 +189,59 @@ def test_graphql_redirect_sends_no_credentials_to_another_host(status, system, f
     assert ("x-user-email" if system else "authorization") in sent  # it was sent to the platform
     assert len(redirect.httpd.received) == 1
     assert target.httpd.received == []  # the other host got nothing, so no credentials
+
+
+def test_graphql_redirect_with_a_malformed_location_names_the_cause(fast_retries):
+    """requests prepares the next request even when it does not follow; that fails on a bad Location."""
+    server = _Server(_handler(301, location="http://[bad"))
+    try:
+        service = _service(f"http://127.0.0.1:{server.port}", system=False)
+        with pytest.raises(BadResponseError) as raised:
+            service.request_gql(GQL, {})
+    finally:
+        server.close()
+
+    message = str(raised.value)
+    assert "(HTTP 301)" in message
+    assert "Check the platform host" in message
+    assert "Unexpected error" not in message
+    assert raised.value.__cause__ is None and raised.value.__suppress_context__
+    assert [item["method"] for item in server.httpd.received] == ["POST"]
+
+
+def test_graphql_redirect_message_hides_location_credentials(fast_retries):
+    server = _Server(_handler(307, location="https://user:secret-pass@sso.example.test/auth?token=abc123#frag-xyz"))
+    try:
+        service = _service(f"http://127.0.0.1:{server.port}", system=False)
+        with pytest.raises(BadResponseError) as raised:
+            service.request_gql(GQL, {})
+    finally:
+        server.close()
+
+    message = str(raised.value)
+    assert "to https://sso.example.test/auth?<redacted>)" in message
+    for hidden in ("user:", "secret-pass", "abc123", "frag-xyz"):
+        assert hidden not in message
+
+
+INVOKE_IDS = ("01J" + "0" * 20 + "DAT", "01J" + "0" * 20 + "DPX")
+
+
+@pytest.mark.parametrize("location, expected", [
+    ("https://platform.example.test/graphql/x", "Set the host to https://"),
+    ("http://[bad", "Check the platform host"),
+])
+def test_invoke_redirect_names_the_cause(location, expected):
+    server = _Server(_handler(301, location=location))
+    try:
+        service = ModelDeploymentService()
+        service._auth_user = _service(f"http://127.0.0.1:{server.port}", system=False)._auth_user
+        with pytest.raises(BadResponseError, match=expected):
+            service.invoke_model_deployment(*INVOKE_IDS, DeploymentInvokeRequest(text="hi"))
+    finally:
+        server.close()
+
+    assert [item["method"] for item in server.httpd.received] == ["POST"]
 
 
 @pytest.mark.parametrize("url", [

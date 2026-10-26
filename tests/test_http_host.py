@@ -146,6 +146,12 @@ class TestRedirectError:
         assert "abc123" not in message
         assert "?<redacted>" in message
 
+    def test_location_userinfo_and_fragment_are_hidden(self):
+        message = str(redirect_error("https://platform.example.test/graphql/",
+                                     _redirect(302, "https://user:secret-pass@sso.example.test/login#frag-xyz")))
+        assert "to https://sso.example.test/login)" in message
+        assert "user:" not in message and "secret-pass" not in message and "frag-xyz" not in message
+
     def test_no_location(self):
         message = str(redirect_error("http://platform.example.test/graphql/", _redirect(308)))
         assert "(HTTP 308)" in message
