@@ -5,16 +5,28 @@ with the rules of zenith (branch fde-85-model-task-type-vlm) that the SDK relies
 status transitions of stop/start/delete, template visibility and deletion
 (C17 revision 3), and DELETE_MODEL_DEPLOYMENT through startJob: the request only
 records the activity and the targets are picked when it runs (C20).
+C38 (FDE-237): definition ``params`` (key rule, at most 32, no widget hints),
+deployment ``parameters`` (unknown keys refused, defaults filled in, required
+items), the expiry input of start and ``setModelDeploymentExpiry``.
 Data is synthetic.
 """
 import copy
 import itertools
 import re
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 ACTIVE = {"PENDING", "STARTING", "READY", "UNRESPONSIVE"}
 ENDED = {"STOPPED", "FAILED", "EXPIRED"}
+EXPIRY_CHANGEABLE = {"PENDING", "STARTING", "READY"}
 ADMIN = "admin@example.test"
+PARAM_KEY = re.compile(r"[a-z][a-z0-9_]{0,63}")
+MODEL_TYPE_PARAM = {
+    "schema": {"type": "string", "enum": ["edge", "nano"], "title": "Model type",
+               "values_display": {"edge": "Cosmos3-Edge", "nano": "Cosmos3-Nano"}},
+    "value": "edge",
+    "description": "Base model size.",
+}
 
 
 class _Response:
@@ -47,7 +59,8 @@ class FakePlatform:
         self.admin = admin
         self.ids = (f"01JDEPLOY{n:017d}" for n in itertools.count(1))
         self.definitions: Dict[str, dict] = {
-            "cosmos3-reasoner": self._definition("cosmos3-reasoner", "Cosmos 3 Reasoner", None, system=True),
+            "cosmos3-reasoner": self._definition("cosmos3-reasoner", "Cosmos 3 Reasoner", None, system=True,
+                                                 params={"model_type": copy.deepcopy(MODEL_TYPE_PARAM)}),
         }
         self.models: Dict[str, dict] = {
             "model-1": {"datasetId": dataset_id, "id": "model-1", "name": "tuned", "status": "COMPLETED",
@@ -76,11 +89,61 @@ class FakePlatform:
 
     # helpers ------------------------------------------------------------------
     @staticmethod
-    def _definition(definition_id, name, dataset_id, system=False, image="team/server", tag=None):
+    def _definition(definition_id, name, dataset_id, system=False, image="team/server", tag=None, params=None):
         return {"id": definition_id, "name": name, "description": None, "datasetId": dataset_id,
                 "isSystem": system, "isPinned": False, "serverImageName": image, "serverImageTag": tag,
-                "startScript": None, "createdAt": "2026-10-20T00:00:00.000Z", "createdBy": ADMIN,
-                "updatedAt": "2026-10-20T00:00:00.000Z", "updatedBy": ADMIN}
+                "startScript": None, "params": params, "createdAt": "2026-10-20T00:00:00.000Z",
+                "createdBy": ADMIN, "updatedAt": "2026-10-20T00:00:00.000Z", "updatedBy": ADMIN}
+
+    @staticmethod
+    def _check_params(params):
+        """C38 item 1, the parts the SDK relies on."""
+        if not params:
+            return
+        if len(params) > 32:
+            raise PlatformError("BAD_REQUEST", "params can have at most 32 items.")
+        for key, item in params.items():
+            if not PARAM_KEY.fullmatch(key):
+                raise PlatformError("BAD_REQUEST", f"params key {key!r} is invalid.")
+            platform_config = item.get("platform_config") or {}
+            schema = item.get("schema") or {}
+            if ("ui_type_hint" in platform_config or "invisible" in platform_config
+                    or "x-superb-widget" in schema or "x-superb-gpu-supported" in schema):
+                raise PlatformError("BAD_REQUEST", f"params item {key!r} uses a widget hint.")
+
+    @staticmethod
+    def _fill_parameters(params, parameters):
+        """C38 item 2: unknown keys refused, missing items get their default, required items checked."""
+        params = params or {}
+        parameters = dict(parameters or {})
+        unknown = set(parameters) - set(params)
+        if unknown:
+            raise PlatformError("BAD_REQUEST", f"Unknown deployment parameters: {sorted(unknown)}.")
+        for key, item in params.items():
+            if key in parameters:
+                enum = (item.get("schema") or {}).get("enum")
+                if enum is not None and parameters[key] not in enum:
+                    raise PlatformError("BAD_REQUEST", f"parameters.{key} must be one of {enum}.")
+            elif "value" in item:
+                parameters[key] = copy.deepcopy(item["value"])
+            else:
+                types = (item.get("schema") or {}).get("type")
+                if "null" not in (types if isinstance(types, list) else [types]):
+                    raise PlatformError("BAD_REQUEST", f"parameters.{key} is required.")
+        return parameters
+
+    @staticmethod
+    def _expires_at(expiry):
+        """C38 item 5: neverExpires takes no expiresAt; otherwise a future expiresAt is required."""
+        if expiry["neverExpires"]:
+            if expiry.get("expiresAt") is not None:
+                raise PlatformError("BAD_REQUEST", "expiresAt must be empty when neverExpires is true.")
+            return None
+        if not expiry.get("expiresAt"):
+            raise PlatformError("BAD_REQUEST", "expiresAt is required unless neverExpires is true.")
+        if datetime.fromisoformat(expiry["expiresAt"].replace("Z", "+00:00")) <= datetime.now(timezone.utc):
+            raise PlatformError("BAD_REQUEST", "expiresAt must be in the future.")
+        return expiry["expiresAt"]
 
     def _vlm(self, datasetId):
         if datasetId != self.dataset_id:
@@ -142,8 +205,10 @@ class FakePlatform:
             raise PlatformError("BAD_REQUEST", "id must be 3 to 63 lowercase letters, numbers, and hyphens.")
         if input["id"] in self.definitions:
             raise PlatformError("CONFLICT", "A deploy definition with this ID already exists.")
+        self._check_params(input.get("params"))
         definition = self._definition(input["id"], input["name"], datasetId if input["datasetOnly"] else None,
-                                      image=input["serverImageName"], tag=input.get("serverImageTag"))
+                                      image=input["serverImageName"], tag=input.get("serverImageTag"),
+                                      params=input.get("params"))
         definition.update(description=input.get("description"), startScript=input.get("startScript"))
         self.definitions[input["id"]] = definition
         return definition
@@ -185,11 +250,13 @@ class FakePlatform:
     # deployments ----------------------------------------------------------------
     def createModelDeployment(self, datasetId, definitionId, name, modelId=None, description=None,
                               expiresAt=None, gpuTypes=None, gpuCount=None, invokeTimeoutSeconds=None,
-                              bindModelToDefinition=False):
+                              bindModelToDefinition=False, parameters=None):
         self._vlm(datasetId)
         self._require_admin()
-        if not self._visible(datasetId, definitionId):
+        definition = self._visible(datasetId, definitionId)
+        if not definition:
             raise PlatformError("NOT_FOUND", "Model deploy definition not found.")
+        parameters = self._fill_parameters(definition["params"], parameters)
         if modelId is not None:
             model = self.models.get(modelId)
             if not model:
@@ -203,7 +270,7 @@ class FakePlatform:
             "name": name, "description": description, "status": "PENDING", "lastHeartbeatAt": None,
             "expiresAt": expiresAt, "gpuTypes": gpuTypes or [], "gpuCount": gpuCount or 1, "isPinned": False,
             "startedAt": "2026-10-20T00:00:00.000Z", "invokeTimeoutSeconds": invokeTimeoutSeconds or 600,
-            "createdAt": "2026-10-20T00:00:00.000Z", "createdBy": ADMIN,
+            "parameters": parameters, "createdAt": "2026-10-20T00:00:00.000Z", "createdBy": ADMIN,
             "updatedAt": "2026-10-20T00:00:00.000Z", "updatedBy": ADMIN, "generation": 1,
         }
         self.deployments[record["id"]] = record
@@ -246,17 +313,28 @@ class FakePlatform:
         self.runtimes[deploymentId][0]["cleanupActivityHistoryId"] = f"history-stop-{deploymentId}"
         return self._with_runtime(record)
 
-    def startModelDeployment(self, datasetId, deploymentId, expiresAt=None):
+    def startModelDeployment(self, datasetId, deploymentId, expiry):
         self._require_admin()
         record = self._deployment(datasetId, deploymentId)
         if record["status"] not in ENDED:
             raise PlatformError("CONFLICT", "Only stopped, failed or expired deployments can be started.")
         if not record["definitionId"]:
             raise PlatformError("BAD_REQUEST", "The template of this deployment was deleted.")
-        record.update(status="PENDING", generation=record["generation"] + 1)
-        if expiresAt:
-            record["expiresAt"] = expiresAt
+        expires_at = self._expires_at(expiry)
+        # Stored values are used as they are; an item added to the definition since gets its default.
+        parameters = self._fill_parameters(self.definitions[record["definitionId"]]["params"],
+                                           record["parameters"])
+        record.update(status="PENDING", generation=record["generation"] + 1, expiresAt=expires_at,
+                      parameters=parameters)
         self._new_runtime(record)
+        return self._with_runtime(record)
+
+    def setModelDeploymentExpiry(self, datasetId, deploymentId, expiry):
+        self._require_admin()
+        record = self._deployment(datasetId, deploymentId)
+        if record["status"] not in EXPIRY_CHANGEABLE:
+            raise PlatformError("CONFLICT", "Only pending, starting or ready deployments can change the expiry.")
+        record["expiresAt"] = self._expires_at(expiry)
         return self._with_runtime(record)
 
     def setModelDeploymentPinned(self, datasetId, deploymentId, isPinned):

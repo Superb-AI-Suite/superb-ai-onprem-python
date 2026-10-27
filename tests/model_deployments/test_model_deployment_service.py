@@ -6,6 +6,7 @@ import pytest
 
 from spb_onprem import (
     ActivityHistory,
+    ModelDeployDefinition,
     ModelDeployDefinitionInput,
     ModelDeployDefinitionService,
     ModelDeployment,
@@ -72,7 +73,8 @@ class TestTemplates:
         assert _variables(platform) == {
             "datasetId": DATASET,
             "input": {"id": "my-server", "name": "My server", "serverImageName": "team/my-server",
-                      "serverImageTag": "v1", "description": None, "startScript": None, "datasetOnly": True},
+                      "serverImageTag": "v1", "description": None, "startScript": None, "datasetOnly": True,
+                      "params": None},
         }
         assert created.id == "my-server"
         assert created.dataset_id == DATASET
@@ -177,8 +179,10 @@ class TestLifecycle:
             "description": "first", "expiresAt": "2030-01-02T03:04:05Z", "gpuTypes": ["NVIDIA-A100-SXM4-80GB"],
             "gpuCount": 2, "invokeTimeoutSeconds": 900, "bindModelToDefinition": False,
         }
+        assert "parameters" not in _variables(platform)  # not given: every form value gets its default
         assert isinstance(created, ModelDeployment)
         assert created.status == ModelDeploymentStatus.PENDING
+        assert created.parameters == {"model_type": "edge"}
         assert created.runtime.generation == 1
         assert created.runtime.deploy_activity_history_id
         assert created.is_base_model is False
@@ -248,7 +252,11 @@ class TestLifecycle:
 
         assert started.status == ModelDeploymentStatus.PENDING
         assert started.runtime.generation == 2
-        assert _variables(platform)["expiresAt"] == "2031-01-01T00:00:00Z"
+        assert _variables(platform) == {
+            "datasetId": DATASET, "deploymentId": created.id,
+            "expiry": {"neverExpires": False, "expiresAt": "2031-01-01T00:00:00Z"},
+        }
+        assert started.expires_at == "2031-01-01T00:00:00Z"
         runtimes = deployments.get_model_deployment_runtimes(DATASET, created.id)
         assert [runtime.generation for runtime in runtimes] == [2, 1]
 
@@ -262,7 +270,7 @@ class TestLifecycle:
         created = deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "d1")
         platform.runtime_reports(created.id, "READY")
         with pytest.raises(ConflictError):
-            deployments.start_model_deployment(DATASET, created.id)
+            deployments.start_model_deployment(DATASET, created.id, never_expires=True)
 
     def test_deployment_without_template_cannot_start(self, platform, deployments, templates):
         _template(templates)
@@ -270,7 +278,7 @@ class TestLifecycle:
         templates.delete_model_deploy_definition(DATASET, "my-server")
         platform.runtime_reports(created.id, "STOPPED")
         with pytest.raises(InvalidInputError, match="template"):
-            deployments.start_model_deployment(DATASET, created.id)
+            deployments.start_model_deployment(DATASET, created.id, never_expires=True)
 
     def test_update_sends_only_the_given_fields(self, platform, deployments):
         created = deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "d1", description="old")
@@ -338,6 +346,240 @@ class TestLifecycle:
         with pytest.raises(BadParameterError):
             deployments.stop_model_deployment(**kwargs)
         assert platform.requests == []
+
+
+class TestDefinitionParams:
+    """C38 item 1: the input form of a definition."""
+
+    PARAMS = {
+        "model_type": {"schema": {"type": "string", "enum": ["edge", "nano"]}, "value": "edge",
+                       "description": "Base model size."},
+        "max_frames": {"schema": {"type": ["integer", "null"], "minimum": 1, "maximum": 64}},
+        "prompt_style": {"schema": {"type": "string"}},  # no default, not nullable: required
+    }
+
+    def test_create_sends_params_and_reads_them_back(self, platform, templates):
+        created = templates.create_model_deploy_definition(
+            DATASET,
+            ModelDeployDefinitionInput(id="form-server", name="Form", server_image_name="team/form",
+                                       params=self.PARAMS),
+        )
+
+        assert _variables(platform)["input"]["params"] == self.PARAMS
+        assert created.params == self.PARAMS
+        assert templates.get_model_deploy_definition(DATASET, "form-server").params == self.PARAMS
+
+    def test_create_takes_params_in_a_dict(self, platform, templates):
+        templates.create_model_deploy_definition(
+            DATASET, {"id": "form-server", "name": "Form", "serverImageName": "team/form", "params": {}},
+        )
+        assert _variables(platform)["input"]["params"] == {}
+
+    def test_system_definition_has_the_model_type_form(self, templates):
+        definition = templates.get_model_deploy_definition(DATASET, "cosmos3-reasoner")
+        assert definition.params["model_type"]["value"] == "edge"
+        assert definition.params["model_type"]["schema"]["enum"] == ["edge", "nano"]
+
+    def test_a_definition_without_a_form(self, templates):
+        assert _template(templates).params is None
+        assert ModelDeployDefinition.model_validate({"id": "old"}).params is None
+
+    @pytest.mark.parametrize("params", [
+        {"Model-Type": {"schema": {"type": "string"}}},
+        {"gpu": {"schema": {"type": "string"}, "platform_config": {"ui_type_hint": "GPU_TYPE"}}},
+        {"slice": {"schema": {"type": "string", "x-superb-widget": "slice"}}},
+        {f"item_{n}": {"schema": {"type": "string"}, "value": "x"} for n in range(33)},
+    ])
+    def test_a_form_the_platform_refuses_is_invalid_input(self, templates, params):
+        with pytest.raises(InvalidInputError):
+            templates.create_model_deploy_definition(
+                DATASET, ModelDeployDefinitionInput(id="form-server", name="F", server_image_name="t/f",
+                                                    params=params),
+            )
+
+    @pytest.mark.parametrize("params", [["model_type"], {"model_type": "edge"}])
+    def test_params_of_the_wrong_shape_are_refused_before_sending(self, platform, templates, params):
+        with pytest.raises(BadParameterError, match="definition is invalid"):
+            templates.create_model_deploy_definition(
+                DATASET, {"id": "form-server", "name": "F", "serverImageName": "t/f", "params": params},
+            )
+        assert platform.requests == []
+
+
+class TestParameters:
+    """C38 item 2: form values of a deployment."""
+
+    def test_given_values_are_sent_and_the_rest_get_defaults(self, platform, deployments, templates):
+        templates.create_model_deploy_definition(DATASET, ModelDeployDefinitionInput(
+            id="form-server", name="Form", server_image_name="team/form",
+            params=TestDefinitionParams.PARAMS,
+        ))
+
+        created = deployments.create_model_deployment(
+            DATASET, "form-server", "d1", parameters={"prompt_style": "short"},
+        )
+
+        assert _variables(platform)["parameters"] == {"prompt_style": "short"}
+        assert created.parameters == {"prompt_style": "short", "model_type": "edge"}
+        listed, _, _ = deployments.get_model_deployments(DATASET)
+        assert listed[0].parameters == created.parameters
+        assert "parameters" in platform.requests[-1]["payload"]["query"]
+
+    def test_model_type_of_the_system_definition(self, platform, deployments):
+        created = deployments.create_model_deployment(
+            DATASET, "cosmos3-reasoner", "nano", parameters={"model_type": "nano"},
+        )
+        assert created.parameters == {"model_type": "nano"}
+
+    def test_a_mapping_is_sent_as_a_dict(self, platform, deployments):
+        from types import MappingProxyType
+
+        deployments.create_model_deployment(
+            DATASET, "cosmos3-reasoner", "d1", parameters=MappingProxyType({"model_type": "nano"}),
+        )
+        assert _variables(platform)["parameters"] == {"model_type": "nano"}
+
+    @pytest.mark.parametrize("parameters,reason", [
+        ({"unknown": 1}, "Unknown"),
+        ({"model_type": "large"}, "must be one of"),
+    ])
+    def test_values_the_platform_refuses_are_invalid_input(self, deployments, parameters, reason):
+        with pytest.raises(InvalidInputError, match=reason):
+            deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "d1", parameters=parameters)
+
+    def test_a_required_item_without_a_value_is_invalid_input(self, deployments, templates):
+        templates.create_model_deploy_definition(DATASET, ModelDeployDefinitionInput(
+            id="form-server", name="Form", server_image_name="team/form",
+            params=TestDefinitionParams.PARAMS,
+        ))
+        with pytest.raises(InvalidInputError, match="prompt_style is required"):
+            deployments.create_model_deployment(DATASET, "form-server", "d1")
+
+    @pytest.mark.parametrize("parameters", [
+        "model_type=nano", ["model_type"], {1: "x"}, {"model_type": object()}, {"limit": float("nan")},
+    ])
+    def test_values_that_are_not_a_json_object_are_refused_before_sending(self, platform, deployments,
+                                                                          parameters):
+        with pytest.raises(BadParameterError, match="parameters"):
+            deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "d1", parameters=parameters)
+        assert platform.requests == []
+
+    def test_start_keeps_the_values_and_fills_a_new_item(self, platform, deployments, templates):
+        templates.create_model_deploy_definition(DATASET, ModelDeployDefinitionInput(
+            id="form-server", name="Form", server_image_name="team/form",
+            params={"model_type": TestDefinitionParams.PARAMS["model_type"]},
+        ))
+        created = deployments.create_model_deployment(
+            DATASET, "form-server", "d1", parameters={"model_type": "nano"},
+        )
+        platform.runtime_reports(created.id, "STOPPED")
+        platform.definitions["form-server"]["params"]["fps"] = {"schema": {"type": "integer"}, "value": 4}
+
+        started = deployments.start_model_deployment(DATASET, created.id, never_expires=True)
+
+        assert started.parameters == {"model_type": "nano", "fps": 4}
+
+    def test_a_deployment_from_before_form_values(self):
+        assert ModelDeployment.model_validate({"id": "old", "parameters": None}).parameters is None
+
+
+class TestExpiry:
+    """C38 item 5: the expiry is chosen at every start, and can change while running."""
+
+    @pytest.fixture
+    def stopped(self, platform, deployments):
+        created = deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "d1",
+                                                      expires_at="2030-01-01T00:00:00Z")
+        platform.runtime_reports(created.id, "STOPPED")
+        return created
+
+    @pytest.fixture
+    def ready(self, platform, deployments):
+        created = deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "d1")
+        platform.runtime_reports(created.id, "READY")
+        return created
+
+    def test_start_without_an_expiry_is_refused_before_sending(self, platform, deployments, stopped):
+        sent_before = len(platform.requests)
+        with pytest.raises(BadParameterError, match="expires_at .* or never_expires=True") as error:
+            deployments.start_model_deployment(DATASET, stopped.id)
+        assert "no longer supported" in str(error.value)
+        with pytest.raises(BadParameterError):
+            deployments.start_model_deployment(DATASET, stopped.id, None)
+        with pytest.raises(BadParameterError):
+            deployments.start_model_deployment(DATASET, stopped.id, never_expires=False)
+        assert len(platform.requests) == sent_before
+
+    def test_start_never_expires(self, platform, deployments, stopped):
+        started = deployments.start_model_deployment(DATASET, stopped.id, never_expires=True)
+
+        assert _variables(platform)["expiry"] == {"neverExpires": True}  # no expiresAt key
+        assert started.expires_at is None  # the old expiry is not kept
+
+    def test_start_with_a_time_from_now(self, platform, deployments, stopped):
+        before = datetime.now(timezone.utc)
+
+        deployments.start_model_deployment(DATASET, stopped.id, timedelta(hours=8))
+
+        expiry = _variables(platform)["expiry"]
+        assert expiry["neverExpires"] is False
+        expires = datetime.fromisoformat(expiry["expiresAt"].replace("Z", "+00:00"))
+        assert timedelta(hours=8) <= expires - before < timedelta(hours=8, minutes=1)
+
+    def test_start_with_a_passed_time_is_refused_by_the_platform(self, deployments, stopped):
+        with pytest.raises(InvalidInputError, match="future"):
+            deployments.start_model_deployment(DATASET, stopped.id, expires_at="2020-01-01T00:00:00Z")
+
+    @pytest.mark.parametrize("call", ["start_model_deployment", "set_model_deployment_expiry"])
+    @pytest.mark.parametrize("kwargs,reason", [
+        ({"expires_at": "2031-01-01T00:00:00Z", "never_expires": True}, "not both"),
+        ({"never_expires": "yes"}, "True or False"),
+        ({"never_expires": 1}, "True or False"),
+        ({"expires_at": timedelta(0)}, "future"),
+        ({"expires_at": "2031-01-01T00:00:00"}, "UTC offset"),
+    ])
+    def test_bad_expiry_is_refused_before_sending(self, platform, deployments, stopped, call, kwargs, reason):
+        sent_before = len(platform.requests)
+        with pytest.raises(BadParameterError, match=reason):
+            getattr(deployments, call)(DATASET, stopped.id, **kwargs)
+        assert len(platform.requests) == sent_before
+
+    def test_never_expires_is_keyword_only(self, deployments, stopped):
+        with pytest.raises(TypeError):
+            deployments.start_model_deployment(DATASET, stopped.id, None, True)
+
+    def test_set_expiry_of_a_running_deployment(self, platform, deployments, ready):
+        changed = deployments.set_model_deployment_expiry(DATASET, ready.id, expires_at="2031-06-01T00:00:00Z")
+
+        assert _variables(platform) == {
+            "datasetId": DATASET, "deploymentId": ready.id,
+            "expiry": {"neverExpires": False, "expiresAt": "2031-06-01T00:00:00Z"},
+        }
+        assert changed.expires_at == "2031-06-01T00:00:00Z"
+        assert changed.status == ModelDeploymentStatus.READY  # no restart
+        assert changed.runtime.generation == 1
+
+        cleared = deployments.set_model_deployment_expiry(DATASET, ready.id, never_expires=True)
+
+        assert _variables(platform)["expiry"] == {"neverExpires": True}
+        assert cleared.expires_at is None
+
+    def test_set_expiry_needs_an_explicit_choice(self, platform, deployments, ready):
+        sent_before = len(platform.requests)
+        with pytest.raises(BadParameterError, match="set_model_deployment_expiry needs an expiry"):
+            deployments.set_model_deployment_expiry(DATASET, ready.id)
+        assert len(platform.requests) == sent_before
+
+    @pytest.mark.parametrize("status", ["UNRESPONSIVE", "STOPPING", "STOPPED", "FAILED", "EXPIRED"])
+    def test_set_expiry_only_while_pending_starting_or_ready(self, platform, deployments, ready, status):
+        platform.runtime_reports(ready.id, status)
+        with pytest.raises(ConflictError):
+            deployments.set_model_deployment_expiry(DATASET, ready.id, never_expires=True)
+
+    def test_set_expiry_needs_a_dataset_admin(self, platform, deployments, ready):
+        platform.admin = False
+        with pytest.raises(ForbiddenError):
+            deployments.set_model_deployment_expiry(DATASET, ready.id, never_expires=True)
 
 
 class TestDelete:

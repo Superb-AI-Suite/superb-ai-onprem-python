@@ -657,6 +657,7 @@ input CreateModelDeployDefinitionInput {
   description: String
   id: String!
   name: String!
+  params: JSON
   serverImageName: String!
   serverImageTag: String
   startScript: String
@@ -2555,6 +2556,7 @@ type ModelDeployDefinition {
   isSystem: Boolean!
   modelSpecification: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
   name: String!
+  params: JSON
   serverImageName: String
   serverImageTag: String
   startScript: String
@@ -2605,6 +2607,7 @@ type ModelDeployment {
   """
   modelId: ID
   name: String!
+  parameters: JSON
 
   """FDE-112: Runtime record of the current generation."""
   runtime: ModelDeploymentRuntime
@@ -2612,6 +2615,11 @@ type ModelDeployment {
   status: ModelDeploymentStatus!
   updatedAt: DateTime!
   updatedBy: String!
+}
+
+input ModelDeploymentExpiryInput {
+  expiresAt: DateTime
+  neverExpires: Boolean!
 }
 
 input ModelDeploymentFilter {
@@ -3158,6 +3166,7 @@ type Mutation {
     """
     modelId: ID
     name: String!
+    parameters: JSON
   ): ModelDeployment!
   createSlice(
     """The ID of the dataset that the slice belongs to."""
@@ -3636,6 +3645,7 @@ type Mutation {
   """
   FDE-115: Pin or unpin a deployment. Pinned deployments come first for everyone.
   """
+  setModelDeploymentExpiry(datasetId: ID!, deploymentId: ID!, expiry: ModelDeploymentExpiryInput!): ModelDeployment!
   setModelDeploymentPinned(datasetId: ID!, deploymentId: ID!, isPinned: Boolean!): ModelDeployment!
   signIn(email: EmailAddress!, password: NonEmptyString!): AuthToken!
   signOut(accessToken: JWT!, idToken: JWT!, refreshToken: JWT!): Boolean!
@@ -3671,9 +3681,9 @@ type Mutation {
   ): JobHistory!
 
   """
-  FDE-112: Start a stopped, failed or expired deployment again as a new PENDING run. Without expiresAt, a remaining expiry is kept and a passed one is renewed for the same duration.
+  FDE-112: Start a stopped, failed or expired deployment again as a new PENDING run. C38 (FDE-237): the expiry is chosen at every start (neverExpires, or a future expiresAt).
   """
-  startModelDeployment(datasetId: ID!, deploymentId: ID!, expiresAt: DateTime): ModelDeployment!
+  startModelDeployment(datasetId: ID!, deploymentId: ID!, expiry: ModelDeploymentExpiryInput!): ModelDeployment!
 
   """Start a workflow run from a workflow instance."""
   startWorkflowRun(

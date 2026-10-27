@@ -8,6 +8,7 @@ from .params import (
     model_deployment_params,
     model_deployments_params,
     set_model_deploy_definition_pinned_params,
+    set_model_deployment_expiry_params,
     set_model_deployment_pinned_params,
     start_model_deployment_params,
     unbind_model_deploy_definition_params,
@@ -52,6 +53,7 @@ class Schemas:
         isPinned
         startedAt
         invokeTimeoutSeconds
+        parameters
         createdAt
         createdBy
         updatedAt
@@ -75,6 +77,7 @@ class Schemas:
         serverImageName
         serverImageTag
         startScript
+        params
         createdAt
         createdBy
         updatedAt
@@ -156,7 +159,8 @@ class Queries:
                 $gpuTypes: [String!],
                 $gpuCount: Int,
                 $invokeTimeoutSeconds: Int,
-                $bindModelToDefinition: Boolean
+                $bindModelToDefinition: Boolean,
+                $parameters: JSON
             ) {{
                 createModelDeployment(
                     datasetId: $datasetId,
@@ -168,7 +172,8 @@ class Queries:
                     gpuTypes: $gpuTypes,
                     gpuCount: $gpuCount,
                     invokeTimeoutSeconds: $invokeTimeoutSeconds,
-                    bindModelToDefinition: $bindModelToDefinition
+                    bindModelToDefinition: $bindModelToDefinition,
+                    parameters: $parameters
                 ) {{
                     {Schemas.DEPLOYMENT_WITH_RUNTIME}
                 }}
@@ -216,13 +221,33 @@ class Queries:
     START_MODEL_DEPLOYMENT = {
         "name": "startModelDeployment",
         "query": f'''
-            mutation StartModelDeployment($datasetId: ID!, $deploymentId: ID!, $expiresAt: DateTime) {{
-                startModelDeployment(datasetId: $datasetId, deploymentId: $deploymentId, expiresAt: $expiresAt) {{
+            mutation StartModelDeployment(
+                $datasetId: ID!,
+                $deploymentId: ID!,
+                $expiry: ModelDeploymentExpiryInput!
+            ) {{
+                startModelDeployment(datasetId: $datasetId, deploymentId: $deploymentId, expiry: $expiry) {{
                     {Schemas.DEPLOYMENT_WITH_RUNTIME}
                 }}
             }}
         ''',
         "variables": start_model_deployment_params,
+    }
+
+    SET_MODEL_DEPLOYMENT_EXPIRY = {
+        "name": "setModelDeploymentExpiry",
+        "query": f'''
+            mutation SetModelDeploymentExpiry(
+                $datasetId: ID!,
+                $deploymentId: ID!,
+                $expiry: ModelDeploymentExpiryInput!
+            ) {{
+                setModelDeploymentExpiry(datasetId: $datasetId, deploymentId: $deploymentId, expiry: $expiry) {{
+                    {Schemas.DEPLOYMENT_WITH_RUNTIME}
+                }}
+            }}
+        ''',
+        "variables": set_model_deployment_expiry_params,
     }
 
     SET_MODEL_DEPLOYMENT_PINNED = {

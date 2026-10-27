@@ -3,6 +3,13 @@
 The schema is a copy of zenith ``tmp/schema-public.gql`` (branch
 ``fde-85-model-task-type-vlm``, commit a52f8ae) in ``tests/fixtures``. When the
 platform schema changes, copy the new file over it.
+
+FDE-237 edited the copy by hand to contract C38 while zenith was built at the
+same time: ``ModelDeployDefinition.params``, ``ModelDeployment.parameters``,
+``CreateModelDeployDefinitionInput.params``, ``createModelDeployment(parameters)``,
+``ModelDeploymentExpiryInput``, ``startModelDeployment(expiry)`` and
+``setModelDeploymentExpiry``. Replace it with zenith's generated schema when
+that branch has it.
 """
 import importlib
 import pkgutil
