@@ -5,10 +5,12 @@ with the rules of zenith (branch fde-85-model-task-type-vlm) that the SDK relies
 status transitions of stop/start/delete, template visibility and deletion
 (C17 revision 3), and DELETE_MODEL_DEPLOYMENT through startJob: the request only
 records the activity and the targets are picked when it runs (C20).
-C38 (FDE-237): definition ``params`` (key rule, at most 32, no widget hints),
-deployment ``parameters`` (unknown keys refused, defaults filled in, required
-items), the expiry input of start and ``setModelDeploymentExpiry``.
-Data is synthetic.
+C38 (FDE-237, zenith 31a05ce): definition ``params`` (key rule, at most 32, no
+widget hints), deployment ``parameters`` (unknown keys refused, defaults filled
+in, required items; null for a deployment from before forms until its start),
+the expiry input of start and ``setModelDeploymentExpiry`` (the expiry is
+checked before the status, UNRESPONSIVE is refused, the same expiry changes
+nothing). Data is synthetic.
 """
 import copy
 import itertools
@@ -131,6 +133,10 @@ class FakePlatform:
                 if "null" not in (types if isinstance(types, list) else [types]):
                     raise PlatformError("BAD_REQUEST", f"parameters.{key} is required.")
         return parameters
+
+    @staticmethod
+    def _instant(value):
+        return None if value is None else datetime.fromisoformat(value.replace("Z", "+00:00"))
 
     @staticmethod
     def _expires_at(expiry):
@@ -315,13 +321,14 @@ class FakePlatform:
 
     def startModelDeployment(self, datasetId, deploymentId, expiry):
         self._require_admin()
+        expires_at = self._expires_at(expiry)  # zenith checks the expiry first
         record = self._deployment(datasetId, deploymentId)
         if record["status"] not in ENDED:
             raise PlatformError("CONFLICT", "Only stopped, failed or expired deployments can be started.")
         if not record["definitionId"]:
             raise PlatformError("BAD_REQUEST", "The template of this deployment was deleted.")
-        expires_at = self._expires_at(expiry)
-        # Stored values are used as they are; an item added to the definition since gets its default.
+        # Stored values (null for a deployment from before forms) are used as they are;
+        # an item added to the definition since gets its default.
         parameters = self._fill_parameters(self.definitions[record["definitionId"]]["params"],
                                            record["parameters"])
         record.update(status="PENDING", generation=record["generation"] + 1, expiresAt=expires_at,
@@ -331,10 +338,13 @@ class FakePlatform:
 
     def setModelDeploymentExpiry(self, datasetId, deploymentId, expiry):
         self._require_admin()
+        expires_at = self._expires_at(expiry)  # zenith checks the expiry first
         record = self._deployment(datasetId, deploymentId)
         if record["status"] not in EXPIRY_CHANGEABLE:
             raise PlatformError("CONFLICT", "Only pending, starting or ready deployments can change the expiry.")
-        record["expiresAt"] = self._expires_at(expiry)
+        if self._instant(record["expiresAt"]) == self._instant(expires_at):
+            return self._with_runtime(record)  # the same expiry changes nothing
+        record.update(expiresAt=expires_at, updatedAt=datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"))
         return self._with_runtime(record)
 
     def setModelDeploymentPinned(self, datasetId, deploymentId, isPinned):

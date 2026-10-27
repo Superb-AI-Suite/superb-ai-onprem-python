@@ -1,15 +1,11 @@
 """Every GraphQL document the SDK sends parses and validates against the platform schema.
 
-The schema is a copy of zenith ``tmp/schema-public.gql`` (branch
-``fde-85-model-task-type-vlm``, commit a52f8ae) in ``tests/fixtures``. When the
-platform schema changes, copy the new file over it.
-
-FDE-237 edited the copy by hand to contract C38 while zenith was built at the
-same time: ``ModelDeployDefinition.params``, ``ModelDeployment.parameters``,
-``CreateModelDeployDefinitionInput.params``, ``createModelDeployment(parameters)``,
-``ModelDeploymentExpiryInput``, ``startModelDeployment(expiry)`` and
-``setModelDeploymentExpiry``. Replace it with zenith's generated schema when
-that branch has it.
+The schema is a copy of zenith ``tmp/schema-public.gql`` in ``tests/fixtures``:
+branch ``feat/fde-237-deploy-definition-params-temp-main``, commit 31a05ce
+(temp-main with FDE-221 GPU options and C38 deployment forms and expiry). It
+replaced the copy from branch ``fde-85-model-task-type-vlm`` (commit a52f8ae),
+which was older than temp-main. When the platform schema changes, copy the new
+file over it unchanged; do not edit it by hand.
 """
 import importlib
 import pkgutil

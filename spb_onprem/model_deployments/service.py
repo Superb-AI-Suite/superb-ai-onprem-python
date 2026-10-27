@@ -336,11 +336,13 @@ class ModelDeploymentService(BaseService):
     ) -> ModelDeployment:
         """Change when a running deployment expires, without restarting it.
 
-        Only PENDING, STARTING and READY deployments (others: ConflictError).
-        The new expiry applies from the server's next heartbeat. Pass exactly
-        one of ``expires_at`` or ``never_expires=True``, as in
-        ``start_model_deployment``. Needs the same role as creating a
-        deployment.
+        Only PENDING, STARTING and READY deployments; UNRESPONSIVE, STOPPING,
+        DELETING and ended ones raise ConflictError. The new expiry applies
+        from the server's next heartbeat. The same expiry as now changes
+        nothing (the deployment is returned as it is). Pass exactly one of
+        ``expires_at`` or ``never_expires=True``, as in
+        ``start_model_deployment``; a time that has passed raises
+        InvalidInputError. Needs the same role as creating a deployment.
 
         Args:
             expires_at: The new expiry: a datetime, an ISO 8601 string or a

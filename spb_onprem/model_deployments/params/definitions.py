@@ -6,6 +6,7 @@ from spb_onprem.activities.deletion import require_id
 from spb_onprem.exceptions import BadParameterError
 
 from ..entities import ModelDeployDefinitionInput
+from .deployments import json_object_variable
 
 
 def model_deploy_definitions_params(dataset_id: str) -> dict:
@@ -31,6 +32,9 @@ def create_model_deploy_definition_params(
             raise BadParameterError(f"definition is invalid: {error}") from error
     if not isinstance(definition, ModelDeployDefinitionInput):
         raise BadParameterError("definition must be a ModelDeployDefinitionInput or a dict.")
+    if definition.params is not None:
+        # The same check as a deployment's parameters, before model_dump meets a value it cannot write.
+        json_object_variable(definition.params, "definition.params")
     return {
         "datasetId": require_id(dataset_id, "dataset_id"),
         "input": definition.model_dump(mode="json", by_alias=True),

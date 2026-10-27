@@ -89,7 +89,8 @@ it in by key:
   them. What they mean is up to the server (for example `model_type` of the Cosmos 3 definitions:
   `edge` or `nano`, the size the model was trained with).
 - **No secrets:** the values are stored as plain text and shown in the deployment details.
-- Deployments made before form values existed have `parameters` None; the platform uses the defaults.
+- Deployments made before form values existed have `parameters` None until they are started again;
+  the start fills them with the defaults.
 
 ### Expiry
 
@@ -99,7 +100,7 @@ When a deployment expires, its server is removed and the status becomes EXPIRED.
 | --- | --- |
 | `create_model_deployment(..., expires_at=...)` | Optional: None (default) never expires. |
 | `start_model_deployment(dataset_id, deployment_id, expires_at=...)` or `(..., never_expires=True)` | **Required**: exactly one of the two. |
-| `set_model_deployment_expiry(dataset_id, deployment_id, expires_at=...)` or `(..., never_expires=True)` | Changes a PENDING, STARTING or READY deployment without a restart, from the server's next heartbeat. |
+| `set_model_deployment_expiry(dataset_id, deployment_id, expires_at=...)` or `(..., never_expires=True)` | Changes a PENDING, STARTING or READY deployment without a restart, from the server's next heartbeat. The same expiry as now changes nothing. |
 
 ```python
 from datetime import timedelta
@@ -112,8 +113,8 @@ service.set_model_deployment_expiry("dataset_123", deployment.id, never_expires=
   and must be in the future. A naive datetime is read as this machine's local time.
 - Neither or both of `expires_at` and `never_expires=True` raise `BadParameterError` before
   anything is sent. "Never expires" is a choice too, so it has to be said.
-- `set_model_deployment_expiry` on another status raises `ConflictError`. It needs the same role as
-  creating a deployment.
+- `set_model_deployment_expiry` on another status (UNRESPONSIVE included) raises `ConflictError`. It
+  needs the same role as creating a deployment.
 
 ### Errors of `invoke_model_deployment`
 
@@ -217,8 +218,8 @@ model = definitions.unbind_model_deploy_definition("dataset_123", "model_456")  
   `integer` (`minimum`, `maximum`, `enum`), `array` (a list of string `enum` values, multiple
   choice) or `object` (JSON); `["<type>", "null"]` makes the item optional. Widget hints
   (`platform_config.ui_type_hint`, `platform_config.invisible`, `x-superb-widget`,
-  `x-superb-gpu-supported`) are refused (`InvalidInputError`). The platform checks the form, not
-  the SDK.
+  `x-superb-gpu-supported`) are refused (`InvalidInputError`). The platform checks the form; the
+  SDK only refuses `params` that are not JSON (`BadParameterError`, for example NaN).
 - Deleting a definition keeps its deployments (they lose the definition: they can be invoked, stopped
   and deleted, but not started again) and unlinks its models. System definitions cannot be deleted.
 - A model gets linked to a definition when it is deployed with `bind_model_to_definition=True`.

@@ -80,14 +80,16 @@ def expiry_variable(
     return {"neverExpires": False, "expiresAt": datetime_variable(expires_at, "expires_at")}
 
 
-def parameters_variable(value: Mapping[str, Any], name: str) -> dict:
-    """Form values for a deployment: a JSON object whose keys are the definition's ``params`` keys.
+def json_object_variable(value: Mapping[str, Any], name: str) -> dict:
+    """A JSON object for a GraphQL ``JSON`` value: a dict with string keys and JSON values only.
 
-    Only the shape is checked here; the platform checks the values against the
-    definition's ``params`` (unknown keys, types, required items, size).
+    Used for a definition's ``params`` and a deployment's ``parameters``. Only
+    the shape is checked here (no NaN or infinity, nothing ``json`` cannot
+    write); the platform checks the content (form rules, unknown keys, types,
+    required items, size).
     """
     if not isinstance(value, Mapping):
-        raise BadParameterError(f"{name} must be a dict of form values (got {type(value).__name__}).")
+        raise BadParameterError(f"{name} must be a dict (got {type(value).__name__}).")
     for key in value:
         if not isinstance(key, str):
             raise BadParameterError(f"{name} keys must be strings (got {key!r}).")
@@ -157,7 +159,7 @@ def create_model_deployment_params(
     }
     # Not given: the argument is left out, so the platform fills every value with its default.
     if parameters is not None:
-        variables["parameters"] = parameters_variable(parameters, "parameters")
+        variables["parameters"] = json_object_variable(parameters, "parameters")
     return variables
 
 

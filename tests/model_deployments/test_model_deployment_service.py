@@ -405,6 +405,19 @@ class TestDefinitionParams:
             )
         assert platform.requests == []
 
+    @pytest.mark.parametrize("item", [
+        {"schema": {"type": "number"}, "value": float("nan")},
+        {"schema": {"type": "number", "maximum": float("inf")}},
+        {"schema": {"type": "object"}, "value": object()},
+    ])
+    @pytest.mark.parametrize("as_dict", [False, True])
+    def test_params_that_are_not_json_are_refused_before_sending(self, platform, templates, item, as_dict):
+        fields = {"id": "form-server", "name": "F", "server_image_name": "t/f", "params": {"limit": item}}
+        definition = fields if as_dict else ModelDeployDefinitionInput(**fields)
+        with pytest.raises(BadParameterError, match="definition.params must be JSON"):
+            templates.create_model_deploy_definition(DATASET, definition)
+        assert platform.requests == []
+
 
 class TestParameters:
     """C38 item 2: form values of a deployment."""
@@ -479,8 +492,15 @@ class TestParameters:
 
         assert started.parameters == {"model_type": "nano", "fps": 4}
 
-    def test_a_deployment_from_before_form_values(self):
-        assert ModelDeployment.model_validate({"id": "old", "parameters": None}).parameters is None
+    def test_a_deployment_from_before_form_values_gets_defaults_at_its_start(self, platform, deployments):
+        created = deployments.create_model_deployment(DATASET, "cosmos3-reasoner", "old")
+        platform.deployments[created.id]["parameters"] = None  # made before forms existed
+        platform.runtime_reports(created.id, "STOPPED")
+
+        assert deployments.get_model_deployment(DATASET, created.id).parameters is None
+        started = deployments.start_model_deployment(DATASET, created.id, never_expires=True)
+
+        assert started.parameters == {"model_type": "edge"}
 
 
 class TestExpiry:
@@ -563,6 +583,22 @@ class TestExpiry:
 
         assert _variables(platform)["expiry"] == {"neverExpires": True}
         assert cleared.expires_at is None
+
+    def test_set_the_same_expiry_changes_nothing(self, platform, deployments, ready):
+        first = deployments.set_model_deployment_expiry(DATASET, ready.id, expires_at="2031-06-01T00:00:00Z")
+
+        again = deployments.set_model_deployment_expiry(DATASET, ready.id, expires_at="2031-06-01T09:00:00+09:00")
+        never = deployments.set_model_deployment_expiry(DATASET, ready.id, never_expires=True)
+        never_again = deployments.set_model_deployment_expiry(DATASET, ready.id, never_expires=True)
+
+        assert again.expires_at == "2031-06-01T00:00:00Z"  # the same instant: kept as it was
+        assert again.updated_at == first.updated_at
+        assert never.expires_at is None
+        assert never_again.updated_at == never.updated_at
+
+    def test_set_a_passed_expiry_is_invalid_input_before_the_status(self, platform, deployments, stopped):
+        with pytest.raises(InvalidInputError, match="future"):
+            deployments.set_model_deployment_expiry(DATASET, stopped.id, expires_at="2020-01-01T00:00:00Z")
 
     def test_set_expiry_needs_an_explicit_choice(self, platform, deployments, ready):
         sent_before = len(platform.requests)

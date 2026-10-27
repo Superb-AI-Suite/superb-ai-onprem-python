@@ -47,8 +47,8 @@ class ModelDeployment(CustomBaseModel):
     ``parameters`` are the form values of the definition's ``params``, stored
     with the defaults filled in (``{"model_type": "edge"}``). The server gets
     them as ``SUPERB_PARAM_<KEY>`` environment variables. None for a
-    deployment made before form values existed (the platform uses the
-    defaults). ``expires_at`` None means it never expires.
+    deployment made before form values existed, until its next start fills
+    them with the defaults. ``expires_at`` None means it never expires.
     """
 
     id: Optional[str] = None
@@ -67,7 +67,9 @@ class ModelDeployment(CustomBaseModel):
     started_at: Optional[str] = Field(None, alias="startedAt")
     invoke_timeout_seconds: Optional[int] = Field(None, alias="invokeTimeoutSeconds")
     parameters: Optional[Dict[str, Any]] = Field(
-        None, description="Form values of the definition's params, defaults filled in. Not secret: stored as is."
+        None,
+        description="Form values of the definition's params, defaults filled in. None for a deployment "
+        "made before form values existed, until its next start. Not secret: stored as is.",
     )
     runtime: Optional[ModelDeploymentRuntime] = Field(
         None, description="The current generation. Filled by get_model_deployment and the mutations, not by lists."
