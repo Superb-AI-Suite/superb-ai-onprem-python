@@ -176,6 +176,24 @@ activity per target; pass all the IDs to the plural function instead.
 The server must have the deletion activities (job definitions and base DAGs).
 See the "Deletion Activities" section of [Activities](spb_onprem/activities/README.md).
 
+## 🚀 Model deployment expiry and form values (breaking change, FDE-237)
+
+- **Breaking:** `ModelDeploymentService.start_model_deployment` needs an explicit expiry: exactly one
+  of `expires_at=...` (a datetime, an ISO 8601 string with an offset, or a timedelta from now) or
+  `never_expires=True`. `start_model_deployment(dataset_id, deployment_id)` (and `expires_at=None`)
+  now raises `BadParameterError` before sending; it no longer keeps a remaining expiry or renews a
+  passed one. Passing `expires_at` works as before.
+- New: `set_model_deployment_expiry(dataset_id, deployment_id, expires_at=... | never_expires=True)`
+  changes the expiry of a PENDING, STARTING or READY deployment without a restart.
+- New: deployment definitions have an input form (`ModelDeployDefinition.params`,
+  `ModelDeployDefinitionInput(params=...)`), and deployments take its values
+  (`create_model_deployment(..., parameters={...})`, `ModelDeployment.parameters`). Values are not
+  secret: they are stored as plain text.
+- The platform must have the same change (`startModelDeployment(expiry)`); the deployment functions
+  of this SDK do not work with an older platform.
+
+See [Model Deployments](spb_onprem/model_deployments/README.md#expiry).
+
 ## 📚 Module Documentation
 
 ### 🏗️ Core Modules

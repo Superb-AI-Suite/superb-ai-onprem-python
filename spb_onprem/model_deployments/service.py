@@ -58,13 +58,16 @@ class ModelDeploymentService(BaseService):
     - ``stop_model_deployment``: STOPPING, then STOP_MODEL_DEPLOYMENT removes
       the server: STOPPED.
     - ``start_model_deployment``: a STOPPED, FAILED or EXPIRED deployment runs
-      again as a new generation (DEPLOY_MODEL).
+      again as a new generation (DEPLOY_MODEL), with an expiry chosen at the
+      start (a time, or ``never_expires=True``).
+    - ``set_model_deployment_expiry``: change the expiry of a PENDING, STARTING
+      or READY deployment.
     - ``delete_model_deployments``: one DELETE_MODEL_DEPLOYMENT activity for all
       targets. When it runs, a deployment whose server is gone is deleted at
       once; the others become DELETING until their server is removed.
 
-    Creating, updating, stopping, starting, pinning and deleting need a dataset
-    admin (Owner, WorkspaceAdmin or DATASET-ADMIN); another member's delete is
+    Creating, updating, stopping, starting, changing the expiry, pinning and
+    deleting need a dataset admin (Owner, WorkspaceAdmin or DATASET-ADMIN); another member's delete is
     submitted as AWAITING_APPROVAL. Reading and invoking need a role in the
     dataset (not Collaborator).
 
@@ -183,6 +186,7 @@ class ModelDeploymentService(BaseService):
         gpu_count: Optional[int] = None,
         invoke_timeout_seconds: Optional[int] = None,
         bind_model_to_definition: bool = False,
+        parameters: Optional[Mapping[str, Any]] = None,
     ) -> ModelDeployment:
         """Deploy a model with a definition. The deployment starts as PENDING.
 
@@ -210,6 +214,16 @@ class ModelDeploymentService(BaseService):
                 links the model to this definition; False (default) deploys it
                 once without linking. A model linked to another definition is
                 refused (InvalidInputError).
+            parameters: Values for the definition's input form
+                (``ModelDeployDefinition.params``), by key, for example
+                ``{"model_type": "nano"}``. Items left out get their default;
+                None (default) uses every default. The platform refuses a key
+                the definition does not have, a value its schema does not
+                allow, a missing required item, or more than 16 KB
+                (InvalidInputError). The values are stored with the defaults
+                filled in (``ModelDeployment.parameters``) and cannot change
+                later. Never put secrets here: the values are stored as plain
+                text and shown in the deployment details.
         """
         response = self.request_gql(
             Queries.CREATE_MODEL_DEPLOYMENT,
@@ -224,6 +238,7 @@ class ModelDeploymentService(BaseService):
                 gpu_count=gpu_count,
                 invoke_timeout_seconds=invoke_timeout_seconds,
                 bind_model_to_definition=bind_model_to_definition,
+                parameters=parameters,
             ),
         )
         return ModelDeployment.model_validate(response)
@@ -275,21 +290,74 @@ class ModelDeploymentService(BaseService):
         dataset_id: str,
         deployment_id: str,
         expires_at: Optional[ExpiresAt] = None,
+        *,
+        never_expires: bool = False,
     ) -> ModelDeployment:
         """Start a STOPPED, FAILED or EXPIRED deployment again as a new generation (PENDING).
+
+        The expiry is chosen at every start: pass exactly one of ``expires_at``
+        or ``never_expires=True``. Neither raises BadParameterError (a start no
+        longer keeps or renews the previous expiry). The model, the GPUs and
+        the form values (``parameters``) stay as created; an item added to the
+        definition since then gets its default. Stored values that no longer
+        fit the definition's form are refused (InvalidInputError, with the
+        reason).
 
         Other statuses: ConflictError. A deployment whose definition was deleted
         cannot start again (InvalidInputError); delete it and create a new one.
 
         Args:
-            expires_at: A new expiry (datetime, ISO 8601 string or timedelta
-                from now). Without it, a remaining expiry is kept and a passed
-                one is renewed for the same duration. A naive datetime is read
-                as local time; a string needs a UTC offset or ``Z``.
+            expires_at: When the server is removed: a datetime, an ISO 8601
+                string or a timedelta from now. It must be in the future. A
+                naive datetime is read as local time; a string needs a UTC
+                offset or ``Z``.
+            never_expires: True runs it until it is stopped. Cannot be combined
+                with ``expires_at``.
+
+        Raises:
+            BadParameterError: Neither or both of ``expires_at`` and
+                ``never_expires=True`` (nothing is sent).
         """
         response = self.request_gql(
             Queries.START_MODEL_DEPLOYMENT,
-            Queries.START_MODEL_DEPLOYMENT["variables"](dataset_id, deployment_id, expires_at),
+            Queries.START_MODEL_DEPLOYMENT["variables"](
+                dataset_id, deployment_id, expires_at, never_expires=never_expires
+            ),
+        )
+        return ModelDeployment.model_validate(response)
+
+    def set_model_deployment_expiry(
+        self,
+        dataset_id: str,
+        deployment_id: str,
+        expires_at: Optional[ExpiresAt] = None,
+        *,
+        never_expires: bool = False,
+    ) -> ModelDeployment:
+        """Change when a running deployment expires, without restarting it.
+
+        Only PENDING, STARTING and READY deployments; UNRESPONSIVE, STOPPING,
+        DELETING and ended ones raise ConflictError. The new expiry applies
+        from the server's next heartbeat. The same expiry as now changes
+        nothing (the deployment is returned as it is). Pass exactly one of
+        ``expires_at`` or ``never_expires=True``, as in
+        ``start_model_deployment``; a time that has passed raises
+        InvalidInputError. Needs the same role as creating a deployment.
+
+        Args:
+            expires_at: The new expiry: a datetime, an ISO 8601 string or a
+                timedelta from now, in the future.
+            never_expires: True removes the expiry.
+
+        Raises:
+            BadParameterError: Neither or both of ``expires_at`` and
+                ``never_expires=True`` (nothing is sent).
+        """
+        response = self.request_gql(
+            Queries.SET_MODEL_DEPLOYMENT_EXPIRY,
+            Queries.SET_MODEL_DEPLOYMENT_EXPIRY["variables"](
+                dataset_id, deployment_id, expires_at, never_expires=never_expires
+            ),
         )
         return ModelDeployment.model_validate(response)
 
@@ -446,7 +514,8 @@ class ModelDeploymentService(BaseService):
 class ModelDeployDefinitionService(BaseService):
     """Deployment definitions (``ModelDeployDefinition``).
 
-    A definition names the server image (and start script) a deployment runs.
+    A definition names the server image (and start script) a deployment runs,
+    and the input form (``params``) its deployments fill in.
     System definitions come from the platform. Other definitions are shared by
     all datasets or belong to one dataset.
 
@@ -493,7 +562,9 @@ class ModelDeployDefinitionService(BaseService):
         """Create a definition (Owner or WorkspaceAdmin).
 
         ``definition.dataset_only`` (default True) keeps it in ``dataset_id``;
-        False shares it with all datasets. An ID that is taken (also by a system
+        False shares it with all datasets. ``definition.params`` is the input
+        form of its deployments (None: no form); a form the platform does not
+        accept raises InvalidInputError. An ID that is taken (also by a system
         definition) raises ConflictError.
         """
         response = self.request_gql(

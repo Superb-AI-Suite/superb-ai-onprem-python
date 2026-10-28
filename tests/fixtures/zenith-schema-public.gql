@@ -657,9 +657,17 @@ input CreateModelDeployDefinitionInput {
   description: String
   id: String!
   name: String!
+
+  """
+  C38: Input form keyed by parameter name (^[a-z][a-z0-9_]{0,63}$, at most 32): { schema, value?, description? }. Omit or null for no inputs.
+  """
+  params: JSON
   serverImageName: String!
   serverImageTag: String
   startScript: String
+
+  """GPUs this definition can run on. Omit or null for no restriction."""
+  supportedGpus: GpuSupportInput
 }
 
 """The custom job entity."""
@@ -1672,6 +1680,41 @@ enum GpuMemoryAccountingMode {
 }
 
 """
+A GPU kind in the cluster that a workload can request. Counts are selectable units, not free capacity.
+"""
+type GpuOption {
+  """Memory of one unit in MiB, when labeled."""
+  memoryMiB: Int
+
+  """MIG profile such as 3g.40gb. Null for whole GPUs."""
+  migProfile: String
+
+  """Number of nodes that have this resource."""
+  nodeCount: Int!
+
+  """Largest capacity of this resource on one node."""
+  perNodeCount: Int!
+
+  """
+  GPU Feature Discovery product label (nvidia.com/gpu.product) of the nodes.
+  """
+  product: String
+
+  """
+  Kubernetes resource name to request: nvidia.com/gpu or nvidia.com/mig-<profile>.
+  """
+  resource: String!
+}
+
+"""
+GPU kinds in the cluster. available is false when the node list cannot be read or no node has GPU Feature Discovery labels; options is then empty.
+"""
+type GpuOptions {
+  available: Boolean!
+  options: [GpuOption!]!
+}
+
+"""
 The GPU quota limits currently in effect, and how they were determined.
 """
 type GpuQuotaEffective {
@@ -1900,6 +1943,48 @@ input GpuResourceSelectionInput {
 
   """The requested memory in GB. Null for whole-card modes."""
   requestedMemGb: Int
+}
+
+"""
+Selected GPU for a workload. product null means any GPU kind. Default: nvidia.com/gpu, null, 1.
+"""
+type GpuSelection {
+  count: Int!
+  product: String
+
+  """All allowed GPU product label values. Empty means any GPU kind."""
+  products: [String!]
+  resource: String!
+}
+
+"""
+Selected GPU. resource is nvidia.com/gpu or nvidia.com/mig-<N>g.<M>gb, product is a GPU product label or null (any), count is at least 1.
+"""
+input GpuSelectionInput {
+  count: Int!
+  product: String
+
+  """
+  Exact GPU product label values allowed when product is null (any of the supported GPUs). Ignored when product is given.
+  """
+  products: [String!]
+  resource: String!
+}
+
+"""
+GPUs a workload can run on. products are case-insensitive parts of nvidia.com/gpu.product (empty means any kind); mig false excludes MIG resources and -MIG- products.
+"""
+type GpuSupport {
+  mig: Boolean!
+  products: [String!]!
+}
+
+"""
+GPUs a definition can run on. products are case-insensitive parts of GPU product labels such as H100 (empty means any kind); mig false excludes MIG.
+"""
+input GpuSupportInput {
+  mig: Boolean!
+  products: [String!]!
 }
 
 """
@@ -2548,25 +2633,35 @@ type ModelDeployDefinition {
   datasetId: ID
   description: String
   id: ID!
-  interfaceId: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
-  interfacePath: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
-  interfaceVersion: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
+  interfaceId: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; definitions no longer declare an interface.")
+  interfacePath: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; definitions no longer declare an interface.")
+  interfaceVersion: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; definitions no longer declare an interface.")
   isPinned: Boolean!
   isSystem: Boolean!
-  modelSpecification: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; templates no longer declare an interface.")
+  modelSpecification: String @deprecated(reason: "FDE-115: endpoint servers follow one platform contract; definitions no longer declare an interface.")
   name: String!
+
+  """
+  C38: Input form of this definition, keyed by parameter name: { schema, value?, description? } like training DAG params. Null or {} means no inputs.
+  """
+  params: JSON
   serverImageName: String
   serverImageTag: String
   startScript: String
+
+  """
+  GPUs this definition can run on. Null means no restriction. Deployment creation rejects GPUs outside it.
+  """
+  supportedGpus: GpuSupport
   updatedAt: DateTime!
   updatedBy: String!
 }
 
 type ModelDeployDefinitionDeletion {
-  deletedDeploymentCount: Int! @deprecated(reason: "C17 revision 3: deleting a template no longer deletes deployments. Always 0; use detachedDeploymentCount.")
+  deletedDeploymentCount: Int! @deprecated(reason: "C17 revision 3: deleting a definition no longer deletes deployments. Always 0; use detachedDeploymentCount.")
 
   """
-  Deployments in all datasets that lost this template (definitionId became null). They keep running and can be invoked, stopped and deleted, but not started again.
+  Deployments in all datasets that lost this definition (definitionId became null). They keep running and can be invoked, stopped and deleted, but not started again.
   """
   detachedDeploymentCount: Int!
   id: ID!
@@ -2584,12 +2679,22 @@ type ModelDeployment {
   datasetId: ID!
 
   """
-  Template of this deployment. Null when the template was deleted: the deployment can still be invoked, stopped and deleted, but not started again.
+  Definition of this deployment. Null when the definition was deleted: the deployment can still be invoked, stopped and deleted, but not started again.
   """
   definitionId: ID
   description: String
   expiresAt: DateTime
+
+  """
+  Selected GPU of this deployment. product is the single entry of gpuTypes, or null when gpuTypes is empty or has several entries; products is all of gpuTypes.
+  """
+  gpu: GpuSelection!
   gpuCount: Int!
+
+  """
+  Kubernetes GPU resource the server requests: nvidia.com/gpu or nvidia.com/mig-<profile>. Default nvidia.com/gpu.
+  """
+  gpuResource: String!
   gpuTypes: [String!]!
   id: ID!
 
@@ -2601,10 +2706,15 @@ type ModelDeployment {
   lastHeartbeatAt: DateTime
 
   """
-  Trained model served by this deployment. Null for a base model deployment: the template's server loads its own base weights.
+  Trained model served by this deployment. Null for a base model deployment: the definition's server loads its own base weights.
   """
   modelId: ID
   name: String!
+
+  """
+  C38: Form values of this deployment checked against the definition params, with defaults filled in. Null for deployments created before forms; Start fills them. Not secret: shown as is.
+  """
+  parameters: JSON
 
   """FDE-112: Runtime record of the current generation."""
   runtime: ModelDeploymentRuntime
@@ -2612,6 +2722,19 @@ type ModelDeployment {
   status: ModelDeploymentStatus!
   updatedAt: DateTime!
   updatedBy: String!
+}
+
+type ModelDeploymentDeletionRun {
+  deploymentId: ID!
+  generation: Int!
+}
+
+"""
+C38: Expiry choice for start and setModelDeploymentExpiry. neverExpires true means no expiry and expiresAt must be omitted; false requires a future expiresAt.
+"""
+input ModelDeploymentExpiryInput {
+  expiresAt: DateTime
+  neverExpires: Boolean!
 }
 
 input ModelDeploymentFilter {
@@ -2666,6 +2789,7 @@ type ModelDeploymentRuntime {
   failureReason: String
   generation: Int!
   gpuCount: Int!
+  gpuResource: String!
   gpuTypes: [String!]!
 
   """Full image reference including the registry."""
@@ -2757,7 +2881,7 @@ input ModelFilterOptions {
   definitionIdIn: [ID!]
 
   """
-  true matches models without a deployment template (definitionId IS NULL); false matches models with one. Reversed under not.
+  true matches models without a deployment definition (definitionId IS NULL); false matches models with one. Reversed under not.
   """
   definitionIdIsNull: Boolean
 
@@ -2839,6 +2963,11 @@ type Mutation {
     """할당할 역할 목록"""
     roles: [RequestRoleInput!]!
   ): Boolean!
+
+  """
+  Begin deletion at activity execution: evaluate the saved filter, transition deployments to DELETING and pin runtime generations. Retries return the same runs.
+  """
+  beginModelDeploymentDeletion(activityHistoryId: ID!, datasetId: ID!, deploymentFilter: ModelDeploymentFilter!): [ModelDeploymentDeletionRun!]!
   bindModelDeployDefinition(datasetId: ID!, definitionId: ID!, modelId: ID!): Model!
 
   """Cancel job history!"""
@@ -3136,7 +3265,7 @@ type Mutation {
   createModel(contents: JSONObject, customDagId: String, datasetId: ID!, description: String, isPinned: Boolean, name: String!, scoreKey: String, scoreUnit: String, scoreValue: Float, taskType: ModelTaskType!, totalDataCount: Int, trainDataCount: Int, trainSliceId: ID, trainingAnnotations: [TrainingAnnotationsInput!], trainingParameters: JSONObject, validationDataCount: Int, validationSliceId: ID): Model!
 
   """
-  FDE-115: Create a deployment template. Owner and workspace admins only; system templates come from zenith code.
+  FDE-115: Create a deployment definition. Owner and workspace admins only; system definitions come from zenith code.
   """
   createModelDeployDefinition(datasetId: ID!, input: CreateModelDeployDefinitionInput!): ModelDeployDefinition!
 
@@ -3149,15 +3278,33 @@ type Mutation {
     definitionId: ID!
     description: String
     expiresAt: DateTime
+
+    """
+    Selected GPU (resource, product, count). Takes precedence over gpuTypes and gpuCount. Omit both for any one GPU.
+    """
+    gpu: GpuSelectionInput
+
+    """
+    Legacy. Number of GPUs, at least 1 (default 1). Ignored when gpu is given.
+    """
     gpuCount: Int
+
+    """
+    Legacy. Allowed GPU product labels (empty means any GPU). Ignored when gpu is given.
+    """
     gpuTypes: [String!]
     invokeTimeoutSeconds: Int
 
     """
-    Trained model to serve. Omit or pass null to deploy the template's base model; bindModelToDefinition is then ignored.
+    Trained model to serve. Omit or pass null to deploy the definition's base model; bindModelToDefinition is then ignored.
     """
     modelId: ID
     name: String!
+
+    """
+    C38: Form values keyed by the definition params. Checked against the definition schema; missing items get their defaults and the full value is saved. Unknown keys are rejected; at most 16 KB as JSON. Do not put secrets here.
+    """
+    parameters: JSON
   ): ModelDeployment!
   createSlice(
     """The ID of the dataset that the slice belongs to."""
@@ -3224,7 +3371,7 @@ type Mutation {
   ): Boolean!
 
   """
-  Delete an analytics report with its items and files. Starts a DELETE_ANALYTICS_REPORT activity and returns true; false when the report does not exist. Conflict while the report is running.
+  Delete an analytics report with its items and files. Starts a DELETE_ANALYTICS_REPORT activity and returns true; Missing targets succeed without changes. Running targets fail during activity execution.
   """
   deleteAnalyticsReport(
     """The dataset ID."""
@@ -3299,7 +3446,7 @@ type Mutation {
   ): Boolean!
 
   """
-  C17 revision 3: Delete every template that belongs only to this dataset, the same way as deleteModelDeployDefinition: deployments are kept and lose the template, models are unlinked. Shared and system templates are not touched. Returns the number of deleted templates, 0 when there are none.
+  C17 revision 3: Delete every definition that belongs only to this dataset, the same way as deleteModelDeployDefinition: deployments are kept and lose the definition, models are unlinked. Shared and system definitions are not touched. Returns the number of deleted definitions, 0 when there are none.
   """
   deleteDatasetModelDeployDefinitions(datasetId: ID!): Int!
 
@@ -3317,7 +3464,7 @@ type Mutation {
   ): Boolean!
 
   """
-  Delete a diagnosis with its report items and files. Starts a DELETE_DIAGNOSIS activity and returns true; false when the diagnosis does not exist. Conflict while the diagnosis is running.
+  Delete a diagnosis with its report items and files. Starts a DELETE_DIAGNOSIS activity and returns true; Missing targets succeed without changes. Running targets fail during activity execution.
   """
   deleteDiagnosis(
     """The dataset ID."""
@@ -3376,7 +3523,7 @@ type Mutation {
   ): Boolean!
 
   """
-  Delete a model with its training report and files. Starts a DELETE_MODEL activity and returns true; false when the model does not exist. Conflict while the model is running or used by a model deployment.
+  Delete a model with its training report and files. Starts a DELETE_MODEL activity and returns true; execution fails if the model is running or used by a model deployment. Missing models succeed without changes.
   """
   deleteModel(
     """The dataset ID."""
@@ -3387,7 +3534,7 @@ type Mutation {
   ): Boolean!
 
   """
-  Delete a template (C17 revision 3). Deployments and models are kept and lose the link: a deployment without a template can still be invoked, stopped and deleted, but not started again. Owner and workspace admins only. System templates cannot be deleted.
+  Delete a definition (C17 revision 3). Deployments and models are kept and lose the link: a deployment without a definition can still be invoked, stopped and deleted, but not started again. Owner and workspace admins only. System definitions cannot be deleted.
   """
   deleteModelDeployDefinition(datasetId: ID!, definitionId: ID!): ModelDeployDefinitionDeletion!
 
@@ -3629,9 +3776,14 @@ type Mutation {
   ): JobHistory!
 
   """
-  FDE-115: Pin or unpin a template. Pinned templates come first for everyone.
+  FDE-115: Pin or unpin a definition. Pinned definitions come first for everyone.
   """
   setModelDeployDefinitionPinned(datasetId: ID!, definitionId: ID!, isPinned: Boolean!): ModelDeployDefinition!
+
+  """
+  C38: Change the expiry of a pending, starting or ready deployment. Takes effect from the next heartbeat. Same permission as creating a deployment.
+  """
+  setModelDeploymentExpiry(datasetId: ID!, deploymentId: ID!, expiry: ModelDeploymentExpiryInput!): ModelDeployment!
 
   """
   FDE-115: Pin or unpin a deployment. Pinned deployments come first for everyone.
@@ -3671,9 +3823,9 @@ type Mutation {
   ): JobHistory!
 
   """
-  FDE-112: Start a stopped, failed or expired deployment again as a new PENDING run. Without expiresAt, a remaining expiry is kept and a passed one is renewed for the same duration.
+  FDE-112: Start a stopped, failed or expired deployment again as a new PENDING run. C38: expiry is required (neverExpires true, or a future expiresAt); the previous expiry is not reused. Saved parameters are checked against the current definition and new items get their defaults; a mismatch is BAD_REQUEST with the reason.
   """
-  startModelDeployment(datasetId: ID!, deploymentId: ID!, expiresAt: DateTime): ModelDeployment!
+  startModelDeployment(datasetId: ID!, deploymentId: ID!, expiry: ModelDeploymentExpiryInput!): ModelDeployment!
 
   """Start a workflow run from a workflow instance."""
   startWorkflowRun(
@@ -3712,7 +3864,7 @@ type Mutation {
   systemSignIn(clientId: String!, clientSecret: String!): SystemAuthToken!
 
   """
-  Unlink a model from its deployment template (definitionId becomes null). Idempotent. Existing deployments keep their own template.
+  Unlink a model from its deployment definition (definitionId becomes null). Idempotent. Existing deployments keep their own definition.
   """
   unbindModelDeployDefinition(datasetId: ID!, modelId: ID!): Model!
   unpinSlice(
@@ -4661,6 +4813,11 @@ type Query {
   frameMetaKeys(datasetId: ID!, sliceId: ID): [MetaKeyInfo!]!
 
   """
+  GPU kinds and counts in the cluster (whole GPUs and MIG profiles). No free capacity, no node names. Cached for 30 seconds.
+  """
+  gpuOptions: GpuOptions!
+
+  """
   Get the GPU quota runtime settings of the workspace. Requires OWNER or WORKSPACE_ADMIN; the workspace comes from the route context only. Null when the settings could not be read.
   """
   gpuQuotaRuntimeSettings: GpuQuotaRuntimeSettings
@@ -4791,7 +4948,7 @@ type Query {
   modelDeployDefinition(datasetId: ID!, definitionId: ID!): ModelDeployDefinition
 
   """
-  FDE-115: Deployments and models across all datasets that use this template.
+  FDE-115: Deployments and models across all datasets that use this definition.
   """
   modelDeployDefinitionUsage(datasetId: ID!, definitionId: ID!): ModelDeployDefinitionUsage!
   modelDeployDefinitions(datasetId: ID!): [ModelDeployDefinition!]!

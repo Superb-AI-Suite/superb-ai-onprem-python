@@ -1,3 +1,4 @@
+import json
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, List, Mapping, Optional, Union
@@ -51,6 +52,55 @@ def datetime_variable(value: Optional[ExpiresAt], name: str) -> Optional[str]:
     raise BadParameterError(f"{name} must be a datetime, a timedelta or an ISO 8601 string.")
 
 
+def expiry_variable(
+    expires_at: Optional[ExpiresAt],
+    never_expires: bool,
+    operation: str,
+    note: str = "",
+) -> dict:
+    """A ``ModelDeploymentExpiryInput``: exactly one of ``expires_at`` or ``never_expires=True``.
+
+    "Never expires" is a choice too, so neither is refused. ``expires_at``
+    follows ``datetime_variable``; a passed time is refused by the platform.
+    """
+    if not isinstance(never_expires, bool):
+        raise BadParameterError("never_expires must be True or False.")
+    if never_expires:
+        if expires_at is not None:
+            raise BadParameterError(
+                f"{operation}: pass expires_at or never_expires=True, not both."
+            )
+        # neverExpires: true takes no expiresAt (C38).
+        return {"neverExpires": True}
+    if expires_at is None:
+        raise BadParameterError(
+            f"{operation} needs an expiry: pass expires_at (a datetime, an ISO 8601 string with a UTC "
+            f"offset, or a timedelta from now) or never_expires=True.{note}"
+        )
+    return {"neverExpires": False, "expiresAt": datetime_variable(expires_at, "expires_at")}
+
+
+def json_object_variable(value: Mapping[str, Any], name: str) -> dict:
+    """A JSON object for a GraphQL ``JSON`` value: a dict with string keys and JSON values only.
+
+    Used for a definition's ``params`` and a deployment's ``parameters``. Only
+    the shape is checked here (no NaN or infinity, nothing ``json`` cannot
+    write); the platform checks the content (form rules, unknown keys, types,
+    required items, size).
+    """
+    if not isinstance(value, Mapping):
+        raise BadParameterError(f"{name} must be a dict (got {type(value).__name__}).")
+    for key in value:
+        if not isinstance(key, str):
+            raise BadParameterError(f"{name} keys must be strings (got {key!r}).")
+    value = dict(value)
+    try:
+        json.dumps(value, allow_nan=False)
+    except (TypeError, ValueError) as error:
+        raise BadParameterError(f"{name} must be JSON values only: {error}") from None
+    return value
+
+
 def model_deployment_params(dataset_id: str, deployment_id: str) -> dict:
     return {
         "datasetId": require_id(dataset_id, "dataset_id"),
@@ -87,6 +137,7 @@ def create_model_deployment_params(
     gpu_count: Optional[int] = None,
     invoke_timeout_seconds: Optional[int] = None,
     bind_model_to_definition: bool = False,
+    parameters: Optional[Mapping[str, Any]] = None,
 ) -> dict:
     if not isinstance(name, str) or not name.strip():
         raise BadParameterError("name is required.")
@@ -94,7 +145,7 @@ def create_model_deployment_params(
         raise BadParameterError("gpu_types must be a list of GPU product labels, not a string.")
     if model_id is not None:
         require_id(model_id, "model_id")
-    return {
+    variables = {
         "datasetId": require_id(dataset_id, "dataset_id"),
         "definitionId": require_id(definition_id, "definition_id"),
         "modelId": model_id,
@@ -106,6 +157,10 @@ def create_model_deployment_params(
         "invokeTimeoutSeconds": invoke_timeout_seconds,
         "bindModelToDefinition": bool(bind_model_to_definition),
     }
+    # Not given: the argument is left out, so the platform fills every value with its default.
+    if parameters is not None:
+        variables["parameters"] = json_object_variable(parameters, "parameters")
+    return variables
 
 
 def update_model_deployment_params(
@@ -133,9 +188,29 @@ def start_model_deployment_params(
     dataset_id: str,
     deployment_id: str,
     expires_at: Optional[ExpiresAt] = None,
+    *,
+    never_expires: bool = False,
 ) -> dict:
     variables = model_deployment_params(dataset_id, deployment_id)
-    variables["expiresAt"] = datetime_variable(expires_at, "expires_at")
+    variables["expiry"] = expiry_variable(
+        expires_at,
+        never_expires,
+        "start_model_deployment",
+        # Before FDE-237 a start without expires_at kept or renewed the old expiry.
+        " Starting without an expiry (keep the remaining one, renew a passed one) is no longer supported.",
+    )
+    return variables
+
+
+def set_model_deployment_expiry_params(
+    dataset_id: str,
+    deployment_id: str,
+    expires_at: Optional[ExpiresAt] = None,
+    *,
+    never_expires: bool = False,
+) -> dict:
+    variables = model_deployment_params(dataset_id, deployment_id)
+    variables["expiry"] = expiry_variable(expires_at, never_expires, "set_model_deployment_expiry")
     return variables
 
 
