@@ -58,6 +58,15 @@ access_key_secret=your-access-key-secret
 EOF
 ```
 
+**Option B: Environment variables (engine containers run by the platform)**
+
+When the platform runs your engine image, it sets `SUPERB_ACCESS_KEY` and
+`SUPERB_ACCESS_KEY_SECRET` to the key of the person who started the run. The SDK
+then calls the platform as that person, with that person's permissions. A key in
+the environment takes precedence over the config file. Setting only one of the two
+is an error; the SDK does not fall back to the system API. The host comes from
+`SUPERB_SYSTEM_SDK_HOST` (default `http://app-api:8080`).
+
 ### Step 2: Your First Workflow
 
 ```python

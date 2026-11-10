@@ -43,6 +43,16 @@ def warn_if_plain_http(host: str, config_file_path: str) -> None:
     )
 
 
+#: Environment variables that carry the requester's access key into a platform-run
+#: container (engine Pod). When set, the SDK calls the public API as that person.
+ENV_ACCESS_KEY = "SUPERB_ACCESS_KEY"
+ENV_ACCESS_KEY_SECRET = "SUPERB_ACCESS_KEY_SECRET"
+
+
+def _platform_host_from_env() -> str:
+    return os.environ.get("SUNRISE_SERVER_URL") or os.environ.get("SUPERB_SYSTEM_SDK_HOST") or "http://app-api:8080"
+
+
 class AuthUser(CustomBaseModel):
     host: str = Field(alias="host")
     access_key: str = Field(alias="accessKey")
@@ -60,16 +70,37 @@ class AuthUser(CustomBaseModel):
     ) -> "AuthUser":
         if cls._instance is None:
             config_file_path = os.path.expanduser(config_file)
-            
-            if not os.path.exists(config_file_path):
+
+            # Order: key in the environment > config file > system API.
+            # A key in the environment never falls back to the system API.
+            if os.environ.get(ENV_ACCESS_KEY) or os.environ.get(ENV_ACCESS_KEY_SECRET):
+                cls._instance = cls._create_env_key_instance()
+            elif not os.path.exists(config_file_path):
                 cls._instance = cls._create_system_sdk_instance()
             else:
                 cls._instance = cls._create_config_instance(config_file_path)
         return cls._instance
 
     @classmethod
-    def _create_system_sdk_instance(cls) -> "AuthUser":        
-        system_sdk_host = os.environ.get("SUNRISE_SERVER_URL") or os.environ.get("SUPERB_SYSTEM_SDK_HOST") or "http://app-api:8080"
+    def _create_env_key_instance(cls) -> "AuthUser":
+        access_key = os.environ.get(ENV_ACCESS_KEY, "")
+        access_key_secret = os.environ.get(ENV_ACCESS_KEY_SECRET, "")
+        if not access_key or not access_key_secret:
+            raise SDKConfigError(
+                f"Set both {ENV_ACCESS_KEY} and {ENV_ACCESS_KEY_SECRET}, or neither. "
+                "The SDK does not fall back to the system API when only one is set."
+            )
+        return cls(
+            host=_platform_host_from_env(),
+            access_key=access_key,
+            access_key_secret=access_key_secret,
+            is_system_sdk=False,
+            system_sdk_user_email=None,
+        )
+
+    @classmethod
+    def _create_system_sdk_instance(cls) -> "AuthUser":
+        system_sdk_host = _platform_host_from_env()
         
         return cls(
             host=system_sdk_host,
