@@ -359,6 +359,21 @@ class DataListFilter(CustomBaseModel):
     )
 
 
+#: The SDK always orders the ``dataList`` query by ``createdAt`` (FDE-361).
+#: Without ``orderBy`` the server orders by ``updatedAt DESC`` and pages with a
+#: cursor on that value, so data updated while a caller pages through the list
+#: moves between pages and is skipped or returned twice. ``createdAt`` never
+#: changes. Oldest data comes first. The order is fixed, not an option; change
+#: the direction only here.
+_DATA_LIST_ORDER_FIELD = "createdAt"
+_DATA_LIST_ORDER_DIRECTION = "ASC"
+
+
+def _data_list_order_by() -> dict:
+    """The fixed ``orderBy`` value (GraphQL ``DataOrderBy``) of the ``dataList`` query."""
+    return {"field": _DATA_LIST_ORDER_FIELD, "direction": _DATA_LIST_ORDER_DIRECTION}
+
+
 def get_data_id_list_params(
     dataset_id: str,
     data_filter: Optional[DataListFilter] = None,
@@ -377,7 +392,8 @@ def get_data_id_list_params(
         BadParameterError: The maximum length is 50.
 
     Returns:
-        dict: The variables for the dataIdList query.
+        dict: The variables for the dataIdList query. ``order_by`` is always the
+        fixed ``createdAt`` order (see ``_DATA_LIST_ORDER_DIRECTION``).
     """
     if length > 50:
         raise BadParameterError("The maximum length is 50.")
@@ -385,7 +401,8 @@ def get_data_id_list_params(
         "dataset_id": dataset_id,
         "filter": data_filter.model_dump(by_alias=True, exclude_unset=True) if data_filter else None,
         "cursor": cursor,
-        "length": length
+        "length": length,
+        "order_by": _data_list_order_by(),
     }
 
 
@@ -407,7 +424,8 @@ def get_data_list_params(
         BadParameterError: The maximum length is 50.
 
     Returns:
-        dict: The variables for the dataList query.
+        dict: The variables for the dataList query. ``order_by`` is always the
+        fixed ``createdAt`` order (see ``_DATA_LIST_ORDER_DIRECTION``).
     """
 
     if length > 50:
@@ -416,5 +434,6 @@ def get_data_list_params(
         "dataset_id": dataset_id,
         "filter": data_filter.model_dump(by_alias=True, exclude_unset=True) if data_filter else None,
         "cursor": cursor,
-        "length": length
+        "length": length,
+        "order_by": _data_list_order_by(),
     }

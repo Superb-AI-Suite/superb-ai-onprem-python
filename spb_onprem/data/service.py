@@ -108,6 +108,9 @@ class DataService(BaseService):
     ):
         """Get data list of a dataset.
 
+        The list is always ordered by ``createdAt``, oldest first, so paging with
+        ``cursor`` does not skip or repeat data that is updated while you page.
+
         Args:
             dataset_id (str): The dataset id.
             data_filter (Optional[DataListFilter]): The filter to apply to the data.
@@ -158,6 +161,9 @@ class DataService(BaseService):
         include_selected_frames: bool = False,
     ):
         """Get data id list of a dataset.
+
+        The list is always ordered by ``createdAt``, oldest first, so paging with
+        ``cursor`` does not skip or repeat data that is updated while you page.
 
         Args:
             dataset_id (str): The dataset id.

@@ -271,13 +271,15 @@ class Queries():
                 $dataset_id: String!,
                 $filter: DataFilter,
                 $cursor: String,
-                $length: Int
+                $length: Int,
+                $order_by: DataOrderBy
             ) {{
                 dataList(
                     datasetId: $dataset_id,
                     filter: $filter,
                     cursor: $cursor,
-                    length: $length
+                    length: $length,
+                    orderBy: $order_by
                 ) {{
                     {Schemas.DATA_ID_PAGE}
                 }}
@@ -293,13 +295,15 @@ class Queries():
                 $dataset_id: String!,
                 $filter: DataFilter,
                 $cursor: String,
-                $length: Int
+                $length: Int,
+                $order_by: DataOrderBy
             ) {{
                 dataList(
                     datasetId: $dataset_id,
                     filter: $filter,
                     cursor: $cursor,
-                    length: $length
+                    length: $length,
+                    orderBy: $order_by
                 ) {{
                     {Schemas.DATA_PAGE}
                     selectedFrames {{
