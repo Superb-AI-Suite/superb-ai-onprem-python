@@ -10,6 +10,10 @@ from .delete_activity import delete_activity_params
 from .start_activity import start_activity_params
 from .update_activity_history import update_activity_history_params
 from .get_activity_history import get_activity_history_params
+from .get_activity_histories import (
+    MAX_ACTIVITY_HISTORIES_LENGTH,
+    get_activity_histories_params,
+)
 from .get_activity_history_task_monitoring import (
     get_activity_history_task_detail_params,
     get_activity_history_task_log_download_params,
@@ -29,6 +33,8 @@ __all__ = (
     "start_activity_params",
     "update_activity_history_params",
     "get_activity_history_params",
+    "MAX_ACTIVITY_HISTORIES_LENGTH",
+    "get_activity_histories_params",
     "get_activity_history_task_detail_params",
     "get_activity_history_task_log_download_params",
     "get_activity_history_task_log_params",
