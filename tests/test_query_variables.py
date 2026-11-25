@@ -16,7 +16,6 @@ from pydantic import BaseModel
 
 import spb_onprem
 from spb_onprem.activities.entities import ActivityStatus
-from spb_onprem.base_types import Undefined
 from spb_onprem.contents.entities import BaseContent
 from spb_onprem.data.entities import AnnotationVersion, Data, DataMeta, Scene
 from spb_onprem.data.enums import DataMetaTypes, DataType, SceneType
@@ -40,10 +39,7 @@ OVERRIDES = {
     ("data", "INSERT_ANNOTATION_VERSION"): {"version": _VERSION},
     ("data", "INSERT_SLICE_ANNOTATION_VERSION"): {"version": _VERSION},
     ("data", "UPDATE_SCENE"): {"scene": Scene(id="scene-1", type=SceneType.IMAGE, content=BaseContent(id="c"))},
-    # UPDATE is used only without expected_caption (UPDATE_WITH_EXPECTED_CAPTION otherwise).
-    ("data", "UPDATE"): {"meta": [DataMeta(key="k", type=DataMetaTypes.STRING, value="v")],
-                         "expected_caption": Undefined},
-    ("data", "UPDATE_WITH_EXPECTED_CAPTION"): {"meta": [DataMeta(key="k", type=DataMetaTypes.STRING, value="v")]},
+    ("data", "UPDATE"): {"meta": [DataMeta(key="k", type=DataMetaTypes.STRING, value="v")]},
     ("models", "CREATE"): {"contents": {"weights": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}},
     ("models", "UPDATE"): {"contents": {"weights": "01ARZ3NDEKTSV4RRFFQ69G5FAV"}},
     ("model_deployments", "CREATE_MODEL_DEPLOYMENT"): {"expires_at": "2026-12-31T09:00:00Z",

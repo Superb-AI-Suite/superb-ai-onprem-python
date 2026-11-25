@@ -5,6 +5,7 @@ except ImportError:
 
 # Services
 from .datasets.service import DatasetService
+from .datasets.entities import CaptionTarget, DatasetCaptionSettings
 from .data.service import DataService
 from .slices.service import SliceService
 from .activities.service import ActivityService
@@ -170,6 +171,8 @@ from .searches import (
 __all__ = (
     # Services
     "DatasetService",
+    "DatasetCaptionSettings",
+    "CaptionTarget",
     "DataService",
     "SliceService",
     "ActivityService",

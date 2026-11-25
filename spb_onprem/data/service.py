@@ -240,56 +240,68 @@ class DataService(BaseService):
             Optional[List[DataAnnotationStat]],
             UndefinedType,
         ] = Undefined,
-        caption: Union[
-            Optional[str],
-            UndefinedType,
-        ] = Undefined,
-        expected_caption: Union[
-            UndefinedType,
-            None,
-            str,
-        ] = Undefined,
-        caption_source: Union[
-            str,
-            UndefinedType,
-        ] = Undefined,
     ):
         """Update a data.
+
+        Since 3.0.0 this does not change the caption. Use ``update_data_caption``.
 
         Args:
             dataset_id (str): The dataset id.
             data_id (str): The data id.
             key (Union[str, UndefinedType], optional): The key of the data. Defaults to Undefined.
             meta (Union[List[DataMeta], UndefinedType], optional): The meta data. Defaults to Undefined.
-            caption (Union[Optional[str], UndefinedType], optional): The caption of the data. Defaults to Undefined.
-            expected_caption (Union[UndefinedType, None, str], optional): The expected caption of the data.
-                Omitted when Undefined, sent as null when None. Defaults to Undefined.
-            caption_source (Union[str, UndefinedType], optional): "GROUND_TRUTH" or
-                "VLM_GENERATED" (contract v2 slot). Defaults to Undefined.
+            annotation_stats (Union[Optional[List[DataAnnotationStat]], UndefinedType], optional):
+                The annotation stats. Defaults to Undefined.
 
         Returns:
             Data: The updated data.
         """
-        query = (
-            Queries.UPDATE_WITH_EXPECTED_CAPTION
-            if expected_caption is not Undefined
-            else Queries.UPDATE
-        )
         response = self.request_gql(
-            query,
-            variables=query["variables"](
+            Queries.UPDATE,
+            variables=Queries.UPDATE["variables"](
                 dataset_id=dataset_id,
                 data_id=data_id,
                 key=key,
                 meta=meta,
                 annotation_stats=annotation_stats,
-                caption=caption,
-                expected_caption=expected_caption,
-                caption_source=caption_source,
             )
         )
         data = Data.model_validate(response)
         return data
+
+    def update_data_caption(
+        self,
+        dataset_id: str,
+        data_id: str,
+        caption: Optional[str],
+    ) -> Data:
+        """Set or clear the caption of a data (mutation ``updateDataCaption``).
+
+        The caption is one text field (``Data.caption``). ``None`` or an empty
+        string clears it; any other text is stored as given, without trimming.
+        The platform updates the caption search on its own after the change.
+
+        Args:
+            dataset_id (str): The dataset id.
+            data_id (str): The data id.
+            caption (Optional[str]): The new caption, or None to clear it.
+
+        Raises:
+            BadParameterError: If dataset_id or data_id is missing, or caption
+                is neither a string nor None.
+
+        Returns:
+            Data: The updated data.
+        """
+        response = self.request_gql(
+            Queries.UPDATE_CAPTION,
+            variables=Queries.UPDATE_CAPTION["variables"](
+                dataset_id=dataset_id,
+                data_id=data_id,
+                caption=caption,
+            ),
+        )
+        return Data.model_validate(response)
 
     def remove_data_from_slice(
         self,

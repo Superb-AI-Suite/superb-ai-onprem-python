@@ -4,6 +4,9 @@ from .create_data import (
 from .update_data import (
     update_params
 )
+from .update_data_caption import (
+    update_data_caption_params
+)
 from .data import (
     get_params
 )
@@ -96,6 +99,7 @@ from .update_scene import (
 __all__ = [
     "create_params",
     "update_params",
+    "update_data_caption_params",
     "get_params",
     "get_data_id_list_params",
     "get_data_list_params",

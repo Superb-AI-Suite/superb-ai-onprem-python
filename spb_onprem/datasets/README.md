@@ -74,6 +74,17 @@ history = service.delete_dataset(dataset_id="dataset_123")
 ActivityService().wait_for_activity(history.id, dataset_id="dataset_123")
 ```
 
+### Caption Settings (3.0.0)
+```python
+# Dataset.caption_settings was removed in 3.0.0. Read the settings with their own call.
+settings = service.get_dataset_caption_settings("dataset_123")  # DatasetCaptionSettings or None
+if settings:
+    print(settings.data_definition)
+    for target in settings.caption_targets or []:
+        print(target.target, target.terms)
+    print(settings.excluded_terms)
+```
+
 ### Dataset Listing
 ```python
 # Get all datasets with pagination
@@ -111,8 +122,8 @@ from spb_onprem.datasets.entities import Dataset
 
 # Entity relationship example
 dataset = Dataset(
-    name="Medical Images Dataset",
-    description="Annotated medical scans for diagnostic AI training",
+    name="Street Scenes Dataset",
+    description="Annotated street scenes for detection training",
     # Timestamps and user info auto-populated by API
 )
 

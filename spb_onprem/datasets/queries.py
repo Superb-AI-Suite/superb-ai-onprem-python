@@ -4,6 +4,7 @@ from spb_onprem.datasets.params import (
     create_dataset_params,
     update_dataset_params,
     delete_dataset_params,
+    dataset_caption_settings_params,
 )
 
 class Schemas:
@@ -18,14 +19,16 @@ class Schemas:
         updatedBy
         sliceCount
         dataCount
-        captionSettings {
-            dataDefinition
-            captionTargets {
-                target
-                terms
-            }
-            excludedTerms
+    '''
+
+    DATASET_CAPTION_SETTINGS = '''
+        datasetId
+        dataDefinition
+        captionTargets {
+            target
+            terms
         }
+        excludedTerms
     '''
 
 class Queries():
@@ -103,4 +106,17 @@ class Queries():
             }
         ''',
         "variables": delete_dataset_params,
+    }
+
+    # Caption settings have their own query (MOD2-106, 3.0.0): Dataset has no captionSettings.
+    DATASET_CAPTION_SETTINGS = {
+        "name": "datasetCaptionSettings",
+        "query": f'''
+            query DatasetCaptionSettings($datasetId: ID!) {{
+                datasetCaptionSettings(datasetId: $datasetId) {{
+                    {Schemas.DATASET_CAPTION_SETTINGS}
+                }}
+            }}
+        ''',
+        "variables": dataset_caption_settings_params,
     }

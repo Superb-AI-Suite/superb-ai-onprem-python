@@ -9,7 +9,7 @@ from spb_onprem.activities.deletion import (
 from spb_onprem.activities.entities import ActivityHistory
 from spb_onprem.base_types import Undefined, UndefinedType
 from .queries import Queries
-from .entities import Dataset
+from .entities import Dataset, DatasetCaptionSettings
 from .params.datasets import DatasetsFilter
 from .enums import DatasetType
 
@@ -77,7 +77,30 @@ class DatasetService(BaseService):
             ),
         )
         return Dataset.model_validate(response)
-    
+
+    def get_dataset_caption_settings(self, dataset_id: str) -> Optional[DatasetCaptionSettings]:
+        """The caption settings of a dataset, or None when it has none.
+
+        Since 3.0.0 the settings are no longer a field of ``Dataset``
+        (``Dataset.caption_settings`` was removed); read them with this call
+        (query ``datasetCaptionSettings``).
+
+        Args:
+            dataset_id (str): The ID of the dataset.
+
+        Raises:
+            BadParameterError: If dataset_id is missing.
+
+        Returns:
+            Optional[DatasetCaptionSettings]: data_definition, caption_targets
+            (target, terms) and excluded_terms, or None.
+        """
+        response = self.request_gql(
+            Queries.DATASET_CAPTION_SETTINGS,
+            Queries.DATASET_CAPTION_SETTINGS["variables"](dataset_id),
+        )
+        return DatasetCaptionSettings.model_validate(response) if response else None
+
     def create_dataset(
         self,
         name: str,
