@@ -137,6 +137,7 @@ from .searches import (
     ModelFilterOptions,
     ModelFilter,
     DateTimeRangeFilterOption,
+    RelativeDateOption,
     UserFilterOption,
     NumericRangeFilter,
     GeoLocationFilter,
@@ -288,6 +289,7 @@ __all__ = (
     
     # Filters
     "DateTimeRangeFilterOption",
+    "RelativeDateOption",
     "UserFilterOption",
     "NumericRangeFilter",
     "GeoLocationFilter",

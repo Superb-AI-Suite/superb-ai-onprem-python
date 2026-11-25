@@ -6,6 +6,18 @@ from spb_onprem.exceptions import BadParameterError
 
 # === 기본 필터 ===
 
+class RelativeDateOption(CustomBaseModel):
+    """
+    실행 시점 기준 상대 기간 (GraphQL ``RelativeDateOption``)
+
+    사용 예시:
+        # 최근 7일
+        {"amount": 7, "unit": "DAY"}
+    """
+    amount: int = Field(..., description="기간 크기 (양의 정수)")
+    unit: Optional[str] = Field(None, description="단위 (DAY, WEEK). 보내지 않으면 서버 기본값 DAY")
+
+
 class DateTimeRangeFilterOption(CustomBaseModel):
     """
     날짜/시간 범위 필터 옵션
@@ -23,6 +35,7 @@ class DateTimeRangeFilterOption(CustomBaseModel):
     datetime_from: Optional[str] = Field(None, alias="from", description="시작 날짜/시간 (ISO 8601 형식)")
     to: Optional[str] = Field(None, description="종료 날짜/시간 (ISO 8601 형식)")
     equals: Optional[str] = Field(None, description="정확한 날짜/시간 (ISO 8601 형식)")
+    within_last: Optional[RelativeDateOption] = Field(None, alias="withinLast", description="실행 시점 기준 최근 기간 (from/to/equals와 함께 쓸 수 없음)")
 
 
 class UserFilterOption(CustomBaseModel):
@@ -176,6 +189,7 @@ class DistanceCountFilter(CustomBaseModel):
 
 
 class AnnotationCountsFilter(CustomBaseModel):
+    annotation_type: Optional[List[CountFilter]] = Field(None, alias="type")
     annotation_class: Optional[List[CountFilter]] = Field(None, alias="class")
     group: Optional[List[CountFilter]] = None
     sub_class: Optional[List[CountFilter]] = Field(None, alias="subClass")
@@ -242,6 +256,10 @@ class DataFilterOptions(CustomBaseModel):
     assigned_to_user: Optional[str] = Field(None, alias="assignedToUser", description="할당된 사용자")
     annotation_counts: Optional[AnnotationCountsFilter] = Field(None, alias="annotationCounts", description="어노테이션 개수 필터")
 
+    # 캡션 필터
+    caption_semantic_query: Optional[str] = Field(None, alias="captionSemanticQuery", description="캡션 자연어 검색어 (캡션이 있는 데이터만 대상)")
+    caption_exists: Optional[bool] = Field(None, alias="captionExists", description="유효한 캡션 존재 여부")
+
 class DataSliceStatusFilterOption(CustomBaseModel):
     status_in: Optional[List[str]] = Field(None, alias="in")
     equals: Optional[str] = None
@@ -268,6 +286,7 @@ class DataSliceCommentFilterOption(CustomBaseModel):
 
 class DataSlicePropertiesFilter(CustomBaseModel):
     status: Optional[DataSliceStatusFilterOption] = None
+    labeling_round: Optional[NumericRangeFilter] = Field(None, alias="labelingRound")
     labeler: Optional[DataSliceUserFilterOption] = None
     reviewer: Optional[DataSliceUserFilterOption] = None
     tags: Optional[DataSliceTagsFilterOption] = None

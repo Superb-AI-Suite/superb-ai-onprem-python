@@ -1,6 +1,7 @@
 # Filters
 from .data.params.data_list import (
     DateTimeRangeFilterOption,
+    RelativeDateOption,
     UserFilterOption,
     NumericRangeFilter,
     GeoLocationFilter,
@@ -52,6 +53,7 @@ from .models.params import (
 
 __all__ = [
     "DateTimeRangeFilterOption",
+    "RelativeDateOption",
     "UserFilterOption",
     "NumericRangeFilter",
     "GeoLocationFilter",
