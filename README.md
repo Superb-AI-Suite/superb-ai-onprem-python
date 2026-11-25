@@ -194,6 +194,47 @@ See the "Deletion Activities" section of [Activities](spb_onprem/activities/READ
 
 See [Model Deployments](spb_onprem/model_deployments/README.md#expiry).
 
+## 📝 Captions (breaking change in 3.0.0, MOD2-106)
+
+The caption of a data is one text field (`Data.caption`) with its own write call.
+3.0.0 removes the old caption arguments without a compatibility layer.
+
+- **Breaking:** `DataService.update_data` no longer takes `caption`, `caption_source` or
+  `expected_caption` (passing them raises `TypeError`). `Queries.UPDATE_WITH_EXPECTED_CAPTION`
+  is removed.
+- **Breaking:** `Dataset.caption_settings` is removed and `Dataset` queries no longer select
+  `captionSettings`.
+- New: `DataService.update_data_caption(dataset_id, data_id, caption)` (mutation
+  `updateDataCaption`) returns the updated `Data`. `caption=None` or `""` clears the caption;
+  any other text is stored as given (no trimming).
+- New: `DatasetService.get_dataset_caption_settings(dataset_id)` (query `datasetCaptionSettings`)
+  returns `DatasetCaptionSettings` (`data_definition`, `caption_targets` of
+  `CaptionTarget(target, terms)`, `excluded_terms`), or `None` when the dataset has none.
+- Unchanged: reading `Data.caption` and the caption search filter fields.
+
+How to migrate:
+
+```python
+# 2.x
+data_service.update_data(dataset_id=dataset_id, data_id=data_id, caption="a red truck")
+data_service.update_data(dataset_id=dataset_id, data_id=data_id, caption=None)  # clear
+
+# 3.0.0
+data_service.update_data_caption(dataset_id=dataset_id, data_id=data_id, caption="a red truck")
+data_service.update_data_caption(dataset_id=dataset_id, data_id=data_id, caption=None)  # clear
+
+# 2.x
+settings = dataset_service.get_dataset(dataset_id=dataset_id).caption_settings  # dict
+# 3.0.0
+settings = dataset_service.get_dataset_caption_settings(dataset_id)  # DatasetCaptionSettings or None
+```
+
+`caption_source` has no replacement (there is one caption slot). `expected_caption` (the
+optimistic guard) has no replacement; read the data first if you need to compare.
+To change other fields and the caption, call `update_data` and `update_data_caption` one after
+the other. The platform must have the same change (`updateDataCaption`,
+`datasetCaptionSettings`); 3.0.0 does not work with an older platform for these calls.
+
 ## 📚 Module Documentation
 
 ### 🏗️ Core Modules

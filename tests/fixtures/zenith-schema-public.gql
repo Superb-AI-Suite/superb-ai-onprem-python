@@ -492,54 +492,29 @@ enum AutoSplitMethods {
 }
 
 """
-One display-language translation of a caption, produced by the caption job.
-"""
-input CaptionDisplayTranslationInput {
-  """
-  Display language code (e.g. ko, ja). English is the original and is ignored.
-  """
-  lang: String!
-
-  """Translated caption text."""
-  text: String!
-}
-
-"""The source of a caption."""
-enum CaptionSource {
-  GROUND_TRUTH
-  VLM_GENERATED
-}
-
-"""
-A caption target: an axis that distinguishes images (target) and the terms to look for on that axis.
+A caption target: an axis that distinguishes images (target) and the terms to use on that axis.
 """
 type CaptionTarget {
-  """An axis that distinguishes images (e.g. lesion type)."""
+  """An axis that distinguishes images (e.g. vehicle type, time of day)."""
   target: String!
 
-  """Terms to look for on this axis. Used verbatim in captions and search."""
+  """
+  Terms to use on this axis (e.g. truck, bus). Captions call a visible item by this name.
+  """
   terms: [String!]!
 }
 
 """
-A caption target: an axis that distinguishes images (target) and the terms to look for on that axis.
+A caption target: an axis that distinguishes images (target) and the terms to use on that axis.
 """
 input CaptionTargetInput {
+  """An axis that distinguishes images."""
   target: String!
 
-  """Terms to look for on this axis (max 15 per target)."""
+  """
+  Terms to use on this axis (max 15 per target). A term must not also be in excludedTerms.
+  """
   terms: [String!]!
-}
-
-"""
-English renderings of a non-Latin caption term, generated once per settings version for caption attribute matching and in-job translation hints. Read-only.
-"""
-type CaptionTermAlias {
-  """English renderings the captions are matched against."""
-  aliases: [String!]!
-
-  """The term exactly as written in captionSettings."""
-  term: String!
 }
 
 """A class distribution item."""
@@ -713,11 +688,6 @@ type Data {
 
   """The dataset id of this data."""
   datasetId: ID
-
-  """
-  The single caption shown and searched for this data, computed by the server. lang: returns the translation when available, falling back to the original.
-  """
-  effectiveCaption(lang: String): String
   frames: [DataFrame!]!
   id: ID!
 
@@ -768,6 +738,19 @@ type DataAnnotationMeta {
   type: String
 }
 
+"""
+Result of upsertDataCaptionVector. STORED: the vector was saved for the current caption. DISCARDED_STALE: the caption changed, was cleared or the data is gone, so nothing was saved.
+"""
+enum DataCaptionVectorResult {
+  """
+  The caption hash no longer matches the current caption (changed, cleared or data gone). Nothing was saved.
+  """
+  DISCARDED_STALE
+
+  """The vector was saved for the current caption."""
+  STORED
+}
+
 input DataFilter {
   """
   A list of frame filters applied to the search_frames index. The data must contain frames matching ALL filters in this list.
@@ -790,13 +773,11 @@ input DataFilterOptions {
   annotationCounts: AnnotationCountsFilter
   assignedToUser: String
 
-  """
-  Filter by whether the data has an effective caption (true) or none (false).
-  """
+  """Filter by whether the data has a caption (true) or none (false)."""
   captionExists: Boolean
 
   """
-  Natural-language caption search. Only data with captions is matched; the result set is bounded by a server-side policy. Combine with orderBy RELEVANCE for similarity ordering.
+  Caption search. Only data with captions is matched. When caption embedding is enabled on the deployment this is a semantic search whose result set is bounded by a server-side policy; otherwise it matches the caption text. Combine with orderBy RELEVANCE for score ordering.
   """
   captionSemanticQuery: String
   createdAt: DateTimeRangeFilterOption
@@ -904,11 +885,6 @@ type DataSlice {
 
   """The annotation stats of the data slice."""
   annotationStats: [AnnotationStat!]
-
-  """
-  The caption of this (slice, data) pair — a copy taken when the data joined the slice, updated by enhancement runs. lang: returns the translation when available, falling back to the original.
-  """
-  caption(lang: String): String
 
   """The comments of the data slice."""
   comments: [DataSliceComment!]
@@ -1062,14 +1038,6 @@ enum DataType {
 
 """The dataset."""
 type Dataset {
-  """Structured caption settings used to build caption prompts (SPO-795)."""
-  captionSettings: DatasetCaptionSettings
-
-  """
-  English renderings of non-Latin caption terms for the current captionSettings (null until first computed or when stale). Used by the caption job for translation term checks.
-  """
-  captionTermAliases: [CaptionTermAlias!]
-
   """The date and time the slice was created."""
   createdAt: DateTime
 
@@ -1119,20 +1087,31 @@ type DatasetAnnotations {
   annotations: [DatasetAnnotation!]
 }
 
-"""Structured caption settings used to build caption prompts."""
+"""
+Caption settings of a dataset, used to build caption prompts. Shared by every dataset type.
+"""
 type DatasetCaptionSettings {
   captionTargets: [CaptionTarget!]
 
-  """One-sentence definition of the data (max 100 characters)."""
+  """
+  One-sentence definition of the data (max 100 characters, e.g. "Street scenes from fixed traffic cameras").
+  """
   dataDefinition: String
 
-  """Elements common to almost every image; captions will not mention them."""
+  """The ID of the dataset."""
+  datasetId: ID!
+
+  """
+  Elements common to almost every image (e.g. road surface); captions will not mention them.
+  """
   excludedTerms: [String!]
 }
 
-"""Structured caption settings. Every field is optional."""
+"""Caption settings of a dataset. Every field is optional."""
 input DatasetCaptionSettingsInput {
   captionTargets: [CaptionTargetInput!]
+
+  """Max 100 characters."""
   dataDefinition: String
   excludedTerms: [String!]
 }
@@ -2786,6 +2765,10 @@ type ModelDeploymentRuntime {
   deployActivityHistoryId: ID
   deploymentId: ID!
   endStatus: ModelDeploymentRuntimeEndStatus
+
+  """
+  C40: `<CODE>` or `<CODE>: <detail>`, at most 300 characters, English. Always present when endStatus is FAILED. While the deployment is UNRESPONSIVE, the current generation shows a computed reason (NO_HEARTBEAT or HEARTBEAT_LOST) that is not stored.
+  """
   failureReason: String
   generation: Int!
   gpuCount: Int!
@@ -3609,14 +3592,16 @@ type Mutation {
   ): WorkflowInstance!
 
   """
-  System launcher reports an observed launch failure (FAILED only); this does not stop a server. FDE-112: stops are confirmed by confirmModelDeploymentRemoved.
+  System launcher reports an observed launch failure (FAILED only); this does not stop a server. FDE-112: stops are confirmed by confirmModelDeploymentRemoved. C40: applied only while the stored state of this generation is PENDING or STARTING; a READY, stopping, deleting, already FAILED or older generation is returned unchanged.
   """
   finishModelDeployment(
     datasetId: ID!
     deploymentId: ID!
     generation: Int!
 
-    """Short failure code or sentence, at most 200 characters, no secrets."""
+    """
+    C40: `<CODE>` or `<CODE>: <detail>` such as `IMAGE_PULL_FAILED: ...`, at most 300 characters, no secrets, paths or URLs. Empty becomes UNKNOWN_FAILURE; text without a code is kept as UNKNOWN_FAILURE: <text>.
+    """
     reason: String
     status: ModelDeploymentStatus!
   ): ModelDeployment!
@@ -3665,9 +3650,19 @@ type Mutation {
   ): String!
 
   """
-  System runtime callback. serverState is the server health result (LOADING, READY or FAILED), not process liveness. FDE-112: the answer tells the runtime of this generation to KEEP running or REMOVE itself; FAILED ends the deployment as FAILED and answers REMOVE. Requires `Authorization: Bearer <heartbeat token>` of this deployment and generation.
+  System runtime callback. serverState is the server health result (LOADING, READY or FAILED), not process liveness. FDE-112: the answer tells the runtime of this generation to KEEP running or REMOVE itself; FAILED ends the deployment as FAILED and answers REMOVE. C40: with FAILED the optional reason (server /health sentence) is stored as `SERVER_LOAD_FAILED: <reason>`; a STARTING deployment that is not READY within MODEL_DEPLOYMENT_START_TIMEOUT_MINUTES (default 60) ends as FAILED `SERVER_NOT_READY` and is answered REMOVE. Requires `Authorization: Bearer <heartbeat token>` of this deployment and generation.
   """
-  heartbeatModelDeployment(datasetId: ID!, deploymentId: ID!, generation: Int!, serverState: ModelDeploymentServerState!): ModelDeploymentRuntimeInstruction!
+  heartbeatModelDeployment(
+    datasetId: ID!
+    deploymentId: ID!
+    generation: Int!
+
+    """
+    C40: Server failure sentence from /health, read only when serverState is FAILED. Stored as SERVER_LOAD_FAILED: <reason> after cleanup (control characters to spaces, URLs to <url>, at most 300 characters). No secrets, paths or URLs.
+    """
+    reason: String
+    serverState: ModelDeploymentServerState!
+  ): ModelDeploymentRuntimeInstruction!
   insertAnnotationVersion(dataId: ID!, datasetId: ID!, version: AnnotationVersionInput!): Data!
   insertScene(datasetId: ID!, id: ID!, scene: SceneInput!): Data!
   insertSliceAnnotationVersion(dataId: ID!, datasetId: ID!, sliceId: ID!, version: AnnotationVersionInput!): Data!
@@ -3691,11 +3686,6 @@ type Mutation {
     """The ID of the slice to pin."""
     id: ID!
   ): Slice!
-
-  """
-  Prefetch the English translation of a caption search query. Fire-and-forget: returns immediately; the search itself applies the cached translation transparently and falls back to the original query when absent.
-  """
-  prewarmCaptionSearch(datasetId: ID!, query: String!): Boolean!
   refreshToken(accessToken: JWT!, idToken: JWT!, refreshToken: JWT!): AuthToken!
 
   """
@@ -3959,23 +3949,8 @@ type Mutation {
     """The annotation stats of the data."""
     annotationStats: [AnnotationStatInput!]
 
-    """
-    The caption of the data. Omitted keeps the current value; explicit null clears it.
-    """
-    caption: String
-
-    """
-    Contract v2: when provided, the caption value is stored in the given source slot and the effective caption is recomputed by the server (VLM wins over GT when both exist). Omitted keeps the v1 behavior of writing the effective caption directly.
-    """
-    captionSource: CaptionSource
-
     """The dataset ID of the data to update."""
     datasetId: ID!
-
-    """
-    Optimistic guard: when provided, the update applies only if the current caption exactly equals this value (null matches a cleared caption). Omitted skips the check.
-    """
-    expectedCaption: String
 
     """The ID of the data to update."""
     id: ID!
@@ -3991,6 +3966,16 @@ type Mutation {
 
     """The type of the data."""
     type: DataType
+  ): Data!
+  updateDataCaption(
+    """The caption of the data. Null or an empty string clears the caption."""
+    caption: String
+
+    """The dataset ID of the data to update."""
+    datasetId: ID!
+
+    """The ID of the data to update."""
+    id: ID!
   ): Data!
 
   """Update a comment on a data slice."""
@@ -4043,11 +4028,6 @@ type Mutation {
   updateDataSlice(annotationStats: [AnnotationStatInput!], dataId: ID!, datasetId: ID!, meta: JSONObject, sliceId: ID!): Data!
   updateDataTags(dataId: ID!, datasetId: ID!, sliceId: ID!, tags: [String!]): Data!
   updateDataset(
-    """
-    Structured caption settings. Replaces the stored settings as a whole; null clears them.
-    """
-    captionSettings: DatasetCaptionSettingsInput
-
     """The description of the dataset."""
     description: String
 
@@ -4057,6 +4037,19 @@ type Mutation {
     """The name of the dataset."""
     name: String
   ): Dataset!
+
+  """
+  Replace the caption settings of a dataset. Null settings clear them and the mutation returns null.
+  """
+  updateDatasetCaptionSettings(
+    """The ID of the dataset."""
+    datasetId: ID!
+
+    """
+    The whole caption settings to store. Null clears the settings of the dataset.
+    """
+    settings: DatasetCaptionSettingsInput
+  ): DatasetCaptionSettings
 
   """
   Replace the VLM question set of a dataset. Existing questions and evidence classes can only be deleted or restored, not changed. Fails with CONFLICT when expectedUpdatedAt does not match the stored version.
@@ -4179,24 +4172,11 @@ type Mutation {
   updateModelDeployment(datasetId: ID!, deploymentId: ID!, description: String, invokeTimeoutSeconds: Int, name: String): ModelDeployment!
   updateScene(dataId: ID!, datasetId: ID!, id: ID!, scene: UpdateSceneInput!): Data!
   updateSlice(
-    """The aggregate caption of the slice."""
-    caption: String
-
-    """
-    Structured caption settings for the enhancement prompt. Replaces the stored settings as a whole; null clears them.
-    """
-    captionSettings: DatasetCaptionSettingsInput
-
     """The ID of the dataset that the slice belongs to."""
     datasetId: String!
 
     """A description of the slice."""
     description: String
-
-    """
-    Optimistic guard: when provided, the update applies only if the current caption exactly equals this value (null matches a cleared caption). Omitted skips the check.
-    """
-    expectedCaption: String
 
     """The ID of the slice to retrieve."""
     id: ID!
@@ -4279,21 +4259,11 @@ type Mutation {
     """The workflow template ID to update."""
     workflowTemplateId: ID!
   ): WorkflowTemplate!
-  upsertCaptionTranslations(
-    """
-    The exact caption text these translations belong to. Translations are keyed by the hash of this text, so it must match the stored caption byte for byte.
-    """
-    caption: String!
 
-    """The ID of the dataset."""
-    datasetId: ID!
-
-    """The ID of the data."""
-    id: ID!
-
-    """Translations to store (one per language)."""
-    translations: [CaptionDisplayTranslationInput!]!
-  ): [String!]!
+  """
+  C46-5: Store the caption embedding of a data. Saved only when captionHash still matches the current data.caption (checked in the same transaction); otherwise DISCARDED_STALE and nothing is saved. The vector must have CAPTION_EMBEDDING_DIMENSION (1024) values. UPDATE_DATA is emitted only when STORED.
+  """
+  upsertDataCaptionVector(captionHash: String!, dataId: ID!, datasetId: ID!, modelFingerprint: String!, vector: [Float!]!): DataCaptionVectorResult!
   upsertDataMeta(
     """The dataset ID of the scene to update."""
     datasetId: ID!
@@ -4726,6 +4696,12 @@ type Query {
     """Dataset ID to get annotation types and class names."""
     datasetId: String!
   ): DatasetAnnotations!
+
+  """Caption settings of a dataset. Null when the dataset has none."""
+  datasetCaptionSettings(
+    """The ID of the dataset."""
+    datasetId: ID!
+  ): DatasetCaptionSettings
 
   """VLM question set of a dataset. Null when the dataset has none."""
   datasetVLMSettings(
@@ -5264,14 +5240,6 @@ type SelectedFrame {
 
 """A slice is a subset of a dataset that can be used to filter data."""
 type Slice {
-  """The aggregate caption of the slice."""
-  caption: String
-
-  """
-  Structured caption settings used to build the enhancement prompt for this slice (SPO-795).
-  """
-  captionSettings: DatasetCaptionSettings
-
   """The date and time the slice was created."""
   createdAt: DateTime
 

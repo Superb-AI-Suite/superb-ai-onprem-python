@@ -1,11 +1,11 @@
 """Every GraphQL document the SDK sends parses and validates against the platform schema.
 
 The schema is a copy of zenith ``tmp/schema-public.gql`` in ``tests/fixtures``:
-branch ``feat/fde-237-deploy-definition-params-temp-main``, commit 31a05ce
-(temp-main with FDE-221 GPU options and C38 deployment forms and expiry). It
-replaced the copy from branch ``fde-85-model-task-type-vlm`` (commit a52f8ae),
-which was older than temp-main. When the platform schema changes, copy the new
-file over it unchanged; do not edit it by hand.
+branch ``feat/caption-redesign``, commit 8db64d1 (caption redesign, MOD2-103:
+``updateDataCaption``, ``datasetCaptionSettings``; ``updateData`` and ``Dataset``
+carry no caption settings). It replaced the copy from branch
+``feat/fde-237-deploy-definition-params-temp-main`` (commit 31a05ce). When the
+platform schema changes, copy the new file over it unchanged; do not edit it by hand.
 """
 import importlib
 import pkgutil

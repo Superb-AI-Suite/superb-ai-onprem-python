@@ -3,6 +3,7 @@ from .datasets import datasets_params
 from .create_dataset import create_dataset_params
 from .update_dataset import update_dataset_params
 from .delete_dataset import delete_dataset_params
+from .dataset_caption_settings import dataset_caption_settings_params
 
 __all__ = (
     "dataset_params",
@@ -10,4 +11,5 @@ __all__ = (
     "create_dataset_params",
     "update_dataset_params",
     "delete_dataset_params",
+    "dataset_caption_settings_params",
 )

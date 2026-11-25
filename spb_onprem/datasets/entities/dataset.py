@@ -19,12 +19,6 @@ class Dataset(CustomBaseModel):
         description="데이터셋 종류. VLM 데이터셋이면 DatasetType.VLM, Computer Vision 데이터셋이면 None",
     )
 
-    caption_settings: Optional[dict] = Field(
-        None,
-        alias="captionSettings",
-        description="캡션 설정 (dataDefinition / captionTargets / excludedTerms)",
-    )
-
     created_at: Optional[str] = Field(None, alias="createdAt", description="생성일시 (ISO 8601)")
     updated_at: Optional[str] = Field(None, alias="updatedAt", description="수정일시 (ISO 8601)")
     created_by: Optional[str] = Field(None, alias="createdBy", description="생성자")
