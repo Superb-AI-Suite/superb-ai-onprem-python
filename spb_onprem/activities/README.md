@@ -165,6 +165,61 @@ if done.status != ActivityStatus.SUCCESS:
     print(done.status, done.meta)
 ```
 
+## 📜 Listing Runs (2.3.0)
+
+`get_activity_histories` returns one page of the runs (activity histories) of a dataset,
+newest first by `createdAt`, as `(runs, next_cursor, total)`. Each run is the same
+`ActivityHistory` that `get_activity_history` returns.
+
+```python
+from spb_onprem import ActivityService, ActivityStatus
+
+service = ActivityService()
+
+# The newest 10 runs of a dataset
+runs, next_cursor, total = service.get_activity_histories("dataset_123")
+for run in runs:
+    print(run.created_at, run.status, run.activity_id, run.id)
+
+# Filters: one value or a list (any of them matches); filters combine with AND
+failed, _, failed_total = service.get_activity_histories(
+    "dataset_123",
+    activity_id="activity_456",                         # Activity.id (= run.activity_id)
+    status=[ActivityStatus.FAILED, ActivityStatus.CANCELED],
+    requester="user@example.com",                       # who started it (= run.created_by)
+    slice_id="slice_789",                               # started with start_activity(slice_id=...)
+    length=50,                                          # 1 to 50, default 10
+)
+
+# Every run, oldest first (stable while new runs start)
+cursor = None
+while True:
+    runs, cursor, _ = service.get_activity_histories("dataset_123", cursor=cursor, length=50, oldest_first=True)
+    ...
+    if cursor is None:
+        break
+```
+
+| Argument | Platform filter | Notes |
+| --- | --- | --- |
+| `dataset_id` (required) | `datasetId`, `must.datasetId` | |
+| `activity_id` | `must.jobIdIn` | |
+| `status` | `must.statusIn` | `ActivityStatus` or its name; `"CANCELLED"` reads as `CANCELED` |
+| `requester` | `must.requestedByIn` | email |
+| `slice_id` | `must.sliceIdIn` | only runs started with a slice; a slice inside `parameters` does not count |
+| `oldest_first` | `orderBy: {field: createdAt, direction: ASC}` | default `DESC` (newest first) |
+
+- The platform has no time-range filter and sorts by `createdAt` only here.
+- A user who is not an admin of the dataset (Owner, WorkspaceAdmin, DATASET-ADMIN)
+  sees only their own runs; the platform replaces `requester` with that user.
+- Every run must belong to `dataset_id`. If the platform returns a run of another
+  dataset, nothing is returned and `BadResponseError` is raised.
+- An empty list (`status=[]`) is refused with `BadParameterError`: the platform would
+  read it as no condition.
+- The cursor is an offset. Newest first, a run started while you page pushes the others
+  down, so a run can show up twice; page with `oldest_first=True` to see each once. When
+  the number of runs is a multiple of `length`, the last page is empty.
+
 ## 🔗 Related Services
 
 - **[📊 Data Service](../data/README.md)** - Manage data items processed by activities

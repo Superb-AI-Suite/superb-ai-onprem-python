@@ -194,6 +194,23 @@ See the "Deletion Activities" section of [Activities](spb_onprem/activities/READ
 
 See [Model Deployments](spb_onprem/model_deployments/README.md#expiry).
 
+## 📜 Listing activity runs (new in 2.3.0)
+
+`ActivityService.get_activity_histories(dataset_id, *, activity_id=None, status=None,
+requester=None, slice_id=None, cursor=None, length=10, oldest_first=False)` returns one
+page of the runs of a dataset, newest first: `(List[ActivityHistory], next_cursor, total)`.
+
+```python
+from spb_onprem import ActivityService, ActivityStatus
+
+runs, next_cursor, total = ActivityService().get_activity_histories(
+    "dataset_123", status=ActivityStatus.FAILED, length=20,
+)
+```
+
+`dataset_id` is required, and a run of another dataset in the answer raises
+`BadResponseError`. See [Listing Runs](spb_onprem/activities/README.md#-listing-runs-230).
+
 ## 📚 Module Documentation
 
 ### 🏗️ Core Modules

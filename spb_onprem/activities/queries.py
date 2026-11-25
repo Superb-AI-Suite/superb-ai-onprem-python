@@ -9,6 +9,7 @@ from spb_onprem.activities.params import (
     start_activity_params,
     update_activity_history_params,
     get_activity_history_params,
+    get_activity_histories_params,
     get_activity_history_task_detail_params,
     get_activity_history_task_log_download_params,
     get_activity_history_task_log_params,
@@ -180,6 +181,14 @@ class Schemas:
         totalCount
     '''
 
+    ACTIVITY_HISTORY_PAGE = f'''
+        jobHistories {{
+            {ACTIVITY_HISTORY}
+        }}
+        next
+        totalCount
+    '''
+
 
 class Queries:
     '''
@@ -236,6 +245,30 @@ class Queries:
             }}
         ''',
         "variables": get_activity_history_params,
+    }
+
+    GET_ACTIVITY_HISTORIES = {
+        "name": "jobHistories",
+        "query": f'''
+            query jobHistories(
+                $datasetId: ID!,
+                $filter: JobHistoryFilter,
+                $orderBy: JobHistoryOrderBy,
+                $cursor: String,
+                $length: Int
+            ) {{
+                jobHistories(
+                    datasetId: $datasetId,
+                    filter: $filter,
+                    orderBy: $orderBy,
+                    cursor: $cursor,
+                    length: $length
+                ) {{
+                    {Schemas.ACTIVITY_HISTORY_PAGE}
+                }}
+            }}
+        ''',
+        "variables": get_activity_histories_params,
     }
 
     GET_ACTIVITY_HISTORY_TASK_MONITORING = {

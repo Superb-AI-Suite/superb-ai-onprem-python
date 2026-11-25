@@ -2,7 +2,7 @@ import time
 from typing import Optional, Union, List, Tuple
 
 from spb_onprem.base_service import BaseService
-from spb_onprem.exceptions import BadParameterError
+from spb_onprem.exceptions import BadParameterError, BadResponseError
 from spb_onprem.base_types import (
     Undefined,
     UndefinedType,
@@ -165,6 +165,94 @@ class ActivityService(BaseService):
             )
         )
         return ActivityHistory.model_validate(response)
+
+    def get_activity_histories(
+        self,
+        dataset_id: str,
+        *,
+        activity_id: Optional[Union[str, List[str]]] = None,
+        status: Optional[Union[ActivityStatus, str, List[Union[ActivityStatus, str]]]] = None,
+        requester: Optional[Union[str, List[str]]] = None,
+        slice_id: Optional[Union[str, List[str]]] = None,
+        cursor: Optional[str] = None,
+        length: int = 10,
+        oldest_first: bool = False,
+    ) -> Tuple[List[ActivityHistory], Optional[str], int]:
+        """One page of the runs (activity histories) of a dataset.
+
+        Newest first by ``createdAt`` (``oldest_first=True`` for the other
+        way). Every filter is optional; a filter takes one value or a list of
+        values (any of them matches), and the filters are combined with AND.
+        The platform has no time-range filter.
+
+        A user who is not an admin of the dataset (Owner, WorkspaceAdmin,
+        DATASET-ADMIN) sees only their own runs; the platform replaces
+        ``requester`` with that user.
+
+        Every run returned must belong to ``dataset_id``. If the platform
+        returns a run of another dataset, nothing is returned and
+        ``BadResponseError`` is raised.
+
+        The cursor is an offset. A run started while you page newest first
+        pushes the others down, so a run can show up on two pages; use
+        ``oldest_first=True`` to page through everything. When the number of
+        runs is a multiple of ``length``, the last page is empty.
+
+        Args:
+            dataset_id (str): The dataset whose runs to list. Required.
+            activity_id (Optional[Union[str, List[str]]]): Runs of these
+                activities (``Activity.id``, i.e. ``ActivityHistory.activity_id``).
+            status (Optional[Union[ActivityStatus, str, List]]): Runs in these
+                statuses, e.g. ``ActivityStatus.FAILED`` or ``"RUNNING"``.
+            requester (Optional[Union[str, List[str]]]): Runs started by these
+                users (email, as in ``ActivityHistory.created_by``).
+            slice_id (Optional[Union[str, List[str]]]): Runs started on these
+                slices (``start_activity(slice_id=...)``). A slice given only
+                inside ``parameters`` does not count.
+            cursor (Optional[str]): ``next_cursor`` of the previous page.
+            length (int): Runs per page, 1 to 50. Defaults to 10.
+            oldest_first (bool): Oldest first instead of newest first.
+
+        Raises:
+            BadParameterError: A missing ``dataset_id``, ``length`` out of
+                range, an empty filter list, or an unknown status.
+            BadResponseError: The platform returned a run of another dataset.
+
+        Returns:
+            Tuple[List[ActivityHistory], Optional[str], int]: The runs of this
+            page, the cursor of the next page (None on the last page), and the
+            number of runs that match the filters.
+        """
+        response = self.request_gql(
+            Queries.GET_ACTIVITY_HISTORIES,
+            Queries.GET_ACTIVITY_HISTORIES["variables"](
+                dataset_id=dataset_id,
+                activity_id=activity_id,
+                status=status,
+                requester=requester,
+                slice_id=slice_id,
+                cursor=cursor,
+                length=length,
+                oldest_first=oldest_first,
+            )
+        )
+        response = response if isinstance(response, dict) else {}
+        histories = [
+            ActivityHistory.model_validate(item)
+            for item in response.get("jobHistories") or []
+        ]
+        foreign = [history for history in histories if history.dataset_id != dataset_id]
+        if foreign:
+            # The IDs are left out of the message: they are runs this call was not asked for.
+            raise BadResponseError(
+                f"jobHistories returned {len(foreign)} run(s) of another dataset "
+                f"for dataset {dataset_id}; nothing is returned."
+            )
+        return (
+            histories,
+            response.get("next"),
+            response.get("totalCount") or 0,
+        )
 
     def wait_for_activity(
         self,
